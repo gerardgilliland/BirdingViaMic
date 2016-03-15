@@ -6,4 +6,4 @@ Website: http://www.modelsw.com/Android/BirdingViaMic/BirdingViaMic.php.
 
 Google Play: https://play.google.com/store/search?q=Birding%20via%20mic&c=apps&hl=en
 
-You can load the database by loading the app from the above GooglePlay. You will need permission from BirdLife International and IUCN RedList to distribute it and permission will be given only if it is non-commercial.
+You can load the database with the IOC World Bird List by loading the app from the above GooglePlay. You will need permission from BirdLife International and IUCN RedList if you intend to share it.
