@@ -5,3 +5,5 @@ This app has three main areas: 1) Database management which allows you to modify
 Website: http://www.modelsw.com/Android/BirdingViaMic/BirdingViaMic.php.
 
 Google Play: https://play.google.com/store/search?q=Birding%20via%20mic&c=apps&hl=en
+
+You can load the database by loading the app from the above GooglePlay. You will need permission from BirdLife International and IUCN RedList to distribute it and permission will be given only if it is non-commercial.
