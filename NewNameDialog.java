@@ -3,8 +3,6 @@ package com.modelsw.birdingviamic;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.modelsw.birdingviamic.R;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;

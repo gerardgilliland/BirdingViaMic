@@ -1,6 +1,41 @@
 package com.modelsw.birdingviamic;
 /*
- * 49.Q before cleanup and export to GitHub
+ * 55.L fix Load Definitions -- was failing if song was Stereo test Main.sourceMic == 0 needed (Main.sourceMic & 1) == 0
+ * 		fix LastKnown Identified -- in Clean Database -- was 'Identified ' (with space at end), and in runPatch()
+ * 55.M	use entire screen regardless of song length -- was use part if less than 5 seconds.
+ *		center time numbers -- was draw time numbers above the time.
+ * 55.N fix Metadata mp3 Comment needs to use TCOP (next atom below COMM) Length is wrong and recordists end comments differently.
+ * 55.T Fix M4a And Wav Players --
+ * 55.U FixCrashOnBuildRampFixRampWithOnePhrase
+ * 55.W Clean up code
+ * 55.X Rewrite Identify To Use Database Instead Of Memory For Each Phrase
+ * 55.Y Totals Working With Database Before Modify Detail
+ * 55.Z Totals And Detail Using Database Once Per Phrase Per Ref New Identify
+ * 56.A Using Database And Fix Shift On Best Fit
+ * 56.B Breakout Criteria To Mean And StdDev In Identify
+ * 56.C Remove Percent From Identify Doesn't Work With One Ref Per Phrase
+ * 56.D Before Finding Codec Changing Lengths_Unsolved_Ver57
+ * 56.E Add Permissions Testing_Ver58
+ * 56.G Cleanup Permissions SourceMic And SampleRate Ver60
+ * 56.H Move Batch File Inside Of Select File Path No Reboot Required
+ * 56.I Permissions Don't Wait Until User Responds
+ * 56.J Fix Permissions Wait Move Load Inside Path
+ * 56.K _Ver61 Plus A Few Minor Changes
+ * 56.L Work On Decode
+ * 56.M Add Decode File Error Test Ver62
+ * 56.N Fix Decoder Error Ver63
+ * 56.O Add Stereo Field To SongList
+ * 56.P Fix Stereo Field Getting Close To Local VisualizerView
+ * 56.Q Time Not The Same Between Functions
+ * 56.R Local Visualizer Working YEA
+ * 56.S Getting Pretty Clean
+ * 56.T Working On Visualizer
+ * 56.U Removed Renderer
+ * 56.V Re-Added Renderer For Edit
+ * 56.W Visualizer Code The Same Results Not The Same
+ * 56.X Using Low And Hi Limits
+ * 56.Y Visualizer Using Average Modify Help
+ * 56.Z Remove Accounts Requirement From Code And Manifest_Ver64
  *
  */
 
@@ -12,14 +47,27 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -29,43 +77,27 @@ import android.widget.Toast;
 import android.util.Log;
 import android.media.AudioManager;
 import android.os.Environment;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 
 
 public class Main extends AppCompatActivity implements OnClickListener {
 	private static final String TAG = "Main";
+	Activity activity;
 	public static String adjustViewOption;
-	public static int[] adLoc;
-	public static int adLocCntr = 0;
-	public static int HELP = 0;
-	public static int ADS = 1;
-	public static int SONG_PATH = 2;
-	public static int WEB_LIST = 3;
-	public static int MY_LIST = 4;
-	public static int REGION = 5;
-	public static int RED_LIST = 6;
-	public static int LOCATION = 7;
-	public static int OPTIONS = 8;
-	public static int SPECIES_LIST = 9;
-	public static int SONG_LIST = 10;
-	public static int MAIN = 11;
-	public static int alertRequest = 0; // 2 = delete files; 3 = delete species
-	public static short[] audioData;
+	public static int alertRequest = 0; // 2=delete files; 3=delete species; 4=delete web; 5=meta data info box; 6=database upgrade complete;
+	public static short[] audioData;  // the entire song -- -32767 +32767 (16 bit)
 	public static int audioDataLength;
 	public static int audioDataSeek;
-	public static int audioSource;
+	public static int audioSource = -1; // stored in SongList -- 0=default, 1=mic, 5=camcorder, 6 voice recognition, -1=unknown
 	public static int bitmapWidth;
 	public static int bitmapHeight;
 	public static int buttonHeight;
-	public static Boolean[] ck;
-	public static int countMic = 0;
-	public static int cntrFftCall; // counts the blocks of 1024 fft data (512)
+	public static Boolean[] ck;  // used in SongList -- song selected
+	public static int cntrFftCall; // counts the blocks of 1024 visualizer View byte data - cleared in PlaySong -- incremented and tested in LineRenderer
 	public static int[] cntrFftCallTotal; // sum of power of each fft Block
-	public static String commonName;
+	public static String commonName; // stored in species table CodeName
 	public static String customPathLocation = null;
 	public static String databaseName;
-	public static int databaseVersion = 77;
+	public static int databaseVersion = 79; // increment if change database -- calls SongData
 	public static SQLiteDatabase db;
 	public static String definepath = null;
 	public static File definePathDir;
@@ -85,20 +117,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static String existingWebName;
 	public static Boolean fileRenamed = false; // used in restart to refresh the songlist
 	public static Boolean fileReshowExisting = false; // used in restart to refresh the songlist
-	public static int fftcntr = 0; // pointer - increments for every line saved
-	public static byte[] fftdata;
+	//public static int fftcntr = 0; // pointer - increments for every line saved
+	//public static byte[] fftdata;
 	public static float filterMaxPower;  // max of fft power calc between exclude filterStartAtLoc and filterStopAtLoc
-	public static int filterStartAtLoc = 0;
+	public static int filterStartAtLoc = 0; // set in AdjustView -- used in PlaySong
 	public static int filterStopAtLoc = 0;
 	public static int highFreqCutoff = 0;  // user entered from adjust view
-	public static float hzPerStep = 11025f / 512f;  // 21.53 hz per step
+	public static float hzPerStep = 11025f / 512f;  // 21.53 hz per step -- in the file as hz; 0-511 everywhere else.
 	public static int[] inx;
 	public static boolean isAutoLocation = true;
-	public static boolean isBatchDownload = false;
-	public static boolean isBirder = false;
+	public static boolean isCheckPermissions = false;
 	public static boolean isDebug = false;
 	public static boolean isEdit = false; // set true when edit button on play is tapped
-	public static boolean isEditActive = false; // set true when inside the AdjustView screen
 	public static boolean isEnhanceQuality = true; // build s/n kernel and apply to normalized audio
 	public static boolean isExternalMic = false;
 	public static boolean isFilterExists = false;
@@ -111,10 +141,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static boolean isShowDetail = false;
 	public static boolean isShowDefinition = false;  // Show the definition (frequency, distance) on the adjust view screen
 	public static boolean isSortByName = true;
-	public static boolean isShowAds = false;
 	public static boolean isStartRecordScreen = false;
 	public static boolean isStartRecording = false;
 	public static boolean isShowWeb = false;
+	public static boolean isStereo = false;
 	public static boolean isUseAudioRecorder = false;
 	public static boolean isUseLocation = false;
 	public static boolean isUseSmoothing = false;
@@ -127,14 +157,15 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static float lengthEachRecord = 5.0f; // number of records * lengthEachRecord = size required for dimension of bitmap
 	private Button songButton;
 	public static int listOffset = 0;
+	public static List<String> listPermissionsNeeded;
 	public static int longitude = -100;
 	public static int lowFreqCutoff = 0;  // user entered from adjust view
 	public static int manualLat;
 	public static int manualLng;
 	public static float maxPower;  // max of fft power calc.
+	//public static int maxEnergy; // from decode file
 	public static int maxPowerJ = 0; // frequency where power is max (don't know if it is lo or hi for harmonics and percent peak)
 	public static int maxPowerRec = 0; // record at which the max power occurred
-	//public static Bitmap mCanvasBitmap;
 	public static String metaData = null;
 	public static int myRequest = 0;
 	public static int myResult = 0;
@@ -151,20 +182,29 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static String newWebName;
 	public static boolean optionsRead = false; // set true when read and in memory
 	public static int path = 1;  // internal songs are default
+	public static int permCntr = 6;
+	String[] permissions = new String[]{
+			Manifest.permission.WRITE_EXTERNAL_STORAGE,
+			Manifest.permission.READ_EXTERNAL_STORAGE,
+			Manifest.permission.RECORD_AUDIO,
+			Manifest.permission.GET_ACCOUNTS,
+			Manifest.permission.ACCESS_FINE_LOCATION,
+			Manifest.permission.ACCESS_COARSE_LOCATION };
 	public static int phoneLat;
 	public static int phoneLng;
 	public String qry = "";
 	private Button recordButton;
+	private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
 	public static String recordedName;
 	public static int[] ref;  // reference (to replace defineName)
 	private Cursor rs;
 	public static int sampleRate = 22050;
 	public static int sampleRateOption = 0;
-	public static int[] scoreAd;
 	public static int[] seg;
 	public static int[] selectedSong;
-	public String sharedStorage;
-	public String sharedDefine;
+	public static String sharedDefine;
+	public static String sharedStorage;
+	public static int shortCntr;
 	public static Boolean showPlayFromList = false;
 	public static Boolean showPlayFromRecord = false;
 	public static Boolean showWebFromIdentify = false;
@@ -182,7 +222,9 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static int[] speciesRef;
 	public static int specOffset = 0;
 	public static Boolean specRenamed = false;
+	public static int stereoFlag = 0; // used in sampleRateOption 0=mono / 1=stereo
 	public static int stopAt = 0;
+	int targetSdkVersion;
 	public static int thisSong = 0;  // current song
 	public static int totalCntr = 0;  // I have to keep this for mediaPlayer and visualizerView
 	Toolbar toolbar;
@@ -194,7 +236,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static Boolean webRenamed = false;
 	public static boolean wikipedia = true;  // true show identified bird - false bring up a different web site 
 	public static boolean xenocanto;
-
+	Bundle savedInstanceState;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -204,7 +246,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		toolbar.setLogo(R.drawable.treble_clef_linen);
-		toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+		toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
 		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Log.d(TAG, "Navigation Icon tapped");
@@ -229,16 +271,28 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		findViewById(R.id.web_browser_button).setOnClickListener(this);
 		webButton = (Button) findViewById(R.id.web_browser_button);
 		findViewById(R.id.register_button).setOnClickListener(this);
+		isCheckPermissions = true;
+		boolean ckPerms = checkPermissions();
+		if (ckPerms == true) {
+			isCheckPermissions = false;
+			init();
+			Log.d(TAG, "App is enabled. Permissions granted.");
+		} else {
+			Log.d(TAG, "App is degraded. Request enable permissions.");
+			Intent pd = new Intent(this, PermissionDetail.class);
+			startActivityForResult(pd,99);
+		}
+	}
+
+	public void init() {
+		Log.d(TAG, "**** App is through checking permissions. ****");
 		environment = Environment.getExternalStorageDirectory().getAbsolutePath();
-		String packageName = getPackageName(); // com.modelsw.birdingviamic
 		songPathDir = getExternalFilesDir("Song"); // File
 		definePathDir = getExternalFilesDir("Define"); // File
 		definepath = definePathDir.toString() + "/"; // String
 		databaseName = definepath + "BirdSongs.db";
 		Log.d(TAG, "onCreate environment:" + environment + " songPathDir:" + songPathDir +
 				" definePathDir:" + definePathDir + " databaseName:" + databaseName);
-		// move the data from assets to definepath and songpath
-		sharedStorage = Environment.getExternalStorageDirectory() + "/Android/obb/" + packageName;
 		// test in loadAssets and only load if missing
 		Log.d(TAG, "make the Define directory");
 		new File(definePathDir.toString()).mkdirs();
@@ -255,68 +309,61 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		db = songdata.getWritableDatabase();
 		// database loaded
 		readTheSongPath();
-
-		switch (path) {
-			case 1: {
-				songpath = Main.songPathDir.toString() + "/";
-				break;
-			}
-			case 2: {
-				songpath = environment + "/" + getResources().getString(R.string.path2_location) + "/";
-				break;
-			}
-			case 3: {
-				songpath = environment + "/" + getResources().getString(R.string.path3_location) + "/";
-				sharedDefine = environment + "/" + getResources().getString(R.string.path3_define) + "/";
-				break;
-			}
-			case 4: {
-				songpath = environment + "/" + getResources().getString(R.string.path4_location) + "/";
-				sharedDefine = environment + "/" + getResources().getString(R.string.path4_define) + "/";
-				break;
-			}
-			case 5: {
-				songpath = environment + "/" + getResources().getString(R.string.path5_location) + "/";
-				sharedDefine = environment + "/" + getResources().getString(R.string.path5_define) + "/";
-				break;
-			}
-			case 6: {
-				songpath = environment + "/" + getResources().getString(R.string.path6_location) + "/";
-				sharedDefine = environment + "/" + getResources().getString(R.string.path6_define) + "/";
-				break;
-			}
-			case 7: {
-				songpath = environment + "/" + customPathLocation + "/";
-				break;
-			}
-		}
+		// I have disabled all but path = 1 here in main.
+		songpath = Main.songPathDir.toString() + "/";
 		Log.d(TAG, "onCreate definepath:" + definepath + " songpath:" + songpath);
 		if (sharedDefine != null) {
 			Log.d(TAG, "onCreate sharedDefine:" + sharedDefine);
 		}
 
 		readTheOptions();
-		if (adLocCntr == 0) {
-			adLocCntr = 12;
-			adLoc = new int[adLocCntr];
-			scoreAd = new int[adLocCntr];
-		}
 		commonName = "CommonName: ";
 
 		// ****************************
 		checkVersion();
 		// ****************************
-
 		readTheLocationFile();
+		runPatch();
 
-		if (isBatchDownload == true && path > 1) {
-			checkForNewFiles();
-		}
 		if (isStartRecordScreen == true) {
 			recordButton.performClick();
 		}
+
 	}
 
+	private boolean checkPermissions() {
+		try {
+			final PackageInfo info = this.getPackageManager().getPackageInfo(this.getPackageName(), 0);
+			targetSdkVersion = info.applicationInfo.targetSdkVersion;
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.e(TAG, "error name not found:" + e);
+			return true; // problems with package -- don't get lost in permissions
+		}
+		// For Android < Android M, self permissions are always granted.
+		Log.d(TAG, "targetSdkVersion:" + targetSdkVersion);
+		Log.d(TAG, "Build.VERSION.SDK_INT:" + Build.VERSION.SDK_INT
+				+ " Build.VERSION_CODES.M:" + Build.VERSION_CODES.M);
+		if (targetSdkVersion < Build.VERSION_CODES.M) {
+			return true;
+		}
+		listPermissionsNeeded = new ArrayList<String>();
+		for (String p:permissions) {
+			int result = ContextCompat.checkSelfPermission(this, p);
+			Log.d(TAG, "result:" + result + " permission:" + p);
+			if (result != PackageManager.PERMISSION_GRANTED && result != 0) {
+				listPermissionsNeeded.add(p);
+				Log.d(TAG, "missing permission:" + p + " result:" + result);
+			}
+		}
+		if (listPermissionsNeeded.isEmpty()) { // either none added or failed to add
+			/*ActivityCompat.requestPermissions(this,
+					listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),
+					REQUEST_ID_MULTIPLE_PERMISSIONS);*/
+			return true;
+		} else {
+			return false; // list is not empty go get permissions
+		}
+	}
 
 	public void onClick(View v) {
 		int resId;
@@ -458,7 +505,11 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
+		Log.d(TAG, "onResume isCheckPermissions:" + isCheckPermissions);
+		if (isCheckPermissions == true) {
+			isCheckPermissions = false;
+			return;
+		}
 
 		Log.d(TAG, "onResume newStartStop:" + isNewStartStop);
 		if (isNewStartStop == true) {
@@ -507,9 +558,13 @@ public class Main extends AppCompatActivity implements OnClickListener {
 
 		// keep this next to last -- if nothing else runs and return from play song then go back to the list where you were
 		// I had to move it above web -- because web quit working -- web has to be last.
-		Log.d(TAG, "onResume fileReshowExisting:" + fileReshowExisting + " existingName:" + existingName);
+		// fileReshowExisting flag also used on deleted files
+		Log.d(TAG, "onResume fileReshowExisting:" + fileReshowExisting);
 		if (fileReshowExisting == true) {
 			//fileReshowExisting = false;  will be cleared to false later in SongList
+			if (songpath == null || songdata == null) {
+				init();
+			}
 			Intent rn = new Intent(this, SongList.class);
 			startActivity(rn);
 		}
@@ -521,7 +576,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			webButton.performClick();
 		}
 		// load single xc file from web
-		if (Main.xenocanto == true && existingRef > 0 && isBatchDownload == false) {  // don't load XC files (from here) if startup
+		if (Main.xenocanto == true && existingRef > 0) { //  && isBatchDownload == false) {  // don't load XC files (from here) if startup
 			environment = Environment.getExternalStorageDirectory().getAbsolutePath();
 			String downloadPath = environment + "/Download/";
 			Log.d(TAG, "*** onResume() XC downloadPath:" + downloadPath);        // crash if songPath is null
@@ -608,7 +663,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 						val.put("Smoothing", 0);
 						val.put("SourceMic", 0);
 						val.put("SampleRate", sr); // solve it when you read it.
-						val.put("AudioSource", 0);
+						val.put("AudioSource", -1);
 						val.put("LowFreqCutoff", 0);
 						val.put("HighFreqCutoff", 0);
 						val.put("FilterStart", 0);
@@ -625,7 +680,89 @@ public class Main extends AppCompatActivity implements OnClickListener {
 
 	}
 
+	// fix what I can in local database
+	void runPatch() {
+		int patch = 0;
+		qry = "SELECT Value FROM Options WHERE Name = 'patch64'"; // it won't exist if I have never run this.
+		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+		if (rs.getCount() == 1) { // i've been here
+			rs.moveToFirst();
+			patch = rs.getInt(0);
+			if (patch == 64) { // is it my patch from this time?
+				rs.close();
+				return;
+			} else {
+				db.beginTransaction();
+				qry = "UPDATE Options SET Value = 64 WHERE Name = 'patch64'";
+				Main.db.execSQL(qry);
+				Main.db.setTransactionSuccessful();
+				Main.db.endTransaction();
+			}
+			rs.close();
+		} else { // patch doesn't exist
+			// test Songlist for field name Stereo
+			qry = "SELECT sql FROM sqlite_master" +
+					" WHERE type='table' AND name = 'SongList'";
+			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+			rs.moveToFirst();
+			String x = rs.getString(0);
+			rs.close();
+			if (x.indexOf("Stereo") > 0) {
+				String msg = "field Stereo already exists";
+				Log.d(TAG, msg);
+				db.beginTransaction();
+				ContentValues val = new ContentValues();
+				val.put("Name", "patch64");
+				val.put("Value", 64);
+				Main.db.insert("Options", null, val);
+				Main.db.setTransactionSuccessful();
+				Main.db.endTransaction();
+				return;
+			}
+			try {
+				// add a new column Stereo
+				db.beginTransaction();
+				qry = "ALTER TABLE SongList ADD COLUMN Stereo INTEGER";
+				db.execSQL(qry);
+				// move the 8 in SampleRate to its new field as a 0 if mono or 1 of stereo
+				qry = "UPDATE Songlist SET Stereo = ((SampleRate & 8) >> 3)";
+				db.execSQL(qry);
+				// get rid of stereo as an 8 in SampleRate
+				qry = "UPDATE SongList SET SampleRate = (SampleRate & 7)";
+				db.execSQL(qry);
+				db.setTransactionSuccessful();
+				db.endTransaction();
+			} catch (SQLiteException e) {
+				Log.e(TAG, "Patch64 Error:" + e);
+			}
+			Log.d(TAG, "patch 64 applied ");
+			db.beginTransaction();
+			ContentValues val = new ContentValues();
+			val.put("Name", "patch64");
+			val.put("Value", 64);
+			Main.db.insert("Options", null, val);
+			Main.db.setTransactionSuccessful();
+			Main.db.endTransaction();
+		}
+	}
+
 	public void readTheOptions() {
+		// backfit database for new option Stereo
+		/*
+		qry = "SELECT Value FROM Options WHERE Name = 'Stereo'";
+		rs = songdata.getReadableDatabase().rawQuery(qry, null);
+		if (rs.getCount() == 0) {
+			Log.d(TAG, "backfit database");
+			db.beginTransaction();
+			ContentValues val = new ContentValues();
+			val.put("Name", "Stereo");
+			val.put("Value", 0);
+			Main.db.insert("Options", null, val);
+			Main.db.setTransactionSuccessful();
+			Main.db.endTransaction();
+			// read it below
+		}
+		*/
 		Log.d(TAG, "readTheOptions");
 		qry = "SELECT Value FROM Options WHERE Name = 'AutoFilter'";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
@@ -683,6 +820,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		isSampleRate = (rs.getInt(0) != 0);
+		qry = "SELECT Value FROM Options WHERE Name = 'Stereo'";
+		rs = songdata.getReadableDatabase().rawQuery(qry, null);
+		rs.moveToFirst();
+		isStereo = (rs.getInt(0) != 0);
 		qry = "SELECT Value FROM Options WHERE Name = 'StartRecordScreen'";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
@@ -691,18 +832,14 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		isStartRecording = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'BatchDownload'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isBatchDownload = (rs.getInt(0) != 0);
+		//qry = "SELECT Value FROM Options WHERE Name = 'BatchDownload'";
+		//rs = songdata.getReadableDatabase().rawQuery(qry, null);
+		//rs.moveToFirst();
+		//isBatchDownload = (rs.getInt(0) != 0);
 		qry = "SELECT Value FROM Options WHERE Name = 'LoadDefinition'";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		isLoadDefinition = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ShowAds'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isShowAds = (rs.getInt(0) != 0);
 		qry = "SELECT Value FROM Options WHERE Name = 'Debug'";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
@@ -792,12 +929,13 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		qry = "SELECT Path, CustomPath FROM SongPath";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
-		Main.path = rs.getInt(0);
+		//Main.path = rs.getInt(0);
+		path = 1;  // always point to internal in main
 		Main.customPathLocation = rs.getString(1);
 		Log.d(TAG, " * * readTheSongPath path:" + path + " customPathLocation:" + customPathLocation);
 	}
 
-	public void readTheLocationFile() {
+	public void readTheLocationFile() { // not file anymore; it is in database
 		Log.d(TAG, "read the Location file");
 
 		qry = "SELECT Value FROM Location WHERE Name = 'AutoLocation'";
@@ -989,6 +1127,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 				return; // later
 			}
 			upgradeSpecies(resultCode); // else 1 = upgrade
+		}
+		if (requestCode == 99) {
+			Log.d(TAG, "BACK FROM PERMISSIONS requestCode:" + requestCode + " resultCode:" + resultCode);
+			init();
 		}
 	}
 
@@ -1292,200 +1434,4 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	} // upgradeSpecies
 
 
-	void checkForNewFiles() {  // moves them out of selected path to local/Songs/ directory.
-		// and filter out of selected path Define to local/Define/ directory
-		// note: this is only called if path > 1 and only if isBatchDownload is true
-		// after moving the files, path is re-set to 1 and isBatchDownload is set false.
-		// songpath is selected path which is > 1 -- could be null if invalid path from custom.
-		if (songpath == null) {
-			String msg = "invalid path";
-			Log.d(TAG, msg);
-			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-			return;
-		}
-		if (sharedDefine != null) {
-			int pathLen = sharedDefine.length();
-			Log.d(TAG, "* checkForNewFiles() sharedDefine:" + sharedDefine);
-			File dirDef = new File(sharedDefine);
-			Log.d(TAG, "onCreate: dirDef:" + dirDef);
-			File[] defineFile = dirDef.listFiles();
-			int defFileLen = 0;
-			if (defineFile != null) {
-				defFileLen = defineFile.length;
-				Log.d(TAG, "* checkForNewDefineFiles() defFileLen:" + defFileLen);
-				//String[] defines = new String[defFileLen]; // names from the folder
-				for (int i = 0; i < defFileLen; i++) {
-					//defines[i] = defineFile[i].toString().substring(pathLen);
-					//String nam = defines[i];
-					String nam = defineFile[i].toString().substring(pathLen);
-					int extLoc = nam.length() - 4;
-					String ext = nam.substring(extLoc);
-					Log.d(TAG, " definefile:" + nam + " ext:" + ext );
-					if (ext.equalsIgnoreCase(".csv")) { // only transfers csv files
-						Boolean success = defineFile[i].renameTo(new File(definepath + nam));
-						Log.d(TAG, " did i move file:" + nam + " ?:" + success);
-						if (nam.equals("filter.csv")) {
-							loadFilterData();  // it is loaded into database
-							//deleteFile(nam); // crash on has a file separater
-						}
-					}
-				}
-			}
-		}
-		// localPath is songPath = 1 from getExternalFilesDir("Song");
-		String localPath = Main.songPathDir.toString() + "/";
-		Log.d(TAG, "* checkForNewFiles() path:" + path + " songpath:" + songpath);
-		int pathLen = songpath.length();
-		File dir = new File(songpath);
-		Log.d(TAG, "onCreate: dir:" + dir);
-		Main.songFile = dir.listFiles();
-		String nums = "0123456789";
-		String ch = "";
-		int cntr = 0;
-		int songsFileLen = 0;
-		if (Main.songFile == null) {
-			Log.d(TAG, "* checkForNewFiles() songFile is null -- closing");
-			String msg = "invalid path:" + songpath;
-			Log.d(TAG, msg);
-			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-			return;
-		} else {
-			songsFileLen = Main.songFile.length;
-			Log.d(TAG, "* checkForNewFiles() songFileLength:" + songsFileLen);        // crash if songPath is null
-			Main.songs = new String[songsFileLen];
-			for (int i = 0; i < songsFileLen; i++) {
-				Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
-				//  01234567890123456789012345678901234
-				String nam = Main.songs[i];        // "16 White-crowned Sparrow Song 1.mp3"
-				//Log.d(TAG, "* checkForNewFiles() songs[" + i + "] " + nam );
-				Boolean isAlbumNumber = false;
-				Boolean isStartsWithXC = false;
-				int chLoc = nam.indexOf(' '); // 2
-				if (chLoc > 0 && chLoc < 5) {
-					ch = nam.substring(0, chLoc);
-					//Log.d(TAG, "ch:" + ch);
-
-					if (nums.contains(ch.substring(0, 1)) == true && nums.contains(nam.substring(chLoc + 1, chLoc + 2)) == false) {
-						isAlbumNumber = true;
-						// find the first beyond the name -- its a number followed by a space followed by a letter
-						int songLoc = nam.indexOf(" Song"); // 24
-						int callLoc = nam.indexOf(" Call"); // -1
-						int drumLoc = nam.indexOf(" Drum"); // -1
-						int extLoc = nam.length() - 4;
-						int afterName = Math.max(chLoc, extLoc); // 31
-						if (afterName > chLoc) {
-							if (songLoc > chLoc) {
-								afterName = Math.min(songLoc, afterName); // 24
-							}
-							if (callLoc > chLoc) {
-								afterName = Math.min(callLoc, afterName);
-							}
-							if (drumLoc > chLoc) {
-								afterName = Math.min(drumLoc, afterName);
-							}
-							if (afterName == extLoc) { // just the name.ext
-								newName = nam.substring(chLoc + 1, afterName) + ch + nam.substring(afterName);
-							} else {  // additional words between
-								newName = nam.substring(chLoc + 1, afterName) + ch + nam.substring(afterName + 1);
-							}
-							Main.songFile[i].renameTo(new File(localPath + newName));
-							cntr++;
-						}
-					}
-				} else if (nam.substring(0, 2).equals("XC")) {    // XC179353-Northern Mockingbird 140414-002.mp3
-					chLoc = nam.indexOf("-");                    // 0123456789012345678901234567890123456789012
-					isStartsWithXC = true;
-					if (chLoc > 3) {
-						ch = nam.substring(0, chLoc);  // XC179353
-						int extLoc = nam.length() - 4;
-						if (extLoc > chLoc) {  // check for .mp3 file
-							// Northern Mockingbird 140414-002-XC179353.mp3
-							newName = nam.substring(chLoc + 1, extLoc) + "-" + ch + nam.substring(extLoc);
-							Main.songFile[i].renameTo(new File(localPath + newName));
-							cntr++;
-						}
-					}
-				}
-				if ((isAlbumNumber == false) && (isStartsWithXC == false)) { // for Birding Via Mic_XX external apps or full name Download
-					int extLoc = nam.length() - 4;
-					String ext = nam.substring(extLoc);
-					if (ext.equalsIgnoreCase(".mp3") || ext.equalsIgnoreCase(".m4a") ||
-							ext.equalsIgnoreCase(".wav") || ext.equalsIgnoreCase(".ogg")) {
-						newName = nam; // it's a song file load it like it is.
-						Main.songFile[i].renameTo(new File(localPath + newName));
-						cntr++;
-					}
-
-				}
-				Log.d(TAG, "* checkForNewFiles() newName:" + newName);
-			} // finished loading files
-			// check the Define folder for filter.csv
-		}
-		Main.db.beginTransaction();
-		qry = "DELETE FROM SongList WHERE Path = " + path;
-		Main.db.execSQL(qry);
-		path = 1;
-		songpath = Main.songPathDir.toString() + "/";
-		isBatchDownload = false;
-		qry = "UPDATE SongPath SET Path = " + path;
-		Main.db.execSQL(qry);
-		qry = "UPDATE Options SET Value = 0 WHERE Name = 'BatchDownload'";
-		Main.db.execSQL(qry);
-		Main.db.setTransactionSuccessful();
-		Main.db.endTransaction();
-
-		String msg = "Files in Download:" + songsFileLen + " Files Loaded:" + cntr;
-		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-		Log.d(TAG, "* return from checkForNewFiles() path:" + path + " songpath:" + songpath);
-	}
-
-	void loadFilterData() { // called only on transfer from external data if filter.csv file now exists
-		Log.d(TAG, "loadFilterData()");
-		Scanner filtr = null;
-		File localFilter = null;
-		try {
-			localFilter = new File(definePathDir.toString() + "/filter.csv");
-			filtr = new Scanner(new BufferedReader(new FileReader(localFilter)));
-			Log.d(TAG, "loadFilterData - clear existing filter -- load new data");
-			Main.db.beginTransaction();
-			qry = "DELETE FROM Filter";  // clear out the table first it may have previous data
-			Main.db.execSQL(qry);
-			Main.db.setTransactionSuccessful();
-			Main.db.endTransaction();
-			// the filter file  has XCxxxxxx, filterType, integerValue
-			ContentValues val = new ContentValues();
-			try {
-				String line;
-				String[] tokens;
-				while ((line = filtr.nextLine()) != null) {
-					tokens = line.split(",");
-					if (tokens.length == 3) {
-						Main.db.beginTransaction();
-						val.put("XcName", tokens[0]);
-						val.put("FilterType", tokens[1]);
-						val.put("FilterVal", Integer.parseInt(tokens[2]));
-						Log.d(TAG, " filter data:" + tokens[0] + "," + tokens[1] + "," + Integer.parseInt(tokens[2]));
-						Main.db.insert("Filter", null, val);
-						Main.db.setTransactionSuccessful();
-						Main.db.endTransaction();
-						val.clear();
-					}
-				}
-			} catch (Exception e) {
-				Log.d(TAG, "internal error loading filter:" + e);
-			} finally {
-				isFilterExists = true;
-				filtr.close(); // does this close cause an exception ? -- file will be deleted on return -- no it is left there
-				Log.d(TAG, "Close and Cleanup file filter");
-			}
-		} catch (Exception e) {
-			// the file dosn't exist leave quitely.
-			Log.d(TAG, "Exit checkVersion -- filter.csv does NOT Exist:" + e);
-			isFilterExists = false;
-			return;
-		}
-		//boolean success = deleteFile(localFilter.toString()); // crash on contains file separator
-		//Log.d(TAG, " delete filter.csv ?" + success);
-
-	}
 }

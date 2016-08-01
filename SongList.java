@@ -2,6 +2,7 @@ package com.modelsw.birdingviamic;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -9,10 +10,15 @@ import java.util.Arrays;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -47,6 +53,7 @@ public class SongList extends AppCompatActivity {
 	private int songsLen;  // the max of the above plus some space
 	Toolbar toolbar;
 	private byte[] metaBuffer;
+	char q = 34;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {    	
@@ -63,7 +70,7 @@ public class SongList extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
 		onCreateOptionsMenu();
 		toolbar.showOverflowMenu();
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -72,10 +79,11 @@ public class SongList extends AppCompatActivity {
                 finish();
             }
         });
-		songPath = Main.songpath;
-		if (Main.songdata == null) {
-			Main.songdata = new SongData(this, Main.databaseName, null, Main.databaseVersion);
+		if (Main.songpath == null || Main.songdata == null) { // knocked out of memory re-init the database
+			Main.fileReshowExisting = true;
+			return;
 		}
+		songPath = Main.songpath;
 		buildList();
 		Main.db = Main.songdata.getWritableDatabase();
 		qry = "SELECT FileName from SongList WHERE FileName = '@_RampSource.wav'";
@@ -152,7 +160,7 @@ public class SongList extends AppCompatActivity {
         } 
        	Log.d(TAG, "buildList: dir:" + dir);
     	Main.songFile = dir.listFiles();
-    	if (Main.songFile == null) {    		
+    	if (Main.songFile == null) {
     		Log.d(TAG, "onCreate songFile is null -- closing" );        
         	String msg = "invalid path:" + songPath;
         	Log.d(TAG, msg);
@@ -181,7 +189,8 @@ public class SongList extends AppCompatActivity {
    			val.put("Smoothing", 0);
    			val.put("SourceMic", 0);
             val.put("SampleRate", 0);
-            val.put("AudioSource", 0);
+            val.put("AudioSource", -1);
+			val.put("Stereo", 0);
    			val.put("LowFreqCutoff", 0);
    			val.put("HighFreqCutoff", 0);
    			val.put("FilterStart", 0);
@@ -205,9 +214,10 @@ public class SongList extends AppCompatActivity {
 		songsLen += 20;  // save more than enough room for additions.		
     	Main.songs = new String[songsLen]; 
     	Log.d(TAG, "START Update database isFilterExists:" + Main.isFilterExists );
-    	for (int i=0; i<songsFileLen; i++) {    		
+		//int kcc = 0;
+    	for (int i=0; i<songsFileLen; i++) {
     		Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
-			Log.d(TAG, "buildList songs[" + i + "] " + Main.songs[i]);
+			//Log.d(TAG, "buildList songs[" + i + "] " + Main.songs[i]) ; // + " kcc:" + kcc);
     	}
     	for (int i=songsFileLen; i<songsLen; i++) {    		
     		Main.songs[i] = z;
@@ -224,23 +234,12 @@ public class SongList extends AppCompatActivity {
 			for (ifile = 0; ifile < songsFileLen; ifile++) {
 				Log.d(TAG, "Adding '" + Main.songs[ifile] + "' to the SongList ref:" + ref);
 				atSign = Main.songs[ifile].substring(0,1);  
-				sourceMic = 0; // default preRecorded
 				filtLow = 0;
 				filtHi = 0;
 				filtBeg = 0;
 				filtEnd = 0;
 				if (atSign.equals("@")) { // song starts with "@_date ...
 					int lenExist = Main.songs[ifile].length();
-					String ext = Main.songs[ifile].substring(lenExist-4); // the extension ".m4a" or ".wav"
-                    // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
-					if (ext.equals(".wav")) {
-						sourceMic = 1;
-					} else { // m4a
-						sourceMic = 2;				
-					}
-                    if (Main.isExternalMic == true) {
-                        sourceMic += 2;
-                    }
 					ref = 0;
 				} else {
 					ref = tryForSpec(Main.songs[ifile]);  // the file name				
@@ -258,7 +257,23 @@ public class SongList extends AppCompatActivity {
 					maxInx = rsCk.getInt(0)+1;  // increment the last known inx
 					rsCk.close();
 				}
-
+				// this code when added changes time to list 174 songs from 10 ms to over 3 sec -- two errors for every file
+				// so only run this when adding a file
+				sourceMic = 0; // adding a file so it has not been recorded here
+				Main.audioSource = -1;
+				try {
+					MediaExtractor extractor = new MediaExtractor();
+					extractor.setDataSource(Main.songpath + Main.songs[ifile]);
+					MediaFormat format = extractor.getTrackFormat(0);
+					int chancnt = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+					extractor.release();
+					Main.stereoFlag = 0;
+					if (chancnt == 2) {
+						Main.stereoFlag = 1; // stereo
+					}
+				} catch (IOException e) {
+					Log.e(TAG, "error:" + e + " " +  Main.songs[ifile]);
+				}
 				Main.db.beginTransaction();
 				val = new ContentValues();
 				val.put("Ref", ref);
@@ -273,9 +288,10 @@ public class SongList extends AppCompatActivity {
            	   	val.put("AutoFilter", 0);
 				val.put("Enhanced", 0);
 	   			val.put("Smoothing", 0);
-				val.put("SourceMic", sourceMic);
+				val.put("SourceMic", sourceMic); // pre-recorded
                 val.put("SampleRate", 4);  // 0=22050, 1=44100 2=24000, 3=48000, 4=unknown
-                val.put("AudioSource", Main.audioSource); // Use existing -- 0=default, 1=mic, 5=camcorder, 6 voice recognition
+                val.put("AudioSource", Main.audioSource); // really unknown 0=default, 1=mic, 5=camcorder, 6 voice recognition
+				val.put("Stereo", Main.stereoFlag); // 0 = mono, 1 = stereo
                 val.put("LowFreqCutoff", filtLow);
 				val.put("HighFreqCutoff", filtHi);
 				val.put("FilterStart", filtBeg);
@@ -313,7 +329,6 @@ public class SongList extends AppCompatActivity {
 				if (result > 0) {  // file > dbName name -- so the song needs to be added
 					//Log.d(TAG, "Adding '" + Main.songs[ifile] + "' to the SongList");
 					atSign = Main.songs[ifile].substring(0,1);  
-					sourceMic = 0; // default preRecorded
 					filtLow = 0;
 					filtHi = 0;
 					filtBeg = 0;
@@ -321,17 +336,6 @@ public class SongList extends AppCompatActivity {
 					filtStrt = 0;
 					filtStop = 0;
 					if (atSign.equals("@")) { // song starts with "@_date ...
-                        int lenExist = Main.songs[ifile].length();
-                        String ext = Main.songs[ifile].substring(lenExist-4); // the extension ".m4a" or ".wav"
-                        // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
-                        if (ext.equals(".wav")) {
-                            sourceMic = 1;
-                        } else { // m4a
-                            sourceMic = 2;
-                        }
-                        if (Main.isExternalMic == true) {
-                            sourceMic += 2;
-                        }
 						ref = 0;
 					} else {
 						ref = tryForSpec(Main.songs[ifile]);  // the file name
@@ -348,8 +352,26 @@ public class SongList extends AppCompatActivity {
 						rsCk.moveToFirst();
 						maxInx = rsCk.getInt(0)+1;  // increment the last known inx
 						rsCk.close();
-					} 
-					
+					}
+					// this code when added changes time to list 174 songs from 10 ms to over 3 sec -- two errors for every file
+					// so only run this when adding a file
+					sourceMic = 0; // adding a file so it has not been recorded
+					Main.audioSource = -1;
+					try {
+						Main.stereoFlag = 0; // mono
+						MediaExtractor extractor = new MediaExtractor();
+						extractor.setDataSource(Main.songpath + Main.songs[ifile]);
+						MediaFormat format = extractor.getTrackFormat(0);
+						int chancnt = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+						extractor.release();
+						if (chancnt == 2) {
+							Main.stereoFlag = 1; // stereo
+						}
+					} catch (IOException e) {
+						Log.e(TAG, "error:" + e + " " +  Main.songs[ifile]);
+					} catch (IllegalArgumentException e) {
+						Log.e(TAG, "error:" + e + " " +  Main.songs[ifile]);
+					}
 	   	            try {        	
 	   	            	Log.d(TAG, "db begin transaction -- adding file:" + Main.songs[ifile]);
 	   	            	Main.db.beginTransaction();
@@ -367,9 +389,10 @@ public class SongList extends AppCompatActivity {
 	   	            	   	val.put("AutoFilter", 0);
 	   	            		val.put("Enhanced", 0);
 	   	        			val.put("Smoothing", 0);
-	   	            		val.put("SourceMic", sourceMic);
-                            val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
+	   	            		val.put("SourceMic", sourceMic); // pre-recorded
+							val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
                             val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
+							val.put("Stereo", Main.stereoFlag); // 0 = mono, 1 = stereo
 	   	            		val.put("LowFreqCutoff", filtLow);
 	   	            		val.put("HighFreqCutoff", filtHi);
 	   	            		val.put("FilterStart", filtBeg);
@@ -409,9 +432,10 @@ public class SongList extends AppCompatActivity {
 								val.put("AutoFilter", 0);
 								val.put("Enhanced", 0);
 								val.put("Smoothing", 0);
-								val.put("SourceMic", sourceMic);
+								val.put("SourceMic", sourceMic); //
 								val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
 								val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
+								val.put("Stereo", Main.stereoFlag); // 0 = mono, 1 = stereo
 								val.put("LowFreqCutoff", 0);
 								val.put("HighFreqCutoff", 0);
 								val.put("FilterStart", 0);
@@ -461,7 +485,7 @@ public class SongList extends AppCompatActivity {
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 
 		qry = "SELECT FileName, CodeName.Spec, CodeName.Ref, Inx, Seg, Identified, Defined, AutoFilter, Enhanced, Smoothing," +
-                " SourceMic, SampleRate, AudioSource," +
+                " SourceMic, SampleRate, AudioSource, Stereo," +
 				" CodeName.Region, CodeName.SubRegion, CodeName.RedList," +
 				" LowFreqCutoff, HighFreqCutoff, FilterStart, FilterStop" +
 				" FROM SongList JOIN CodeName ON SongList.Ref = CodeName.Ref" + 
@@ -528,105 +552,119 @@ public class SongList extends AppCompatActivity {
 			int iaut = rs.getInt(7); // AutoFilter
 			int ienh = rs.getInt(8); // Enhanced
 			int ismo = rs.getInt(9); // Smoothing
-			int imic = rs.getInt(10); // SourceMic  0=pre-recorded (.) 1=internal.wav (m), 2=internal.m4a (m), 3=external.wav (x), 4=external.m4a (x)
-            int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown
-            int iaud = rs.getInt(12); // AudioSource 0,1,5, or 6
-			int if1 = rs.getInt(16); //  lowFreqCutoff
-			int if2 = rs.getInt(17); //  highFreqCutoff
-			int if3 = rs.getInt(18); // filterStart
-			int if4 = rs.getInt(19); // filter Stop
+			int imic = rs.getInt(10); // SourceMic  0=pre-recorded, 1=internal, 2=external
+            int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown, bit3 8=stereo/0=mono
+            int iaud = rs.getInt(12); // AudioSource 0,1,5, or 6, -1=unknown
+			int iste = rs.getInt(13); // Stereo 0=mono, 1=stereo
+			int if1 = rs.getInt(17); //  lowFreqCutoff
+			int if2 = rs.getInt(18); //  highFreqCutoff
+			int if3 = rs.getInt(19); // filterStart
+			int if4 = rs.getInt(20); // filter Stop
 			String def = " ";
-
-			// SOURCE
+			// 0=pre-recorded, 1=internal mic, 2=external mic
             switch (imic) { // first . microphone
-                case 0: {
-                    def = def + ".";  // pre-recorded
-                    iaud = 0;
+                case 0:
+					def += ".";  // pre-recorded
+					iaud = -1;
+					break;
+				case 1: {
+					def += "i"; // internal
+					break;
+				}
+				case 2: {
+					def += "x"; // external
+					break;
+				}
+			}
+			switch (iste) { // second mono/stereo
+				case 0:	{
+                    def += "m";  // mono
                     break;
                 }
-                case 1:
-                case 2: {
-                    def = def + "m"; // internal
-                    break;
-                }
-                case 3:
-                case 4: {
-                    def = def + "x"; // external
-                    break;
-                }
+				case 1: {
+					def += "s"; // stereo
+					break;
+				}
             }
-            switch(isrt) { // second . sample rate
+            switch(isrt) { // third . sample rate
                 case 0: {
-                    def = def + "0";  // 0 = 22050
+                    def += "0";  // 0 = 22050
                     break;
                 }
                 case 1: {
-                    def = def + "1"; // 1 = 44100
+                    def += "1"; // 1 = 44100
                     break;
                 }
 				case 2: {
-					def = def + "2";  // 0 = 24000
+					def += "2";  // 0 = 24000
 					break;
 				}
 				case 3: {
-					def = def + "3"; // 1 = 48000
+					def += "3"; // 1 = 48000
 					break;
 				}
 				case 4: {
-					def = def + "."; // unknown
+					def += "."; // unknown
 					break;
 				}
             }
-            switch(iaud) { // third . audio source
-                case 0: {
-                    def = def + ".";  // the default was used
-                    break;
-                }
-                case 1: {
-                    def = def + "m";  // the microphone was used
-                    break;
-                }
-                case 5: {
-                    def = def + "c";  // the camcorder was used
-                    break;
-                }
-                case 6: {
-                    def = def + "v";  // the voice recognition was used
-                    break;
-                }
+			if (imic == 0) {  // pre-recorded
+				def += ".";
+			} else {
+				switch (iaud) { // fourth . audio source
+					case 0: {
+						def += "d";  // the default was used
+						break;
+					}
+					case 1: {
+						def += "m";  // the microphone was used
+						break;
+					}
+					case 5: {
+						def += "c";  // the camcorder was used
+						break;
+					}
+					case 6: {
+						def += "v";  // the voice recognition was used
+						break;
+					}
+				}
 			}
-
 			// PROCESS
 			if (if1 > 0 || if2 > 0 || if3 > 0 || if4 > 0) { /// fourth . Filter  -- low freq, high freq, begin end noise
-				def = def + "f"; // manual filter exists
+				def += "f"; // manual filter exists
 			} else if (iaut == 1) {
-				def = def + "a";
+				def += "a";
 			} else {
-				def = def + ".";  // not used
+				def += ".";  // not used
 			}
 			if (ienh == 0) { // fifth . enhanced
-				def = def + ".";  // not processed
+				def += ".";  // not processed
 			} else {
-				def = def + "e";  // use digital filter
+				def += "e";  // use digital filter
 			}
 			if (ismo == 0) { // sixth . smoothing
-				def = def + ".";  // not processed
+				def += ".";  // not processed
 			} else {
-				def = def + "s";  // use smoothing
+				def += "s";  // use smoothing
 			}
 
 			// RESULT
 			if (iden == 0) {  // seventh identified set Identified to 0 to remove "i" from SongList
-				def = def + "."; // not identified
+				def += "."; // not identified
 			} else if (iden == 1) {
-				def = def + "i"; // identified
-			} else if (iden > 1) {
-				def = def + "?";  // rejected identification  the identifiedRef didn't match the definedRef
+				def += "i"; // identified
+			} else if (iden == 2) {
+				def += "E"; // decoder Error
+			} else if (iden > 2) {
+				def += "?";  // rejected identification  the identifiedRef didn't match the definedRef
 			}
-			if (idef == 0) { // eighth . the bird has a species and has been analyzed and saved  -- set Defined to 0 to remove "d" from the SongList
-				def = def + ".";  // not defined
-			} else {
-				def = def + "d";  // defined
+			if (idef == 0) { // eighth defined analyzed and saved  -- set Defined to 0 to remove "d" from the SongList
+				def += ".";  // not defined
+			} else if (idef == 1) {
+				def += "d"; // defined
+			} else if (idef == 2) {
+				def += "E"; // decoder Error
 			}
 			if (Main.fileRenamed == true) {
 				if (foundRenamed == false) {
@@ -655,8 +693,8 @@ public class SongList extends AppCompatActivity {
 					}
 				}
 			}
-			String specInxSeg = rs.getString(1) + "_" + rs.getInt(3) + "." + rs.getInt(4) + " " + rs.getString(15);  // Species name_1.0 RedList
-			Main.songsCombined[i] = rs.getString(0) + def + "\n\t" + specInxSeg + "\n\t" + rs.getString(13) + " : " + rs.getString(14); // fileName newline specIncSeg
+			String specInxSeg = rs.getString(1) + "_" + rs.getInt(3) + "." + rs.getInt(4) + " " + rs.getString(16);  // Species name_1.0 RedList
+			Main.songsCombined[i] = rs.getString(0) + def + "\n\t" + specInxSeg + "\n\t" + rs.getString(14) + " : " + rs.getString(15); // fileName newline specIncSeg
 			Main.ck[i] = false;
 			rs.moveToNext();
 		}
@@ -667,7 +705,6 @@ public class SongList extends AppCompatActivity {
     } // buildList
     
     int tryForSpec(String filname) {
-    	char q = 34;
     	int ref = 0;  // unknown
 //    	Log.d(TAG, "try for spec filname:" + filname);    	
     	int fillen; // the length of the common name from the database
@@ -705,18 +742,8 @@ public class SongList extends AppCompatActivity {
 	// Main.isFilterExist == true to get to here. -- filter is in the database
 	public void checkForFilter(String filName) { // filter loaded at the time the file is loaded.
 		Log.d(TAG, "checkForFilter filName:" + filName);
-		int locStart = filName.indexOf("XC");
-		if (locStart == -1) {
-			return;
-		}
-		int locEnd = filName.indexOf(".",locStart);
-		int locEndDash  = filName.indexOf("-",locStart); // in case it was loaded externally
-		if (locEndDash > 2) {
-			locEnd = Math.min(locEnd,locEndDash);
-		}
-		String xcNam = filName.substring(locStart, locEnd);
-		Log.d(TAG, "checkForFilter xcNam:" + xcNam);
-		qry = "SELECT XcName, FilterType, FilterVal FROM Filter WHERE XcName = '" + xcNam + "'";
+		// I used to use just XC123456 in XcName -- now I have the whole file name in the field XcName
+		qry = "SELECT XcName, FilterType, FilterVal FROM Filter WHERE XcName = " + q + filName + q;
 		Cursor rsF = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		int cntr = rsF.getCount();
 		if (cntr == 0) {
@@ -744,7 +771,7 @@ public class SongList extends AppCompatActivity {
 		}
 		rsF.close();
 		Main.db.beginTransaction();
-		qry = "DELETE FROM Filter WHERE XcName = '" + xcNam + "'";
+		qry = "DELETE FROM Filter WHERE XcName = " + q + filName + q;
 		Main.db.execSQL(qry);
 		Main.db.setTransactionSuccessful();
 		Main.db.endTransaction();
@@ -953,15 +980,16 @@ public class SongList extends AppCompatActivity {
         Cursor rsDel = null;
         for (int i = 0; i < Main.songsDbLen; i++) {
             if (Main.ck[i] == true) {
-                Main.existingName = Main.songs[i];
+				Main.listOffset = i;
+				Main.existingName = Main.songs[i];
                 Main.existingRef = Main.ref[i];
                 Main.existingInx = Main.inx[i];
                 Main.existingSeg = Main.seg[i];
                 qry = "SELECT count(*) FROM SongList" +
                         " WHERE FileName = " + q + Main.existingName + q +
+						" AND Ref = " + Main.existingRef +
                         " AND Inx = " + Main.existingInx +
-                        " AND Seg = " + Main.existingSeg +
-                        " AND Path = " + Main.path;
+                        " AND Seg = " + Main.existingSeg;
                 Log.d(TAG, "count qry:" + qry);
                 rsDel = Main.songdata.getReadableDatabase().rawQuery(qry, null);
                 rsDel.moveToFirst();
@@ -971,8 +999,16 @@ public class SongList extends AppCompatActivity {
                 try {
                     Log.d(TAG, "db begin transaction");
                     Main.db.beginTransaction();
-                    try {
-                        if (id == 0 || id == 1) { // 0= file and definition 1 = definition only
+                    try {   // 0= file and definition 1 = definition only
+						if (id == 0) {
+							qry = "DELETE FROM SongList" +
+									" WHERE FileName = " + q + Main.existingName + q +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg +
+									" AND Path = " + Main.path;
+							Main.db.execSQL(qry);
+						}
+						if (id == 0 || id == 1) {
                             Log.d(TAG, "delete definition with ref:" + Main.existingRef + " inx:" + Main.existingInx + " seg:" + Main.existingSeg);
                             qry = "DELETE FROM DefineTotals" +
                                     " WHERE Ref = " + Main.existingRef +
@@ -984,26 +1020,22 @@ public class SongList extends AppCompatActivity {
                                     " AND Inx = " + Main.existingInx +
                                     " AND Seg = " + Main.existingSeg;
                             Main.db.execSQL(qry);
-                            if (Main.existingSeg > 0) { // remove the segment
-                                qry = "DELETE FROM SongList" +
-                                        " WHERE FileName = " + q + Main.existingName + q +
-                                        " AND Inx = " + Main.existingInx +
-                                        " AND Seg = " + Main.existingSeg +
-                                        " AND Path = " + Main.path;
-                                Main.db.execSQL(qry);
-                            }
-                            if (id == 1) {
-                                qry = "UPDATE SongList " +
-                                        " SET Defined = 0" +
-                                        " WHERE FileName = " + q + Main.existingName + q +
-                                        " AND Path = " + Main.path +
-                                        " AND Ref = " + Main.existingRef +
-                                        " AND Inx = " + Main.existingInx +
-                                        " AND Seg = " + Main.existingSeg;
-                                Log.d(TAG, "qry:" + qry);
-                                Main.db.execSQL(qry);
-                            }
-                        } // definition
+						}
+                        if (id == 1) {
+							qry = "UPDATE SongList " +
+									" SET Defined = 0" +
+									", Identified = 0" +
+									", AutoFilter = 0" +
+									", Enhanced = 0" +
+									", Smoothing = 0" +
+									" WHERE FileName = " + q + Main.existingName + q +
+									" AND Path = " + Main.path +
+									" AND Ref = " + Main.existingRef +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg;
+							Log.d(TAG, "qry:" + qry);
+							Main.db.execSQL(qry);
+                        }
                     } finally {
                         Main.db.setTransactionSuccessful();
                         Main.db.endTransaction();
@@ -1011,24 +1043,33 @@ public class SongList extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Database Exception: " + e.toString());
-                }
+				}
 
                 boolean deleted = false;
                 if (id == 0) { // 0 = file and definition
-                    if (cntr == 1 && Main.existingSeg == 0) { // I counted it before i deleted it
-                        Log.d(TAG, "deleteFile name:" + Main.songpath + Main.existingName);
-                        File file = new File(Main.songpath + Main.existingName);
-                        deleted = file.delete();
+					Log.d(TAG, "is it a real file? existingSeg:" + Main.existingSeg);
+                    if (Main.existingSeg == 0) {
+						try {
+							Log.d(TAG, "deleteFile name:" + Main.songpath + Main.existingName);
+							File file = new File(Main.songpath + Main.existingName);
+							if (file.exists()) { // it will not exist if it was only in the list.
+								deleted = file.delete();
+								Log.d(TAG, "deleteFile was file deleted?" + deleted);
+							}
+						} catch (Exception e) {
+							Log.d(TAG, "exception e:" + e);
+						}
                     }
-                    Log.d(TAG, "deleteFile was file deleted?" + deleted);
                 }
             }
         } // next i
         Main.fileReshowExisting = true;
-        rsDel.close();
+		Main.isNewStartStop = false; // finish was taking me to play
+        //rsDel.close(); already closed
         //db.close();
-        finish();
-    } // deleteOk
+		Log.d(TAG, "finish() back to main resume fileReshowExisting:" + Main.fileReshowExisting);
+		finish(); // should resume and back here to songlist -- error "rsrc of package null"
+	} // deleteOk
 
 	void showMetaData() throws IOException {
 		if (Main.existingName == null) {
@@ -1039,24 +1080,13 @@ public class SongList extends AppCompatActivity {
 		String filePath = Main.songpath + Main.existingName;
 		MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 		mmr.setDataSource(filePath);
-		if (filePath.indexOf(".mp3") > 0 || filePath.indexOf(".ogg") > 0 || filePath.indexOf(".wav") > 0 ) {
-			Main.metaData = "ALBUM:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) + "\n";
-			Main.metaData += "ARTIST:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) + "\n";
-			Main.metaData += "BITRATE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE) + "\n";
-			Main.metaData += "DURATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) + "\n";
-			Main.metaData += "GENRE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) + "\n";
-			Main.metaData += "MIMETYPE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE) + "\n";
-			Main.metaData += "NUM_TRACKS:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS) + "\n";
-			Main.metaData += "KEY_TITLE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) + "\n";
-			//Log.d(TAG, "mp3 metadata:" + Main.metaData);
-		}
 
-		if (filePath.indexOf(".m4a") > 0) {
-			// [4 bytes atom length] [4 bytes atom name] [4 bytes len] [4 bytes "data"] [4 len of data] [data] [contents of the atom, if any]
-			// 3B,"©nam",33,"data",1,0,"American ...." (length 33-12)
-			metaBuffer = new byte[512];
+		if (filePath.indexOf(".mp3") > 0 || filePath.indexOf(".ogg") > 0 || filePath.indexOf(".wav") > 0) {
+			// [4 bytes atom name][4 bytes len to next atom name][data]								[4 bytes atom name]
+			// 		TIT2			 	0x24 				 	Cedar Waxwing (Bombycilla cedrorum)	TCON
+			metaBuffer = new byte[1024];
 			File selected = new File(Main.songpath + Main.existingName);
-			Long startAt = selected.length()-512;
+			Long startAt = 0L;
 			readFile(selected, startAt);
 			char[] hexArray = "0123456789ABCDEF".toCharArray();
 			char[] hexChars = new char[metaBuffer.length * 2];
@@ -1066,10 +1096,96 @@ public class SongList extends AppCompatActivity {
 				hexChars[j * 2] = hexArray[v >>> 4];
 				hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 				metaHex.append(hexChars[j*2]);
-				metaHex.append(hexChars[j*2+1]);
-//					Log.d(TAG, "m4a hexChars at:" + j + " " + hexChars[j*2] + hexChars[j*2+1]);
+				metaHex.append(hexChars[j * 2 + 1]);
+				//Log.d(TAG, "mp3 hexChars at:" + j + " " + hexChars[j*2] + hexChars[j*2+1]);
 			}
-//			Log.d(TAG, "read hexChars:" + metaHex);
+			Log.d(TAG, "read hexChars:" + metaHex);
+			StringBuilder meta = new StringBuilder();
+			for (int i = 0; i < metaHex.length(); i+=2) {
+				String str = metaHex.substring(i, i+2);
+				meta.append((char)Integer.parseInt(str, 16));
+			}
+			int i = meta.indexOf("TALB"); // Album
+			if (i > 0) {
+				int len = Integer.parseInt(metaHex.substring(i*2+8, i*2+16),16);
+				Main.metaData += "ALBUM:" + meta.substring(i + 11, i + len + 10) + "\n";
+			} else {
+				Main.metaData += "ALBUM:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST) + "\n"; // 13
+			}
+			i = meta.indexOf("TIT2"); // Key_Title
+			if (i > 0) {
+				int len = Integer.parseInt(metaHex.substring(i * 2 + 8, i * 2 + 16), 16); // the 16 on the end is radix so it knows it is hex
+				//Log.d(TAG, "mp3 TIT2 at:" + i + " len:" + len);
+				Main.metaData += "TITLE:" + meta.substring(i + 11, i + len + 10) + "\n";
+				//Log.d(TAG, "mp3 Main.metaData:" + Main.metaData);
+			} else {
+				Main.metaData += "TITLE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) + "\n";
+			}
+			i = meta.indexOf("TCON"); // Family
+			Log.d(TAG, "mp3 TCON at:" + i);
+			if (i > 0) {
+				int len = Integer.parseInt(metaHex.substring(i*2+8, i*2+16),16);
+				//Log.d(TAG, "mp3 TCON at:" + i + " len:" + len);
+				Main.metaData += "FAMILY:" + meta.substring(i + 11, i + len + 10) + "\n";
+				//Log.d(TAG, "mp3 Main.metaData:" + Main.metaData);
+			}
+			i = meta.indexOf("TPE1"); // Artist
+			if (i > 0) {
+				int len = Integer.parseInt(metaHex.substring(i*2+8, i*2+16),16);
+				Main.metaData += "ARTIST:" + meta.substring(i + 11, i + len + 10) + "\n";
+			}
+			i = meta.indexOf("COMM"); // Comment
+			Log.d(TAG, "mp3 COMM at:" + i);
+			if (i > 0) {
+				int len = meta.indexOf("TCOP"); // next one the comment length is way long
+				Log.d(TAG, "mp3 TCOP at:" + len);
+				Main.metaData += "COMMENT:" + meta.substring(i + 11, len) + "\n";
+			}
+			Main.metaData += "DURATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) + "\n"; // 9
+			Main.metaData += "MIMETYPE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE) + "\n"; //12
+
+			//Main.metaData += "xKEY_TITLE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) + "\n";
+			//Main.metaData += "NUM_TRACKS:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS) + "\n"; // 10
+			//Main.metaData += "xARTIST:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST) + "\n"; // 13
+			//Main.metaData += "xAUTHOR:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR) + "\n";  // 3
+			//Main.metaData += "xFRAMERATE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE) + "\n"; // 25
+			//Main.metaData += "TRACK_NUMBER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER) + "\n"; // 0
+			//Main.metaData += "xCOMPILATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPILATION) + "\n"; // 15
+			//Main.metaData += "xCOMPOSER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPOSER) + "\n"; // 4
+			//Main.metaData += "xDATE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE) + "\n"; // 5
+			//Main.metaData += "DISK_NUMBER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER) + "\n"; // 14
+			//Main.metaData += "HAS_AUDIO:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO) + "\n"; // 16
+			//Main.metaData += "HAS_VIDEO:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO) + "\n"; // 17
+			//Main.metaData += "xLOCATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION) + "\n"; // 23
+			//Main.metaData += "VIDEO_HEIGHT:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT) + "\n"; // 19
+			//Main.metaData += "VIDEO_ROTATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION) + "\n"; // 24
+			//Main.metaData += "VIDEO_WIDTH:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH) + "\n"; // 18
+			//Main.metaData += "xWRITER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_WRITER) + "\n"; // 11
+			//Main.metaData += "xYEAR:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR) + "\n"; // 8
+			Log.d(TAG, "mp3 metadata:" + Main.metaData);
+
+		}
+			// [4 bytes atom name][4 bytes len to next atom name][data]								[4 bytes atom name]
+			// 		TIT2			 	0x24 				 	Cedar Waxwing (Bombycilla cedrorum)	TCON
+		if (filePath.indexOf(".m4a") > 0) {
+			// [4 bytes atom length] [4 bytes atom name] [4 bytes len] [4 bytes "data"] [4 len of data] [data] [contents of the atom, if any]
+			// 3B,"©nam",33,"data",1,0,"American ...." (length 33-12)
+			metaBuffer = new byte[1024];
+			File selected = new File(Main.songpath + Main.existingName);
+			Long startAt = selected.length()-1024;
+			readFile(selected, startAt);
+			char[] hexArray = "0123456789ABCDEF".toCharArray();
+			char[] hexChars = new char[metaBuffer.length * 2];
+			StringBuilder metaHex = new StringBuilder();
+			for ( int j = 0; j < metaBuffer.length; j++ ) {
+				int v = metaBuffer[j] & 0xFF;
+				hexChars[j * 2] = hexArray[v >>> 4];
+				hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+				metaHex.append(hexChars[j*2]);
+				metaHex.append(hexChars[j * 2 + 1]);
+					//Log.d(TAG, "m4a hexChars at:" + j + " " + hexChars[j*2] + hexChars[j*2+1]);
+			}
+			//Log.d(TAG, "read hexChars:" + metaHex);
 			StringBuilder meta = new StringBuilder();
 			for (int i = 0; i < metaHex.length(); i+=2) {
 				String str = metaHex.substring(i, i+2);
@@ -1084,48 +1200,69 @@ public class SongList extends AppCompatActivity {
 				int len = Integer.parseInt(metaHex.substring(i * 2 + 10, i * 2 + 16),16);
 				Log.d(TAG, "m4a ©alb at:" + i + " len:" + len);
 				Main.metaData += "ALBUM:" + meta.substring(i + 12, i + len + 4) + "\n";
-			}
-			String nam = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-			if (nam != "") {
-				Main.metaData += "KEY_TITLE:" + nam + "\n";
 			} else {
-				i = meta.indexOf("©nam");
-				if (i > 0) {
-					int len = Integer.parseInt(metaHex.substring(i * 2 + 10, i * 2 + 16),16);
-					Log.d(TAG, "m4a ©nam at:" + i + " len:" + len);
-					nam = meta.substring(i + 12, i + len + 4);
-					Main.metaData += "NAME:" + nam + "\n";
-				}
+				Main.metaData += "ALBUM:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST) + "\n"; // 13
 			}
-			Main.metaData += "DURATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) + "\n";
-			Main.metaData += "MIMETYPE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE) + "\n";
-			Main.metaData += "NUM_TRACKS:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS) + "\n";
-			i = meta.indexOf("©cmt");
+			i = meta.indexOf("©nam");
 			if (i > 0) {
 				int len = Integer.parseInt(metaHex.substring(i * 2 + 10, i * 2 + 16),16);
-				Log.d(TAG, "m4a ©alb at:" + i + " len:" + len);
-				Main.metaData += "COMMENT:" + meta.substring(i + 12, i + len + 4) + "\n";
+				Log.d(TAG, "m4a ©nam at:" + i + " len:" + len);
+				Main.metaData += "TITLE:" + meta.substring(i + 12, i + len + 4) + "\n";
+			} else {
+				String nam = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+				if (nam != "") {
+					Main.metaData += "TITLE:" + nam + "\n";
+				}
 			}
 			i = meta.indexOf("©gen");
 			if (i > 0) {
 				int len = Integer.parseInt(metaHex.substring(i * 2 + 10, i * 2 + 16), 16);
 				Log.d(TAG, "m4a ©gen at:" + i + " len:" + len);
-				Main.metaData += "GENUS:" + meta.substring(i + 12, i + len + 4) + "\n";
+				Main.metaData += "FAMILY:" + meta.substring(i + 12, i + len + 4) + "\n";
 			}
-			//Log.d(TAG, "m4a metadata:" + Main.metaData);
+			i = meta.indexOf("©cmt");
+			if (i > 0) {
+				int len = Integer.parseInt(metaHex.substring(i * 2 + 10, i * 2 + 16),16);
+				Log.d(TAG, "m4a ©cmt at:" + i + " len:" + len);
+				Main.metaData += "COMMENT:" + meta.substring(i + 12, i + len + 4) + "\n";
+			}
+			Main.metaData += "DURATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) + "\n";
+			Main.metaData += "MIMETYPE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE) + "\n";
+
+			//Main.metaData += "xKEY_TITLE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) + "\n";
+			//Main.metaData += "NUM_TRACKS:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS) + "\n"; // 10
+			//Main.metaData += "xALBUM:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST) + "\n"; // 13
+			//Main.metaData += "xAUTHOR:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR) + "\n";  // 3
+			//Main.metaData += "xFRAMERATE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE) + "\n"; // 25
+			//Main.metaData += "TRACK_NUMBER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER) + "\n"; // 0
+			//Main.metaData += "xCOMPILATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPILATION) + "\n"; // 15
+			//Main.metaData += "xCOMPOSER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPOSER) + "\n"; // 4
+			//Main.metaData += "xDATE:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE) + "\n"; // 5
+			//Main.metaData += "DISK_NUMBER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER) + "\n"; // 14
+			//Main.metaData += "HAS_AUDIO:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO) + "\n"; // 16
+			//Main.metaData += "HAS_VIDEO:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO) + "\n"; // 17
+			//Main.metaData += "xLOCATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION) + "\n"; // 23
+			//Main.metaData += "VIDEO_HEIGHT:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT) + "\n"; // 19
+			//Main.metaData += "VIDEO_ROTATION:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION) + "\n"; // 24
+			//Main.metaData += "VIDEO_WIDTH:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH) + "\n"; // 18
+			//Main.metaData += "xWRITER:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_WRITER) + "\n"; // 11
+			//Main.metaData += "xYEAR:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR) + "\n"; // 8
+			//Main.metaData += "NUM_TRACKS:" + mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS) + "\n";
+			Log.d(TAG, "m4a metadata:" + Main.metaData);
 
 		}
+
 		if (Main.metaData == "") {
 			Main.metaData = "Meta Data NOT available";
 		}
-
+		Main.metaData += " \n \n \n";
 		Main.alertRequest = 5; // meta data info box
 		Intent mdib = new Intent(this, Alert1ButtonDialog.class);
 		startActivityForResult(mdib, Main.alertRequest);  // request == 5 == show meta data info box
 	}
 
 	public void readFile(File file, Long startAt) throws IOException {
-		metaBuffer = new byte[512];
+		metaBuffer = new byte[1024];
 		InputStream ios = null;
 		try {
 			ios = new FileInputStream(file);
@@ -1164,8 +1301,10 @@ public class SongList extends AppCompatActivity {
 
 	@Override
     public void onDestroy() {
-        list.setAdapter(null);
         super.onDestroy();
+		if (list != null) {
+			list = null;
+		}
     }
 
 } // SongList

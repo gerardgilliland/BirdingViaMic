@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -45,7 +46,7 @@ public class MyList extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         onCreateOptionsMenu();
         toolbar.showOverflowMenu();
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -98,10 +99,10 @@ public class MyList extends AppCompatActivity {
     void showIdList() {
         String stats = "Identified:\n";
         Main.db = Main.songdata.getWritableDatabase();
+        // includes any Identified regardless of source
         qry = "SELECT CommonName, Count(SongList.Ref)" +
                 " FROM SongList JOIN CodeName ON SongList.Ref = CodeName.Ref" +
-                " WHERE SourceMic > 0" +
-                " AND Identified = 1" +
+                " WHERE Identified = 1" +
                 " AND SongList.Ref > 0" +
                 " GROUP BY CommonName " +
                 " ORDER BY CommonName";

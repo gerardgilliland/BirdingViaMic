@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -22,9 +23,11 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -36,6 +39,9 @@ import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+
+import com.google.android.gms.cast.Cast;
 
 public class AudioRecorder extends AppCompatActivity implements OnClickListener {
 	// this reads the mic and saves the data and reads the data and plays it.
@@ -43,16 +49,22 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 	// however, it is bigendian and Media Recorder can't read it
 	private static final String TAG = "AudioRecord";
 	AudioRecord audioRecord;
+	private MediaPlayer mPlayer = null;
 	int audsrc = 0;
+	int chanCnt = 0;
+	Context ctx = this;
+	private boolean fileSaved = false;
 	private Button mRecordButton;
 	private Button mListenButton = null;
 	private Button mPlayButton = null;
 	private Boolean isRecording = false;
+	private String msg = "";
 	private static String mFileName = null;
 	private static String temp = null;
 	private CharSequence cs = null;
 	private TextView fileDate;
 	private int totalAudioLen = 0;
+	private int numChannels = 1;
 	boolean mStartRecording;
 	boolean mStartListening;
 	boolean mStartPlaying;
@@ -79,7 +91,7 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		setSupportActionBar(toolbar);
 		toolbar.setNavigationIcon(R.drawable.ic_action_back);
 		toolbar.setLogo(R.drawable.treble_clef_linen);
-		toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+		toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
 		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Log.d(TAG, "Navigation Icon tapped");
@@ -88,12 +100,36 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		});
 
 		TextView mediaType = (TextView) findViewById(R.id.media_type);
-		if (Main.isSampleRate == false) {
-			mediaType.setText("0.wav");
+		AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+		Main.isExternalMic = am1.isWiredHeadsetOn();
+		String mType = "";
+		if (Main.isExternalMic == true) {
+			mType = " External";
+		} else {
+			mType = " Internal";
+		}
+		if (Main.isStereo == true) {
+			mType += " Stereo";
+			Main.stereoFlag = 1;
+			numChannels = 2; // used in wave header
+			chanCnt = AudioFormat.CHANNEL_IN_STEREO; // 12 (hex c) don't ask me why
+		} else {
+			mType += " Mono";
+			Main.stereoFlag = 0;
+			numChannels = 1; // used in wave header
+			chanCnt = AudioFormat.CHANNEL_IN_MONO; // 16 (hex 10) don't ask me why
 		}
 		if (Main.isSampleRate == true) {
-			mediaType.setText("1.wav");
+			mType += " 44100";
+			Main.sampleRate = 44100;
+			Main.sampleRateOption = 1;
+		} else {
+			mType += " 22050";
+			Main.sampleRate = 22050;
+			Main.sampleRateOption = 0;
 		}
+		mType += ".wav";
+		mediaType.setText(mType);
 		RadioButton mic0 = (RadioButton) findViewById(R.id.mic_0);
 		RadioButton mic1 = (RadioButton) findViewById(R.id.mic_1);
 		RadioButton mic5 = (RadioButton) findViewById(R.id.mic_5);
@@ -103,6 +139,14 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		findViewById(R.id.mic_1).setOnClickListener(this);
 		findViewById(R.id.mic_5).setOnClickListener(this);
 		findViewById(R.id.mic_6).setOnClickListener(this);
+
+		qry = "SELECT Value from Options WHERE Name='audsrc'";
+		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+		if (rs.getCount() == 1) {
+			rs.moveToFirst();
+			audsrc = rs.getInt(0);
+		}
+		rs.close();
 
 		switch (audsrc) {
 			case 0: {
@@ -138,12 +182,6 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		Main.showPlayFromRecord = false;
 		thisRef = 0;
 		thisInx = 0;
-		Main.sampleRate = 22050;
-		Main.sampleRateOption = 0;
-		if (Main.isSampleRate == true) {
-			Main.sampleRate = 44100;
-			Main.sampleRateOption = 1;
-		}
 		if (Main.isStartRecording == true) {
 			mRecordButton.performClick();
 		}
@@ -152,6 +190,12 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 	@Override
 	public void onPause() {
 		super.onPause();
+		if (mPlayer != null) {
+			//mPlayer.reset();
+			mPlayer.release();
+			mPlayer = null;
+			mFileName = null;
+		}
 		Main.db.beginTransaction();
 		String qry = "UPDATE Options SET Value =" + audsrc  + " WHERE Name='audsrc'";
 		Main.db.execSQL(qry);
@@ -159,8 +203,8 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		Main.db.execSQL(qry);
 		Main.db.setTransactionSuccessful();
 		Main.db.endTransaction();
-
 	}
+
 	/* removed because I moved the record button outside of the scroll.
 	// this allows the record button to act on release of touch and doesn't interpret the touch as scroll
 	public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -178,6 +222,7 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 				onRecord(mStartRecording);
 				if (mStartRecording) {
 					mRecordButton.setText("Stop recording");
+					fileSaved = false;
 				} else {
 					mRecordButton.setText("Record");
 				}
@@ -185,6 +230,9 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 				break;
 			}
 			case R.id.listen_button: {
+				if (fileSaved == false) {
+					break;
+				}
 				Log.d(TAG, "onClick Listen mStartListening:" + mStartListening );
 				onListen(mStartListening);
 				if (mStartListening) {
@@ -253,135 +301,145 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 
 	public void stopRecording() {
 		isRecording = false;
-		cs = "Recorded at: " + Main.recordedName.substring(2, 20);  // the time of the recording
+		cs = "Saving file ...";  // the time of the recording
 		fileDate.setText(cs);
+		fileSaved = false;
+		Log.d(TAG, "stopRecording fileSaved:" + fileSaved);
 		copyFile();
 	}
 
-	public void stopListening() {
-		if (audioTrack == null) {
-			Log.d(TAG, "audioTrack is null");
+	private void stopListening() {
+		if (mPlayer == null) {
+			Log.d(TAG, "stopListening() mPlayer is null" );
 			return;
 		}
-		audioTrack.stop();
+		Log.d(TAG, "stopListening" );
+		//mPlayer.reset();
+		mPlayer.stop();
+		mPlayer.release();
+		mPlayer = null;
 	}
 
 	private void startRecord() {
 		Log.d(TAG, "startRecord");
 		temp = tempFile();  // path/date.pcm
 		File file = new File(temp);
-
 		try {
-			file.createNewFile();
-			Log.d(TAG, "startRecord setupFile and audioData");
-			OutputStream outputStream = new FileOutputStream(file);
-			BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-			DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
+			try {
+				file.createNewFile();
+				Log.d(TAG, "startRecord setupFile and audioData");
+				OutputStream outputStream = new FileOutputStream(file);
+				BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+				DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
+				int minBufferSize = AudioRecord.getMinBufferSize(Main.sampleRate,
+						chanCnt,
+						AudioFormat.ENCODING_PCM_16BIT);
+				AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+				Main.isExternalMic = am1.isWiredHeadsetOn();
 
-			int minBufferSize = AudioRecord.getMinBufferSize(Main.sampleRate,
-					AudioFormat.CHANNEL_IN_MONO,
-					AudioFormat.ENCODING_PCM_16BIT);
-			AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-			Main.isExternalMic = am1.isWiredHeadsetOn();
+				// WITH external mic plugged in:
+				// 0 d DEFAULT Samsung blocks - internal works on motorola - external mic doesn't block but no increase in volume
+				// 1 m MIC Samsung blocks - internal works on motorola - external mic works
+				// 2 VOICE_UPLINK ALL Blocked - crash on motorola
+				// 3 VOICE_DOWNLINK ALL Blocked - crash on motorola
+				// 4 VOICE_CALL ALL Blocked - crash on motorola
+				// 5 c CAMCORDER Works - does it have auto gain control - internal works on motorola - external doesn't block doesn't gain
+				// 6 v VOICE_RECOGNITION Works -- does it have auto gain control - internal works on motorola - external works
+				// 7 VOICE_COMMUNICATION Blocks - internal works on motorola - external not work
+				// 8 REMOTE_SUBMIX - crash on motorola
 
-			// WITH external mic plugged in:
-			// 0 d DEFAULT Samsung blocks - internal works on motorola - external mic doesn't block but no increase in volume
-			// 1 m MIC Samsung blocks - internal works on motorola - external mic works
-			// 2 VOICE_UPLINK ALL Blocked - crash on motorola
-			// 3 VOICE_DOWNLINK ALL Blocked - crash on motorola
-			// 4 VOICE_CALL ALL Blocked - crash on motorola
-			// 5 c CAMCORDER Works - does it have auto gain control - internal works on motorola - external doesn't block doesn't gain
-			// 6 v VOICE_RECOGNITION Works -- does it have auto gain control - internal works on motorola - external works
-			// 7 VOICE_COMMUNICATION Blocks - internal works on motorola - external not work
-			// 8 REMOTE_SUBMIX - crash on motorola
-
-			// audsrc = MediaRecorder.AudioSource.MIC
-			short[] audioData = new short[minBufferSize];
-			audioRecord = new AudioRecord(audsrc,
-					Main.sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBufferSize);
-			Log.d(TAG, "AudioRecorder audsrc:" + audsrc + " sampleRate:" + Main.sampleRate + " isExternalMic:" + Main.isExternalMic);
-			audioRecord.startRecording();
-
-			int sid = audioRecord.getAudioSessionId();
-			boolean agcStatus = AutomaticGainControl.isAvailable();
-			boolean agcEnabled = false;
-			if (agcStatus) {
-				final AutomaticGainControl agc = AutomaticGainControl.create(sid);
-				agcEnabled = agc.getEnabled();
-			}
-			Log.d(TAG, "audioRecord agcStatus:" + agcStatus + " sessionID:" + sid + " agcEnabled:" + agcEnabled );
-
-			while(isRecording == true){
-				int numberOfShort = audioRecord.read(audioData, 0, minBufferSize);
-				// Log.d(TAG, "WHILE recording numberOfShort" + numberOfShort);
-				for(int i = 0; i < numberOfShort; i++){
-					dataOutputStream.writeShort(audioData[i]);
+				// audsrc = MediaRecorder.AudioSource.MIC
+				short[] audioData = new short[minBufferSize];
+				audioRecord = new AudioRecord(audsrc,
+						Main.sampleRate, chanCnt, AudioFormat.ENCODING_PCM_16BIT, minBufferSize);
+				Log.d(TAG, "AudioRecorder audsrc:" + audsrc + " sampleRate:" + Main.sampleRate + " isExternalMic:" + Main.isExternalMic + " chanCnt:" + chanCnt );
+				audioRecord.startRecording();
+				int sid = audioRecord.getAudioSessionId();
+				boolean agcStatus = AutomaticGainControl.isAvailable();
+				boolean agcEnabled = false;
+				if (agcStatus) {
+					final AutomaticGainControl agc = AutomaticGainControl.create(sid);
+					agcEnabled = agc.getEnabled();
 				}
-			}
-			Log.d(TAG, "Stop recording");
-			audioRecord.stop();
-			dataOutputStream.close();
+				Log.d(TAG, "audioRecord agcStatus:" + agcStatus + " sessionID:" + sid + " agcEnabled:" + agcEnabled );
 
-		} catch (IOException e) {
-			String msg = "Failed to setAudioSource:" + audsrc + ". Try another Mic Option.";
-			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+				while(isRecording == true){
+					int numberOfShort = audioRecord.read(audioData, 0, minBufferSize);
+					// Log.d(TAG, "WHILE recording numberOfShort" + numberOfShort);
+					for(int i = 0; i < numberOfShort; i++){
+						dataOutputStream.writeShort(audioData[i]);
+					}
+				}
+				Log.d(TAG, "Stop recording");
+				audioRecord.stop();
+				audioRecord.release();
+				audioRecord = null;
+				dataOutputStream.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+				msg = "IO Exception:" + e;
+				showToast(msg);
+				return;
+			}
+		} catch (RuntimeException e) {
 			e.printStackTrace();
+			String msg = "Failed to setAudioSource:" + audsrc + ". Try another Mic Option.";
+			showToast(msg);
 		}
 	} // start record
 
-	void startListening(){
-		Log.d(TAG, "playRecord");
-		if (mFileName == null) {
-			String msg = "Nothing recorded to listen to.";
-			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-			Log.d(TAG, "mFileName is null");
-			return;
-		}
-		File file = new File(temp); // path/date.pcm
-		int shortSizeInBytes = Short.SIZE/Byte.SIZE;
-
-		int bufferSizeInBytes = (int)(file.length()/shortSizeInBytes);
-		short[] audioData = new short[bufferSizeInBytes];
-
-		try {
-			Log.d(TAG, "open dataInputStream file:" + file.toString());
-			InputStream inputStream = new FileInputStream(file);
-			BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-			DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
-			int i = 0;
-			while(dataInputStream.available() > 0){
-				audioData[i] = dataInputStream.readShort();
-				i++;
+	public void showToast(final String msg)	{
+		runOnUiThread(new Runnable() {
+			public void run() {
+				Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
 			}
-			Log.d(TAG, "completed dataInputStream audioData.length" + audioData.length);
-			dataInputStream.close();
+		});
+	}
 
-			audioTrack = new AudioTrack(
-					AudioManager.STREAM_MUSIC,  // The audio stream for music playback (vs voice or alarm)
-					Main.sampleRate,
-					AudioFormat.CHANNEL_OUT_MONO, // was  CHANNEL_IN_FRONT
-					AudioFormat.ENCODING_PCM_16BIT,
-					bufferSizeInBytes,
-					AudioTrack.MODE_STREAM);
-			Log.d(TAG, "audioTrack.play");
-			audioTrack.play();
-			audioTrack.write(audioData, 0, bufferSizeInBytes);  // am i writing to the player
-			Log.d(TAG, "audioTrack.getPlayState()" + audioTrack.getPlayState());
-			//if (audioTrack.getPlayState() == audioTrack.PLAYSTATE_STOPPED) {
-			//	mListenButton.performClick();
-			//}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+	void startListening(){
+		long duration = 0;
+		try {
+			if (mFileName == null) {
+				String msg = "Nothing recorded to listen to.";
+				showToast(msg);
+				return;
+			}
+			Log.d(TAG, "startListening");
+			Log.d(TAG, "mFileName:" + mFileName);
+			try {
+				mPlayer = new MediaPlayer();
+				mPlayer.setDataSource(mFileName);
+				mPlayer.prepare();
+				mPlayer.start();
+				duration = mPlayer.getDuration();
+			} catch (IOException e) {
+				Log.e(TAG, "prepare() failed");
+				String msg = "Failed to prepare recording.";
+				showToast(msg);
+			}
+		} catch (IllegalStateException e) {
+			Log.e(TAG, "Illegal StateException:" + e); // not initialized
+			String msg = "Not initialized yet.";
+			showToast(msg);
 		}
+		// I need this on Completion listener because the file length extends until I click stop
+		// even though the song is through playing
+		mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+			// @Override
+			public void onCompletion(MediaPlayer mediaPlayer) {
+				// Main.isPlaying = false;
+				Log.d(TAG, "startListening onCompletion" );
+				mListenButton.performClick();
+			}
+		});
+
 	}
 
 	public String tempFile() {  // called during startRecording()
 		String format = "yyyy_MMdd_HH.mm.ss";
 		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
 		long iNow = System.currentTimeMillis();
-		int src = Main.sourceMic;  // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
 		Main.recordedName = "@_" + sdf.format(iNow) + ".wav";  // @_yyyy-MMdd_HH.mm.ss.pcm move to top of list (before A)
 		mFileName = Main.songpath + Main.recordedName; // file name is the date
 		Log.d(TAG, "mFileName:" + mFileName);
@@ -394,8 +452,8 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		OutputStream outStream = null;
 		try{
 
-			File file1 =new File(temp);
-			File file2 =new File(mFileName);  // full path wave file
+			File file1 = new File(temp);
+			File file2 = new File(mFileName);  // full path wave file
 			inStream = new FileInputStream(file1);
 			outStream = new FileOutputStream(file2); // for override file content
 			totalAudioLen = (int) file1.length();
@@ -423,21 +481,20 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		Main.existingRef = 0;
 		Main.existingInx = 0;
 		Main.existingSeg = 0;
-		Main.sourceMic = 1; // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
-		if(Main.isExternalMic) {
-			Main.sourceMic = 3; // external mic
-		}
-		Main.sampleRateOption = 0;
-		if (Main.isSampleRate == true) {
-			Main.sampleRateOption = 1;
-		}
+		// 0=pre-recorded, 1=internal mic, 2=external mic
+		Main.sourceMic = Main.isExternalMic ? 2 : 1; // 2 = external / 1 internal mic
+		Main.audioSource = audsrc;
 		if (Main.existingName.equals("@_RampSource.wav") ) {
-			Main.sourceMic = 0; // recorded
-			Main.sampleRateOption = 0;  // 22050 hz
+			Main.sourceMic = 0; // Show as pre-recorded
+			Main.isSampleRate = false;  // 22050 hz
+			Main.isExternalMic = false;
+			Main.isStereo = false;
+			Main.audioSource = -1;
 			thisRef = 39999;
 			thisInx = 1;
 		}
-		Main.audioSource = audsrc;
+		Main.sampleRateOption = (Main.isSampleRate ? 1 : 0); // here 0=22050, 1=44100, else 2=24000, 3=48000, 4=unknown
+		Main.stereoFlag = Main.isStereo ? 1 : 0; // 1 = stereo / 0 = mono
 		Log.d(TAG, "stop recording Main.existingName:" + Main.existingName);
 		Log.d(TAG, "stop recording mFileName:" + mFileName);
 		Main.db.beginTransaction();
@@ -457,6 +514,7 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		val.put("SourceMic", Main.sourceMic);
 		val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
 		val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
+		val.put("Stereo", Main.stereoFlag); // 0 = mono; 1 = stereo
 		val.put("LowFreqCutoff", 0);
 		val.put("HighFreqCutoff", 0);
 		val.put("FilterStart", 0);
@@ -465,14 +523,20 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		Main.db.setTransactionSuccessful();
 		Main.db.endTransaction();
 		val.clear();
+		fileSaved = true;
+		if (!Main.recordedName.equals("@_RampSource.wav") ) {
+			cs = "Recorded at: " + Main.recordedName.substring(2, 20);  // the time of the recording
+			fileDate.setText(cs);
+		}
+		Log.d(TAG, "db end transaction fileSaved:" + fileSaved);
 	}
 
 	private void getWaveFileHeader(int totalAudioLen, byte[] header) {
 		Log.d(TAG, "writing wave file header");
 		long longSampleRate = Main.sampleRate;
-		long byteRate = 44100; // 16 * 22050 * 1 / 8  = RECORDER_BPP * RECORDER_SAMPLERATE * channels/8;
+		long byteRate = 16 * longSampleRate * numChannels / 8; //  = RECORDER_BPP * RECORDER_SAMPLERATE * channels/8;
 		int totalDataLen = totalAudioLen + 36;
-
+		int blockAlign = numChannels * 16 / 8; // numChannels * bitsPerSample / 8 bits per byte
 		header[0] = 'R';  // RIFF/WAVE header
 		header[1] = 'I';
 		header[2] = 'F';
@@ -493,9 +557,9 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		header[17] = 0;
 		header[18] = 0;
 		header[19] = 0;
-		header[20] = 1;  // format = 1
+		header[20] = 1;  // format = 1 (PCM pulse control modulation = not compressed)
 		header[21] = 0;
-		header[22] = (byte) 1;
+		header[22] = (byte) numChannels;
 		header[23] = 0;
 		header[24] = (byte) (longSampleRate & 0xff);
 		header[25] = (byte) ((longSampleRate >> 8) & 0xff);
@@ -505,8 +569,8 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		header[29] = (byte) ((byteRate >> 8) & 0xff);
 		header[30] = (byte) ((byteRate >> 16) & 0xff);
 		header[31] = (byte) ((byteRate >> 24) & 0xff);
-		header[32] = (byte) 2;  // block align
-		header[33] = 0;
+		header[32] = (byte) (blockAlign & 0xff);  // block align
+		header[33] = (byte) ((blockAlign >> 8) & 0xff);;
 		header[34] = 16;  // bits per sample
 		header[35] = 0;
 		header[36] = 'd';
@@ -517,7 +581,6 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 		header[41] = (byte) ((totalAudioLen >> 8) & 0xff);
 		header[42] = (byte) ((totalAudioLen >> 16) & 0xff);
 		header[43] = (byte) ((totalAudioLen >> 24) & 0xff);
-
 	}
 
 	public void buildRampFile() {
@@ -535,7 +598,7 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 			DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
 			// I am changing frequency by 1/1024 every 2048/8 samples = 22050 / 2048/8 = change 86.13 times per second
 			// file should be 1024 * (2048/8) * 2 bytes long = 4194304 bytes long = 95 seconds --NO-- NOW IS SHORTER SEE BELOW
-			int base = 2048;  // size that I send to fft
+			int base = 2048;  // NOT the size that I send to fft -- it is 1024
 			int step = 8; // parts of a block
 			int halfBlock = base/2; // 1024 the max frequency slot -- the size i get back from fft
 			int bufferSize = halfBlock * (base / step);

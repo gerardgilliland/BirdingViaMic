@@ -101,7 +101,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/options_lable" />
+        android:text="@string/options_label" />
       
     <TextView
         android:text="" 

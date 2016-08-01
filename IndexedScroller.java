@@ -182,9 +182,9 @@ public class IndexedScroller implements OnClickListener {
 	
 	private void setState(int state) {
 		//Log.d(TAG, "setState state:" + state );	
-		if (state < STATE_HIDDEN || state > STATE_HIDING)
+		if (state < STATE_HIDDEN || state > STATE_HIDING) {
 			return;
-		
+		}
 		mState = state;
 		switch (mState) {
 		case STATE_HIDDEN:
@@ -216,12 +216,15 @@ public class IndexedScroller implements OnClickListener {
 	}
 	
 	private int getSectionByPoint(float y) {
-		if (mSections == null || mSections.length == 0)
+		if (mSections == null || mSections.length == 0) {
 			return 0;
-		if (y < mIndexbarRect.top + mIndexbarMargin)
+		}
+		if (y < mIndexbarRect.top + mIndexbarMargin) {
 			return 0;
-		if (y >= mIndexbarRect.top + mIndexbarRect.height() - mIndexbarMargin)
+		}
+		if (y >= mIndexbarRect.top + mIndexbarRect.height() - mIndexbarMargin) {
 			return mSections.length - 1;
+		}
 		return (int) ((y - mIndexbarRect.top - mIndexbarMargin) / ((mIndexbarRect.height() - 2 * mIndexbarMargin) / mSections.length));
 	}
 	

@@ -2,20 +2,16 @@ package com.modelsw.birdingviamic;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-
-//import org.apache.http.protocol.HTTP;
 import java.net.HttpURLConnection;
 
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Build.VERSION;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -45,7 +41,7 @@ public class Register extends AppCompatActivity implements OnClickListener {
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "Navigation Icon tapped");
@@ -58,7 +54,6 @@ public class Register extends AppCompatActivity implements OnClickListener {
 		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
 		dateFmt = sdf.format(iNow);
 		info =  "DateTime:" + dateFmt 
-				+ "\nEmailAddress:" + getEmail(this) 
 				+ "\nManufacturer:" + getManufacturer()
 		 		+ "\nModel:" + getModel()
 		 		+ "\nAndroidVersion:" + getAndroidVersion()
@@ -72,8 +67,6 @@ public class Register extends AppCompatActivity implements OnClickListener {
 	    comments = (EditText) findViewById(R.id.comments);
 	    View registerNowButton = findViewById(R.id.register_now_button);
 	    registerNowButton.setOnClickListener(this);
-	    //View websiteButton = findViewById(R.id.website_button);
-	    //websiteButton.setOnClickListener(this);
 
 	    
 	}
@@ -82,44 +75,14 @@ public class Register extends AppCompatActivity implements OnClickListener {
     	switch (v.getId()) {
     	case R.id.register_now_button:
 			emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "birdingviamic@modelsw.com", null));
-    	    //emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"birdingviamic@modelsw.com"}); // recipients
     	    emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Register_BirdingViaMic");
     	    emailIntent.putExtra(Intent.EXTRA_TEXT, info + comments.getText() + "\n");
     		startActivityForResult(emailIntent, 1);    		
     		break;
-		/*
-    	case R.id.website_button:
-    		Intent i = new Intent(this, WebList.class);
-    		Main.wikipedia = false;
-	    	Main.xenocanto = false;
-            startActivity(i);   
-	    	break;
-	    */
     	} // switch
 	}	  
 
-	public static String getEmail(Context context) {
-	    AccountManager accountManager = AccountManager.get(context); 
-	    Account account = getAccount(accountManager);
 
-	    if (account == null) {
-	      return null;
-	    } else {
-	      return account.name;
-	    }
-	  }
-
-	private static Account getAccount(AccountManager accountManager) {
-	    Account[] accounts = accountManager.getAccountsByType("com.google");
-	    Account account;
-	    if (accounts.length > 0) {
-	      account = accounts[0];      
-	    } else {
-	      account = null;
-	    }
-	    return account;
-	}
-	  
 	public static String getAndroidVersion() {
 	    int iVer = Build.VERSION.SDK_INT;
 		return String.format("%d", iVer);
