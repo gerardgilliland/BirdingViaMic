@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_id": "default-demo-app-dc43d",
+    "project_number": "712341994331",
+    "name": "Birding Via Mic"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:712341994331:android:27d689d63f1b7a06",
+        "client_id": "android:com.modelsw.birdingviamic",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.modelsw.birdingviamic",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "712341994331-p77pnbbmgd1905dlp85dvo3g7plc1rc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.modelsw.birdingviamic",
+            "certificate_hash": "7F5DD58CE7F0906D38B310FD2000B9E4E22FD5FA"
+          }
+        },
+        {
+          "client_id": "712341994331-ddeugd8273usf6ql7f1206b300nr2pg1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 1
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

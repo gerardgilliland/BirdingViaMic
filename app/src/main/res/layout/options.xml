@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:screenOrientation="portrait"
+    android:background="#ff000000"
+    >
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/linen" >
+    </android.support.v7.widget.Toolbar>
+
+    <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+	android:screenOrientation="portrait" 
+    android:layout_below="@id/toolbar"
+    android:scrollbars="none">
+
+
+<LinearLayout 
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+	android:orientation="vertical" >
+
+    <RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/normalize"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/auto_filter_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/autoFilter_check"/>
+    	<CheckBox android:id="@+id/autoFilter_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/autoFilter_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/autoFilter_summary"
+			android:layout_below="@id/normalize" />
+    	</RelativeLayout>
+    	
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/enhance_mic"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/enhance_mic_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/enhance_mic_check"/>
+    	<CheckBox android:id="@+id/enhance_mic_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/enhance_mic_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/enhance_mic_summary"
+			android:layout_below="@id/enhance_mic" />
+    	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/use_smoothing"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/use_smoothing_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/use_smoothing_check"/>
+    	<CheckBox android:id="@+id/use_smoothing_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/use_smoothing_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/use_smoothing_summary"
+			android:layout_below="@id/use_smoothing" />
+    	</RelativeLayout>
+
+ 	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/show_definitions"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/show_definitions_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/show_definition_check"/>
+    	<CheckBox android:id="@+id/show_definition_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/show_definitions_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/show_definitions_summary"
+			android:layout_below="@id/show_definitions" />
+    	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="4dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+		<CheckBox android:id="@+id/view_distance_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentLeft="true" />
+		<TextView android:id="@+id/view_distance"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/view_distance_title"
+			android:textColor="@color/linen"
+			android:layout_toRightOf="@+id/view_distance_check"/>
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="4dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+		<CheckBox android:id="@+id/view_energy_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentLeft="true" />
+		<TextView android:id="@+id/view_energy"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/view_energy_title"
+			android:textColor="@color/linen"
+			android:layout_toRightOf="@+id/view_energy_check"/>
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="4dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+		<CheckBox android:id="@+id/view_frequency_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentLeft="true" />
+		<TextView android:id="@+id/view_frequency"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/view_frequency_title"
+			android:textColor="@color/linen"
+			android:layout_toRightOf="@+id/view_frequency_check"/>
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="4dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+		<CheckBox android:id="@+id/view_quality_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentLeft="true" />
+		<TextView android:id="@+id/view_quality"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/view_quality_title"
+			android:textColor="@color/linen"
+			android:layout_toRightOf="@+id/view_quality_check"/>
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/show_detail"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/show_detail_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/show_detail_check"/>
+    	<CheckBox android:id="@+id/show_detail_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/show_detail_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/show_detail_summary"
+			android:layout_below="@id/show_detail" />
+    	</RelativeLayout>
+    	
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/show_web"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/show_web_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/show_web_check"/>
+    	<CheckBox android:id="@+id/show_web_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/show_web_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/show_web_summary"
+			android:layout_below="@id/show_web" />
+    	</RelativeLayout>
+ 
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/sort_by_name"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/sort_by_name_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/sort_by_name_check"/>
+    	<CheckBox android:id="@+id/sort_by_name_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/sort_by_name_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/sort_by_name_summary"
+			android:layout_below="@id/sort_by_name" />
+    	</RelativeLayout>
+		
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/use_location"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/use_location_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/use_location_check"/>
+    	<CheckBox android:id="@+id/use_location_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/use_location_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/use_location_summary"
+			android:layout_below="@id/use_location" />
+    	</RelativeLayout>
+    	
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/use_audio_recorder"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/use_audio_recorder_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/use_audio_recorder_check"/>
+    	<CheckBox android:id="@+id/use_audio_recorder_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/use_audio_recorder_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/use_audio_recorder_summary"
+			android:layout_below="@id/use_audio_recorder" />
+    	</RelativeLayout>
+
+    <RelativeLayout
+        android:screenOrientation="portrait"
+        android:paddingTop="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView android:id="@+id/sample_rate"
+            android:textSize="16sp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_rate_title"
+            android:textColor="@color/linen"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/sample_rate_check"/>
+        <CheckBox android:id="@+id/sample_rate_check"
+            android:layout_height="wrap_content"
+            android:layout_width="40dip"
+            android:layout_alignParentRight="true" />
+        <TextView android:id="@+id/sample_rate_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+            android:text="@string/sample_rate_summary"
+            android:layout_below="@id/sample_rate" />
+    </RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="16dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+		<TextView android:id="@+id/stereo"
+			android:textSize="16sp"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:text="@string/stereo_title"
+			android:textColor="@color/linen"
+			android:layout_alignParentLeft="true"
+			android:layout_toLeftOf="@+id/stereo_check"/>
+		<CheckBox android:id="@+id/stereo_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentRight="true" />
+		<TextView android:id="@+id/stereo_summary"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textColor="@color/linen"
+			android:text="@string/stereo_summary"
+			android:layout_below="@id/stereo" />
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/start_record_screen"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/start_record_screen_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/start_record_screen_check"/>
+    	<CheckBox android:id="@+id/start_record_screen_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/start_record_screen_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/start_record_screen_summary"
+			android:layout_below="@id/start_record_screen" />
+    	</RelativeLayout>
+
+    <RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/start_recording"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/start_recording_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/start_recording_check"/>
+    	<CheckBox android:id="@+id/start_recording_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/start_recording_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/start_recording_summary"
+			android:layout_below="@id/start_recording" />
+    	</RelativeLayout>
+
+	<!--
+    <RelativeLayout
+        android:screenOrientation="portrait"
+        android:paddingTop="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView android:id="@+id/batch_download"
+            android:textSize="16sp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/batch_download_title"
+            android:textColor="@color/linen"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/batch_download_check"/>
+        <CheckBox android:id="@+id/batch_download_check"
+            android:layout_height="wrap_content"
+            android:layout_width="40dip"
+            android:layout_alignParentRight="true" />
+        <TextView android:id="@+id/batch_download_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+            android:text="@string/batch_download_summary"
+            android:layout_below="@id/batch_download" />
+    </RelativeLayout>
+	-->
+
+    <RelativeLayout
+        android:screenOrientation="portrait"
+        android:paddingTop="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView android:id="@+id/load_definitions"
+            android:textSize="16sp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/load_definitions_title"
+            android:textColor="@color/linen"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/load_definition_check"/>
+        <CheckBox android:id="@+id/load_definition_check"
+            android:layout_height="wrap_content"
+            android:layout_width="40dip"
+            android:layout_alignParentRight="true" />
+        <TextView android:id="@+id/load_definitions_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+            android:text="@string/load_definitions_summary"
+            android:layout_below="@id/load_definitions" />
+    </RelativeLayout>
+
+	<RelativeLayout
+		android:screenOrientation="portrait" 
+    	android:paddingTop="16dp"    	
+    	android:orientation="horizontal"
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent">
+    	<TextView android:id="@+id/debug"
+    	    android:textSize="16sp"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:text="@string/debug_title"
+            android:textColor="@color/linen"
+        	android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/debug_check"/>
+    	<CheckBox android:id="@+id/debug_check"
+        	android:layout_height="wrap_content"
+        	android:layout_width="40dip" 
+        	android:layout_alignParentRight="true" />
+    	<TextView android:id="@+id/debug_summary"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+            android:textColor="@color/linen"
+        	android:text="@string/debug_summary"
+			android:layout_below="@id/debug" />
+    	</RelativeLayout>
+
+<!--
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="16dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+		<TextView
+			android:textSize="16sp"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:text="Criteria Multiply"
+			android:textColor="@color/linen"
+			android:layout_alignParentLeft="true"
+			android:layout_toLeftOf="@+id/crit_mult"/>
+		<EditText android:id="@+id/crit_mult"
+			android:inputType="number"
+			android:layout_height="wrap_content"
+			android:layout_width="100dip"
+			android:textColor="@color/linen"
+			android:text="1"
+			android:layout_alignParentRight="true" />
+	</RelativeLayout>
+-->
+
+	</LinearLayout>
+</ScrollView>  
+</RelativeLayout>  

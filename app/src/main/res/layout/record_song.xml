@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:screenOrientation="portrait"
+    android:background="#ff000000"
+    >
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/linen" >
+    </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
+        android:id="@+id/top"
+        android:layout_below="@id/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/spacer"
+        android:text=""
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="0dip"
+        android:textSize="24.5sp" />
+
+        <Button
+            android:id="@+id/record_button"
+            android:textAllCaps="false"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="25dip"
+            android:layout_margin="@dimen/abc_button_inset_horizontal_material"
+            android:textColor="@drawable/text_state"
+            android:background="@drawable/background_state"
+            android:textSize="32sp"
+            android:text="@string/record_lable" />
+
+        <TextView
+            android:id="@+id/more_space"
+            android:text=""
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="0dip"
+            android:textSize="24.5sp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:screenOrientation="portrait"
+        android:layout_below="@id/top"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/file_date"
+                android:text=""
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/linen"
+                android:layout_marginBottom="0dip"
+                android:textSize="16sp" />
+
+            <TextView
+                android:text=""
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="0dip"
+                android:textSize="16sp" />
+
+            <Button
+            android:id="@+id/listen_button"
+            android:textAllCaps="false"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@drawable/text_state"
+            android:background="@drawable/background_state"
+            android:textSize="16sp"
+            android:text="@string/listen_lable" />
+
+            <TextView
+            android:text=""
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="0dip"
+            android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/play_button"
+                android:textAllCaps="false"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/text_state"
+                android:background="@drawable/background_state"
+                android:textSize="16sp"
+                android:text="@string/play_label"/>
+
+        <TextView
+            android:text=".m4a"
+            android:id="@+id/media_type"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/linen"
+            android:gravity="right" />
+
+            <TextView
+                android:text="@string/selectmic_lable"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/linen"
+                android:gravity="left" />
+
+            <RadioGroup android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:orientation="vertical">
+
+                <RadioButton android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/linen"
+                    android:text="@string/mic0_lable"
+                    android:id="@+id/mic_0"/>
+                <RadioButton android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/linen"
+                    android:text="@string/mic1_lable"
+                    android:id="@+id/mic_1"/>
+                <RadioButton android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/linen"
+                    android:text="@string/mic5_lable"
+                    android:id="@+id/mic_5"/>
+                <RadioButton android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/linen"
+                    android:text="@string/mic6_lable"
+                    android:id="@+id/mic_6"/>
+
+            </RadioGroup>
+    </LinearLayout>
+    </ScrollView>
+</RelativeLayout>
