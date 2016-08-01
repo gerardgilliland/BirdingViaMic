@@ -35,8 +35,9 @@ public class IndexedListView  extends ListView {
 	public void setFastScrollEnabled(boolean enabled) {
 		mIsFastScrollEnabled = enabled;
 		if (mIsFastScrollEnabled) {
-			if (mScroller == null)
+			if (mScroller == null) {
 				mScroller = new IndexedScroller(getContext(), this);
+			}
 		} else {
 			if (mScroller != null) {
 				mScroller.hide();
@@ -50,8 +51,9 @@ public class IndexedListView  extends ListView {
 		super.draw(canvas);
 		
 		// Overlay index bar
-		if (mScroller != null)
+		if (mScroller != null) {
 			mScroller.draw(canvas);
+		}
 	}
 
 	@Override
@@ -62,18 +64,18 @@ public class IndexedListView  extends ListView {
 //			return false;
 //		}
 		// Intercept ListView's touch event
-		if (mScroller != null && mScroller.onTouchEvent(ev))
+		if (mScroller != null && mScroller.onTouchEvent(ev)) {
 			return true;
-		
+		}
 		if (mGestureDetector == null) {
 			mGestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
 
 				@Override
 				public boolean onFling(MotionEvent e1, MotionEvent e2,
 						float velocityX, float velocityY) {
-					// If fling happens, index bar shows
-					mScroller.show();
-					return super.onFling(e1, e2, velocityX, velocityY);
+				// If fling happens, index bar shows
+				mScroller.show();
+				return super.onFling(e1, e2, velocityX, velocityY);
 				}
 				
 			});
@@ -96,15 +98,17 @@ public class IndexedListView  extends ListView {
 	@Override
 	public void setAdapter(ListAdapter adapter) {
 		super.setAdapter(adapter);
-		if (mScroller != null)
+		if (mScroller != null) {
 			mScroller.setAdapter(adapter);
+		}
 	}
 
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		super.onSizeChanged(w, h, oldw, oldh);
-		if (mScroller != null)
+		if (mScroller != null) {
 			mScroller.onSizeChanged(w, h, oldw, oldh);
+		}
 	}
 
 }

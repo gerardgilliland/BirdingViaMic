@@ -13,11 +13,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -35,6 +37,9 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 	//public static SQLiteDatabase db;
 	//public static SongData songdata;
     int audsrc = 0;
+    int chanCnt = 1;
+    Context ctx = this;
+    private boolean fileSaved = false;
     private static String mFileName = null;
     //private static String pathBase = null;
     private static String[] items;   
@@ -75,7 +80,7 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "Navigation Icon tapped");
@@ -84,13 +89,34 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         });
 
         TextView mediaType = (TextView) findViewById(R.id.media_type);
-        if (Main.isSampleRate == false) {
-            mediaType.setText("0.m4a");
+        AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        Main.isExternalMic = am1.isWiredHeadsetOn();
+        String mType = "";
+        if (Main.isExternalMic == true) {
+            mType = " External";
+        } else {
+            mType = " Internal";
+        }
+        if (Main.isStereo == true) {
+            mType += " Stereo";
+            Main.stereoFlag = 1;
+            chanCnt = 2;
+        } else {
+            mType += " Mono";
+            Main.stereoFlag = 0;
+            chanCnt = 1;
         }
         if (Main.isSampleRate == true) {
-            mediaType.setText("1.m4a");
+            mType += " 44100";
+            Main.sampleRate = 44100;
+            Main.sampleRateOption = 1;
+        } else {
+            mType += " 22050";
+            Main.sampleRate = 22050;
+            Main.sampleRateOption = 0;
         }
-
+        mType += ".m4a";
+        mediaType.setText(mType);
         RadioButton mic0 = (RadioButton) findViewById(R.id.mic_0);
         RadioButton mic1 = (RadioButton) findViewById(R.id.mic_1);
         RadioButton mic5 = (RadioButton) findViewById(R.id.mic_5);
@@ -100,6 +126,14 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         findViewById(R.id.mic_1).setOnClickListener(this);
         findViewById(R.id.mic_5).setOnClickListener(this);
         findViewById(R.id.mic_6).setOnClickListener(this);
+
+        qry = "SELECT Value from Options WHERE Name='audsrc'";
+        rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+        if (rs.getCount() == 1) {
+            rs.moveToFirst();
+            audsrc = rs.getInt(0);
+        }
+        rs.close();
 
         switch (audsrc) {
             case 0: {
@@ -161,6 +195,7 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         Main.db.endTransaction();
 
     }
+
 /* removed because I moved the record button outside of the scroll.
     // this allows the record button to act on release of touch and doesn't interpret the touch as scroll
     public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -174,10 +209,11 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		    case R.id.record_button: {
-	    	    Log.d(TAG, "onClick Record mStartRecording:" + mStartRecording );
+	    	    Log.d(TAG, "onClick Record mStartRecording:" + mStartRecording);
                 onRecord(mStartRecording);
                 if (mStartRecording) {
                     mRecordButton.setText("Stop recording");
+                    fileSaved = false;
                 } else {
             	    mRecordButton.setText("Record");
                 }
@@ -185,6 +221,9 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 		        break;
 		    }
 		    case R.id.listen_button: {
+                if (fileSaved == false) {
+                    break;
+                }
 	    	    Log.d(TAG, "onClick Listen mStartListening:" + mStartListening );
                 onListen(mStartListening);
                 if (mStartListening) {
@@ -199,7 +238,8 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 	    	    Log.d(TAG, "onClick Play");
 	            Main.songCounter = 0; // clear the list so this one will play
 	    	    Main.showPlayFromRecord = true; // force the play screen to appear
-	    	    finish();
+
+                finish();
 		    }
             case R.id.mic_0: {
                 Log.d(TAG, "onClick mic_0 Default");
@@ -243,24 +283,30 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 
     private void startListening() {
     	long duration = 0;
-        if (mFileName == null) {
-            String msg = "Nothing recorded to listen to.";
-            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            Log.d(TAG, "mFileName is null");
-            return;
-        }
-        Log.d(TAG, "startListening");
-    	Log.d(TAG, "mFileName:" + mFileName);
-        mPlayer = new MediaPlayer();
         try {
-            mPlayer.setDataSource(mFileName);
-            mPlayer.prepare();
-            mPlayer.start();
-            duration = mPlayer.getDuration();
-        } catch (IOException e) {
-            Log.e(TAG, "prepare() failed");
+            if (mFileName == null) {
+                String msg = "Nothing recorded to listen to.";
+                showToast(msg);
+                return;
+            }
+            Log.d(TAG, "startListening");
+            Log.d(TAG, "mFileName:" + mFileName);
+            try {
+                mPlayer = new MediaPlayer();
+                mPlayer.setDataSource(mFileName);
+                mPlayer.prepare();
+                mPlayer.start();
+                duration = mPlayer.getDuration();
+            } catch (IOException e) {
+                Log.e(TAG, "prepare() failed");
+                String msg = "Failed to prepare recording.";
+                showToast(msg);
+            }
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Illegal StateException:" + e); // not initialized
+            String msg = "Not initialized yet.";
+            showToast(msg);
         }
-    
         // I need this on Completion listener because the file length extends until I click stop 
         // even though the song is through playing
         mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -273,6 +319,14 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         });
     }
 
+    public void showToast(final String msg)	{
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private void stopListening() {
         if (mPlayer == null) {
             Log.d(TAG, "stopListening() mPlayer is null" );
@@ -280,13 +334,14 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         }
 		Log.d(TAG, "stopListening" );
 		//mPlayer.reset();
+        mPlayer.stop();
         mPlayer.release();
         mPlayer = null;
     }
 
     private void startRecording() {
-        AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        Main.isExternalMic = am1.isWiredHeadsetOn();
+        //AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        //Main.isExternalMic = am1.isWiredHeadsetOn();
         // the following crashes on null
         //IntentFilter iFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         //Intent iStatus = this.registerReceiver(null, iFilter);
@@ -323,33 +378,34 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
          */
 
         // audsrc = MediaRecorder.AudioSource.MIC
-
         mFileName = tempFile();  // path/date.m4a
         mRecorder = new MediaRecorder();
-        Main.sampleRate = 22050;
-        Main.sampleRateOption = 0;
-        if (Main.isSampleRate == true) {
-            Main.sampleRate = 44100;
-            Main.sampleRateOption = 1;
-        }
         Log.d(TAG, "MediaRecorder sampleRate:" + Main.sampleRate + " audsrc:" + audsrc + " isExternalMic:" + Main.isExternalMic);
         cs = "........";
         fileDate.setText(cs);
         try {
-            mRecorder.setAudioSource(audsrc); // MediaRecorder.AudioSource.CAMCORDER works and does NOT have Auto Gain Control
-            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);       // MPEG_4 works -- try adts for fraunhofer
-            mRecorder.setAudioChannels(1);        // 1=mono 2=stereo
-            mRecorder.setAudioSamplingRate(Main.sampleRate);
-            mRecorder.setAudioEncodingBitRate(96000); // i tried 44100 it changed to 96000 -- the encoder needs this rate to save the data -- removed -- does it work?
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);  // AAC  works
-            mRecorder.setOutputFile(mFileName);  // full path
-            Log.d(TAG, "startRecord setupFile and audioData");
-            mRecorder.prepare();
+            try {
+                mRecorder.setAudioSource(audsrc); // MediaRecorder.AudioSource.CAMCORDER works and does NOT have Auto Gain Control
+                mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);       // MPEG_4 works -- try adts for fraunhofer
+                mRecorder.setAudioChannels(chanCnt);  // 1=mono 2=stereo
+                mRecorder.setAudioSamplingRate(Main.sampleRate);  // 22050 / 44100
+                mRecorder.setAudioEncodingBitRate(96000); // i tried 44100 it changed to 96000 -- the encoder needs this rate to save the data -- removed -- does it work?
+                mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);  // AAC  works
+                mRecorder.setOutputFile(mFileName);  // full path
+                Log.d(TAG, "startRecord setupFile and audioData");
+                mRecorder.prepare();
+            } catch(IOException e) {
+                e.printStackTrace();
+                String msg = "Failed to prepare audio source:" + audsrc + ". Try another Mic Option.";
+                showToast(msg);
+                return;
+            }
             mRecorder.start();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (RuntimeException e) {
+            e.printStackTrace();
             String msg = "Failed to setAudioSource:" + audsrc + ". Try another Mic Option.";
-            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+            showToast(msg);
+            return;
 		}
     }
 
@@ -357,18 +413,27 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
     private void stopRecording() {
     	//RecordThread recordThread = new RecordThread();
     	//recording = false;
-    	//recordThread.quit();    	
-        mRecorder.stop();
-        mRecorder.release();
-        mRecorder = null;
-        cs = "Recorded at: " + Main.recordedName.substring(2, 20);  // the time of the recording
+    	//recordThread.quit();
+        cs = "Saving file ...";  // the time of the recording
         fileDate.setText(cs);
+        fileSaved = false;
+        Log.d(TAG, "stopRecording fileSaved:" + fileSaved);
+        try {
+            mRecorder.stop();
+            mRecorder.release();
+            mRecorder = null;
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            String msg = "Error stopRecording:" + e;
+            Log.d(TAG, msg);
+            return;
+        }
         InputStream inStream = null;
         OutputStream outStream = null;
         try{
  
-            File file1 =new File(mFileName);  // full path
-            File file2 =new File(Main.songpath + "zztemp.m4a"); // mp4 works, .aac works
+            File file1 = new File(mFileName);  // full path
+            File file2 = new File(Main.songpath + "zztemp.m4a"); // mp4 works, .aac works
             inStream = new FileInputStream(file1);
             outStream = new FileOutputStream(file2); // for override file content
             byte[] buffer = new byte[1024];
@@ -387,13 +452,10 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         Main.existingRef = 0;
         Main.existingInx = 0;
         Main.existingSeg = 0;
-//        Main.existingSpecInxSeg = "UNBI_0.0";
-        Main.sourceMic = 2; // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
-        if(Main.isExternalMic) {
-            Main.sourceMic = 4;
-        }
+        // 0=pre-recorded, 1=internal mic, 2=external mic
+        Main.sourceMic = Main.isExternalMic ? 2 : 1; // 2 = external / 1 internal mic
+        Main.stereoFlag = Main.isStereo ? 1 : 0; // 1 = stereo / 0 = mono
         Main.audioSource = audsrc;
-
     	Log.d(TAG, "stop recording Main.existingName:" + Main.existingName);
     	Log.d(TAG, "stop recording mFileName:" + mFileName);
         try {        	
@@ -413,9 +475,10 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
            	   	val.put("AutoFilter", 0);
            	   	val.put("Enhanced", 0);
                 val.put("Smoothing", 0);
-    			val.put("SourceMic", Main.sourceMic); // 0=pre-recorded 1=internal.wav, 2=internal.m4a, 3=external.wav, 4=external.m4a
+    			val.put("SourceMic", Main.sourceMic);
                 val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
                 val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
+                val.put("Stereo", Main.stereoFlag); // 0=mono, 1=stereo
     			val.put("LowFreqCutoff", 0);
     			val.put("HighFreqCutoff", 0);
     			val.put("FilterStart", 0);
@@ -424,8 +487,11 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
            		Main.db.setTransactionSuccessful();
             } finally {
 		    	val.clear();
-            	Main.db.endTransaction();
-            	Log.d(TAG, "db end transaction");
+                Main.db.endTransaction();
+                cs = "Recorded at: " + Main.recordedName.substring(2, 20);  // the time of the recording
+                fileDate.setText(cs);
+                fileSaved = true;
+                Log.d(TAG, "db end transaction fileSaved:" + fileSaved);
             }
         } catch( Exception e ) {
      	    Log.e(TAG, "Database Exception: " + e.toString() );     	    

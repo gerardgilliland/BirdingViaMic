@@ -80,33 +80,33 @@ public class SpeciesAdapter extends BaseAdapter implements SectionIndexer {
         return vi;
     }
 
-		CheckBox check;
-		TextView text;
+    CheckBox check;
+    TextView text;
 
-		public int getPositionForSection(int section) {
-			// If there is no item for current section, previous section will be selected
-			for (int i = section; i >= 0; i--) {
-				for (int j = 0; j < getCount(); j++) {
-					if (StringMatcher.match(String.valueOf(SpeciesList.speciesCombined[j].charAt(0)), String.valueOf(mSections.charAt(i))))
-						return j;
-				}
-			}
-			return 0;
-		}
+    public int getPositionForSection(int section) {
+        // If there is no item for current section, previous section will be selected
+        for (int i = section; i >= 0; i--) {
+            for (int j = 0; j < getCount(); j++) {
+                if (StringMatcher.match(String.valueOf(SpeciesList.speciesCombined[j].charAt(0)), String.valueOf(mSections.charAt(i))))
+                    return j;
+            }
+        }
+        return 0;
+    }
 
-		public int getSectionForPosition(int position) {
-			// TODO Auto-generated method stub
- 	   	 	Log.d(TAG, "getSectionForPosition position:" + position);
+    public int getSectionForPosition(int position) {
+        // TODO Auto-generated method stub
+        Log.d(TAG, "getSectionForPosition position:" + position);
 //			EditSpecies.chk[position] = !EditSpecies.chk[position];  // this doesn't do anything
-			return 0;
-		}
+        return 0;
+    }
 
-		public Object[] getSections() {
-			String[] sections = new String[mSections.length()];
-			for (int i = 0; i < mSections.length(); i++)
-				sections[i] = String.valueOf(mSections.charAt(i));
-			return sections;
-		}
+    public Object[] getSections() {
+        String[] sections = new String[mSections.length()];
+        for (int i = 0; i < mSections.length(); i++)
+            sections[i] = String.valueOf(mSections.charAt(i));
+        return sections;
+    }
 
 }
 

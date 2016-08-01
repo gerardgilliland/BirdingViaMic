@@ -111,10 +111,12 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         isInit = PlaySong.isInit;
 
         Log.d(TAG, "2) AdjustView(context) vvtop:" + vvtop + " isInit:" + isInit);
-        if (VisualizerView.mCanvasBitmap == null || VisualizerView.mCanvas == null || VisualizerView.mPaint == null) {
-            String msg = "Bitmap is missing";
-            Context ctx = getContext();
-            Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
+        //if (VisualizerView.mCanvasBitmap == null || VisualizerView.mCanvas == null || VisualizerView.mPaint == null) {
+        if (VisualizerView.mCanvasBitmap == null || VisualizerView.mCanvas == null) {
+            Log.d(TAG, "2a) AdjustView returning -- bitmap or canvas is missing.");
+            //String msg = "Bitmap is missing";
+            //Context ctx = getContext();
+            //Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -196,84 +198,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         }
         isInit = false;
         Log.d(TAG, "4) AdjustView isInit:" + isInit );
-        // Obtain MotionEvent object
-        /*
-        if (isInit == true) {
-            long downTime = SystemClock.uptimeMillis() - 100;
-            long eventTime = SystemClock.uptimeMillis();
-            float x = (float) screenCenterW;
-            float y = (float) screenCenterH;
-            // List of meta states found here:     developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
-            int metaState = 0;
-            MotionEvent motionEvent = MotionEvent.obtain(
-                    downTime,
-                    eventTime,
-                    MotionEvent.ACTION_UP,
-                    x,
-                    y,
-                    metaState
-            );
-
-            Main.adjustViewOption = "edit";
-            Log.d(TAG, "1a) AdjustView isInit dispatchTouchEvent x:" + x + " y:" + y + " vvtop:" + vvtop + " option:" + Main.adjustViewOption);
-            invalidate();  // move the canvas
-            Log.d(TAG, "1b) after invalidate and before touch event isInit:" + isInit);
-            // Dispatch touch event
-            this.dispatchTouchEvent(motionEvent);
-            //Log.d(TAG, "1b) AdjustView isInit translate the canvas x:" + x + " y:" + y + " isInit:" + isInit);
-            //Log.d(TAG, "1c) AdjustView isInit:" + isInit + " adjustViewOption:" + Main.adjustViewOption);
-            Log.d(TAG, "1c) after touch event isInit:" + isInit + " adjustViewOption:" + Main.adjustViewOption);
-            invalidate();  // display
-            Log.d(TAG, "1d) after second invalidate event isInit:" + isInit + " adjustViewOption:" + Main.adjustViewOption);
-
-
-            // repeat to show the lines and buttons
-            downTime = SystemClock.uptimeMillis() - 100;
-            eventTime = SystemClock.uptimeMillis();
-            x = (float) screenCenterW + 20;
-            y = (float) screenCenterH + 20;
-            motionEvent = MotionEvent.obtain(
-                    downTime,
-                    eventTime,
-                    MotionEvent.ACTION_MOVE,
-                    x,
-                    y,
-                    metaState
-            );
-            Log.d(TAG, "1c) AdjustView isInit action move x:" + x + " y:" + y + " isEdit:" + Main.isEdit);
-            this.dispatchTouchEvent(motionEvent);
-            downTime = SystemClock.uptimeMillis() - 100;
-            eventTime = SystemClock.uptimeMillis();
-            x = (float) screenCenterW + 50;
-            y = (float) screenCenterH + 50;
-            motionEvent = MotionEvent.obtain(
-                    downTime,
-                    eventTime,
-                    MotionEvent.ACTION_UP,
-                    x,
-                    y,
-                    metaState
-            );
-            Log.d(TAG, "1d) AdjustView isInit action up x:" + x + " y:" + y + " isEdit:" + Main.isEdit);
-            this.dispatchTouchEvent(motionEvent);
-
-
-        }
-*/
-
-        // does this cause the error message: "can't set paint color"
-        //if (Main.isIdentify == true && isDrawOnce == true) { // gg added 2/28/16 -- I was plotting previous when click id
-        //    Log.d(TAG, "AdjustView isDrawOnce:" + isDrawOnce + " isIdentify:" + Main.isIdentify);
-        //    return;
-        //}
-
-        // if song just played for first time and you tap edit then crash if isShowDefinition true because you have no detail
-        //if (Main.isEdit == true) {
-        //    Main.adjustViewOption = "existing"; // show existing filter if it does exist
-        //    return;
-        //}
         Log.d(TAG, "5) AdjustView: Main.totalCntr:" + Main.totalCntr);
-
     }
 
 
@@ -291,10 +216,12 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         vv.requestLayout();
         setOnTouchListener(this);
         Log.d(TAG, "7) onLayout vv:" + l + "," + vvtop + "," + r + "," + (vvtop + vvHeight));
-        if (VisualizerView.mCanvasBitmap == null || VisualizerView.mCanvas == null || VisualizerView.mPaint == null) {
-            String msg = "Bitmap is missing";
-            Context ctx = getContext();
-            Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
+        //if (VisualizerView.mCanvasBitmap == null || VisualizerView.mCanvas == null || VisualizerView.mPaint == null) {
+        if (VisualizerView.mCanvasBitmap == null) {
+            Log.d(TAG, "7a) returning -- bitmap is missing.");
+            //String msg = "Bitmap is missing";
+            //Context ctx = getContext();
+            //Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
             return;
         }
         Log.d(TAG, "8) onLayout canvas vvtop:" + vvtop + " isInit:" + isInit);
@@ -378,14 +305,6 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
     @Override
     protected void onDraw(Canvas canvas) {
         Log.d(TAG, "onDraw() just entered isInit:" + isInit);
-        //if (isInit == true) {
-        //    Log.d(TAG, "onDraw() translate canvas vvtop:" + vvtop + " isInit:" + isInit);
-        //    canvas.translate(0, vvtop);
-        //    canvas.save();
-        //    invalidate();
-        //    isInit = false;
-        //    return;
-        //}
 
         //		Log.d(TAG, "onDraw: drawOnce:" + drawOnce + " w:" + screenWidth + " h:" + screenHeight  + " sq:" + sq + " ratio:" + ratio);
         if (Main.adjustViewOption == "edit") {  // last pointer up waiting to save or exclude or cancel
@@ -485,17 +404,9 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
 
     public boolean onTouch (View v, MotionEvent event) {
         v.setTop(vvtop);
-        //if (isInit == true) {
-        //    v.setTop(vvtop);
-              Log.d(TAG, "************** onTouch: isInit:" + isInit);
-        //    invalidate();
-        //    isInit = false;
-        //    return true;
-        //}
-        //if (isInit == true) {
-            PlaySong.editButton.setBackgroundColor(getResources().getColor(R.color.linen));
-            PlaySong.editButton.setTextColor(getResources().getColor(R.color.teal));
-        //}
+        Log.d(TAG, "************** onTouch: isInit:" + isInit);
+        PlaySong.editButton.setBackgroundColor(getResources().getColor(R.color.linen));
+        PlaySong.editButton.setTextColor(getResources().getColor(R.color.teal));
         final float x = event.getX();
         final float y = event.getY();
         //Log.d(TAG, "onTouch event:" + event + " x:" + x + " y:" + y);
@@ -756,15 +667,9 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
             // you have to click "exclude"
         }
         Main.isNewStartStop = true;
-        // songStartAtLoc is counter and counter * 100 = ms into the file
-        // for example saving AMRO.0.0 at 2 seconds = 2000 ms / 100 = 20 start at
-        // and end at 3 seconds = counter 30
-        // now I'm using Main.records for spectrum and fft detail  so use incY
-        // whoops I don't know anything about Main.records while I am editing the file if it hasn't been defined.
-        // incY = (float) (Main.lengthEachRecord / (float) Main.baseStep);  // doesn't change with frequency -- does with repeating calls
-        // songStartAtLoc and songStopAtLoc are records
-        // start at end stop at could already be used.
-        int oldStart = Main.songStartAtLoc;
+
+
+        int oldStart = Main.songStartAtLoc; // msec = start pixels / pixel/ms = ms
         int oldStop = Main.songStopAtLoc;
         Log.d(TAG, "oldStart:" + oldStart + " oldStop:" + oldStop);
         int newStart = 0;
@@ -870,7 +775,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
 
             // Start
             if (Main.songStartAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'Start'";
+                qry = "SELECT * FROM Filter WHERE XcName = " + q + xcNam + q  + " AND FilterType = 'Start'";
                 rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
                 Main.db.beginTransaction();
                 if (rs.getCount() == 0) {
@@ -882,7 +787,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
                     val.clear();
                 } else {
                     String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStartAtLoc +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'Start'";
+                            " WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Start'";
                     Main.db.execSQL(qry1);
                 }
                 Main.db.setTransactionSuccessful();
@@ -890,7 +795,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
             }
             // Stop
             if (Main.songStopAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'Stop'";
+                qry = "SELECT * FROM Filter WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Stop'";
                 rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
                 Main.db.beginTransaction();
                 if (rs.getCount() == 0) {
@@ -902,7 +807,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
                     val.clear();
                 } else {
                     String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStopAtLoc +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'Stop'";
+                            " WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Stop'";
                     Main.db.execSQL(qry1);
                 }
                 Main.db.setTransactionSuccessful();
@@ -954,7 +859,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         qry = "UPDATE SongList" +
                 " SET FilterStart = " + Main.filterStartAtLoc +
                 ", FilterStop = " + Main.filterStopAtLoc +
-                ", LowFreqCutoff = " + (int) ((float) Main.lowFreqCutoff * Main.hzPerStep + 0.5) +  // freq only in database 0->255 everywhere else
+                ", LowFreqCutoff = " + (int) ((float) Main.lowFreqCutoff * Main.hzPerStep + 0.5) +  // freq only in database 0->511 everywhere else
                 ", HighFreqCutoff = " + (int) ((float) Main.highFreqCutoff * Main.hzPerStep + 0.5)  +
                 " WHERE Ref = " + Main.existingRef +
                 " AND Inx = " + Main.existingInx +
@@ -1058,15 +963,10 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         Main.adjustViewOption = "clearExclude";
         invalidate();
         isExcludeOnce = true;
-        return false;
+        return true;
     } // exclude square
 
     boolean cancelSquare() {
-        //if (isCancelOnce == true) {
-        //    Log.d(TAG, "Blocking any ActionDown on Cancel" );
-        //    return false;
-        //}
-
         // NOTE: cancel modifies the record by zeroing existing data -- this is not escape or quit -- use the back key for that
         // ALSO:  Main.songStartAtLoc and Main.songStopAtLoc are not modified with cancel -- delete the record if that is what you want
         Log.d(TAG, "ActionDown inside Cancel" );
@@ -1078,11 +978,11 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         finalEnd = 0;
         //finalStart = 0;
         //finalStop = 0;
-        Main.filterStartAtLoc = 0;
+        Main.filterStartAtLoc = 0; // msec = start pixels / pixel/ms = ms
         Main.filterStopAtLoc = 0;
         Main.lowFreqCutoff = 0;
         Main.highFreqCutoff = 0;
-        //Main.songStartAtLoc = 0;
+        //Main.songStartAtLoc = 0; // msec = start pixels / pixel/ms = ms
         //Main.songStopAtLoc = 0;
         Main.db.beginTransaction();
         qry = "UPDATE SongList" +
@@ -1103,7 +1003,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         if (locStart > 0 && locEnd > locStart) { // yes
             String xcNam = song.substring(locStart, locEnd);
             Log.d(TAG, "cancel xcNam:" + xcNam);
-            qry = "DELETE FROM Filter WHERE XcName = '" + xcNam + "'";
+            qry = "DELETE FROM Filter WHERE XcName = " + q + xcNam + q;
             Main.db.execSQL(qry);
         }
         Main.db.setTransactionSuccessful();
@@ -1113,7 +1013,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         Main.adjustViewOption = "clear";
         invalidate();
         isCancelOnce = true;
-        return false;
+        return true;
     }
 
 }

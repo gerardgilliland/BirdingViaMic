@@ -40,7 +40,7 @@ public class SongAdapter extends BaseAdapter implements SectionIndexer {
 
     public View getView(int position, View convertView, ViewGroup parent) {
         View vi=convertView;
- //   	Log.d(TAG, "getView outside of OnClickListener position:" + position);
+//   	Log.d(TAG, "getView outside of OnClickListener position:" + position);
         if(vi==null) {
 //        	Log.d(TAG, "getView vi is null");
             vi = inflater.inflate(R.layout.song_list, null);            
@@ -49,7 +49,7 @@ public class SongAdapter extends BaseAdapter implements SectionIndexer {
             holder.check = (CheckBox) vi.findViewById(R.id.check);
             vi.setTag(holder);
         } else {
- //       	Log.d(TAG, "getView vi is NOT null");
+//       	Log.d(TAG, "getView vi is NOT null");
             holder = (ViewHolder) vi.getTag();        	
         }
         holder.text.setText(Main.songsCombined[position]);
@@ -78,33 +78,33 @@ public class SongAdapter extends BaseAdapter implements SectionIndexer {
         return vi;
     }
     
-        CheckBox check;
-		TextView text;
+	CheckBox check;
+	TextView text;
 
-		public int getPositionForSection(int section) {
-			// If there is no item for current section, previous section will be selected
-			for (int i = section; i >= 0; i--) {
-				for (int j = 0; j < getCount(); j++) {
-					if (StringMatcher.match(String.valueOf(Main.songsCombined[j].charAt(0)), String.valueOf(mSections.charAt(i))))
-						return j;
-				}
+	public int getPositionForSection(int section) {
+		// If there is no item for current section, previous section will be selected
+		for (int i = section; i >= 0; i--) {
+			for (int j = 0; j < getCount(); j++) {
+				if (StringMatcher.match(String.valueOf(Main.songsCombined[j].charAt(0)), String.valueOf(mSections.charAt(i))))
+					return j;
 			}
-			return 0;
 		}
+		return 0;
+	}
 
-		public int getSectionForPosition(int position) {
-			// TODO Auto-generated method stub
- 	   	 	Log.d(TAG, "getSectionForPosition position:" + position);  
+	public int getSectionForPosition(int position) {
+		// TODO Auto-generated method stub
+		Log.d(TAG, "getSectionForPosition position:" + position);
 //			EditSpecies.chk[position] = !EditSpecies.chk[position]; // this doesn't do anything
-			return 0;
-		}
+		return 0;
+	}
 
-		public Object[] getSections() {
-			String[] sections = new String[mSections.length()];
-			for (int i = 0; i < mSections.length(); i++)
-				sections[i] = String.valueOf(mSections.charAt(i));
-			return sections;
-		}
+	public Object[] getSections() {
+		String[] sections = new String[mSections.length()];
+		for (int i = 0; i < mSections.length(); i++)
+			sections[i] = String.valueOf(mSections.charAt(i));
+		return sections;
+	}
 
 
 }

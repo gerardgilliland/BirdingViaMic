@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 
 import android.annotation.TargetApi;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -37,12 +38,14 @@ public class Options extends AppCompatActivity implements OnClickListener{
 	private static Boolean isUseAudioRecorder;
     public static CheckBox checkSampleRate;
     private static Boolean isSampleRate;
+	public static CheckBox checkStereo;
+	private static Boolean isStereo;
 	public static CheckBox checkStartRecordScreen;
 	private static Boolean isStartRecordScreen;	
 	public static CheckBox checkStartRecording;
 	private static Boolean isStartRecording;
-    public static CheckBox checkBatchDownload;
-    private static Boolean isBatchDownload;
+    //public static CheckBox checkBatchDownload;
+    //private static Boolean isBatchDownload;
     public static CheckBox checkLoadDefinition;
     private static Boolean isLoadDefinition;
 	public static CheckBox checkDebug;
@@ -70,13 +73,13 @@ public class Options extends AppCompatActivity implements OnClickListener{
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG, "Navigation Icon tapped");
-                finish();
-            }
-        });
+			public void onClick(View v) {
+				Log.d(TAG, "Navigation Icon tapped");
+				finish();
+			}
+		});
 
         checkAutoFilter = (CheckBox) findViewById(R.id.autoFilter_check);
         checkAutoFilter.setOnClickListener(this);
@@ -148,7 +151,12 @@ public class Options extends AppCompatActivity implements OnClickListener{
         Options.isSampleRate = Main.isSampleRate;
         checkSampleRate.setChecked(isSampleRate);
 
-        checkStartRecordScreen = (CheckBox) findViewById(R.id.start_record_screen_check);
+		checkStereo = (CheckBox) findViewById(R.id.stereo_check);
+		checkStereo.setOnClickListener(this);
+		Options.isStereo = Main.isStereo;
+		checkStereo.setChecked(isStereo);
+
+		checkStartRecordScreen = (CheckBox) findViewById(R.id.start_record_screen_check);
 	    checkStartRecordScreen.setOnClickListener(this);
 	    Options.isStartRecordScreen = Main.isStartRecordScreen;
 	    checkStartRecordScreen.setChecked(isStartRecordScreen);
@@ -158,10 +166,10 @@ public class Options extends AppCompatActivity implements OnClickListener{
 	    Options.isStartRecording = Main.isStartRecording;
 	    checkStartRecording.setChecked(isStartRecording);
 
-        checkBatchDownload = (CheckBox) findViewById(R.id.batch_download_check);
-        checkBatchDownload.setOnClickListener(this);
-        Options.isBatchDownload = Main.isBatchDownload;
-        checkBatchDownload.setChecked(isBatchDownload);
+        //checkBatchDownload = (CheckBox) findViewById(R.id.batch_download_check);
+        //checkBatchDownload.setOnClickListener(this);
+        //Options.isBatchDownload = Main.isBatchDownload;
+        //checkBatchDownload.setChecked(isBatchDownload);
 
         checkLoadDefinition = (CheckBox) findViewById(R.id.load_definition_check);
         checkLoadDefinition.setOnClickListener(this);
@@ -265,6 +273,12 @@ public class Options extends AppCompatActivity implements OnClickListener{
                 Main.isSampleRate = isSampleRate;
                 break;
             }
+			case R.id.stereo_check: {
+				Log.d(TAG, "onClick stereo_check");
+				isStereo = checkStereo.isChecked();
+				Main.isStereo = isStereo;
+				break;
+			}
             case R.id.start_record_screen_check: {
                 Log.d(TAG, "onClick start_record_screen_check");
                 isStartRecordScreen = checkStartRecordScreen.isChecked();
@@ -277,11 +291,11 @@ public class Options extends AppCompatActivity implements OnClickListener{
     		    Main.isStartRecording = isStartRecording;
     		    break;
     	    }
-            case R.id.batch_download_check: {
-                Log.d(TAG, "onClick batch_download_check");
-                isBatchDownload = checkBatchDownload.isChecked();
-                Main.isBatchDownload = isBatchDownload; break;
-            }
+            //case R.id.batch_download_check: {
+            //    Log.d(TAG, "onClick batch_download_check");
+            //    isBatchDownload = checkBatchDownload.isChecked();
+            //    Main.isBatchDownload = isBatchDownload; break;
+            //}
             case R.id.load_definition_check: {
                 Log.d(TAG, "onClick load_definition_check");
                 isLoadDefinition = checkLoadDefinition.isChecked();
@@ -310,9 +324,9 @@ public class Options extends AppCompatActivity implements OnClickListener{
                		file = new File(Main.definepath + "voiced.txt");
                		deleted = file.delete();
                		Log.d(TAG, "deleteFile voiced.txt:" + deleted);
-					//file = new File(Main.definepath + "VoicedMaxPwrRec.txt");
-					//deleted = file.delete();
-					//Log.d(TAG, "deleteFile VoicedMaxPwrRec.txt:" + deleted);
+					file = new File(Main.definepath + "AudioLen.csv");
+					deleted = file.delete();
+					Log.d(TAG, "deleteFile AudioLen.csv:" + deleted);
 
     		    }
     		break;
@@ -372,15 +386,18 @@ public class Options extends AppCompatActivity implements OnClickListener{
 		temp = Main.isSampleRate ? 1 : 0;
 		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'SampleRate'";
 		Main.db.execSQL(qry);
+		temp = Main.isStereo ? 1 : 0;
+		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'Stereo'";
+		Main.db.execSQL(qry);
 		temp = Main.isStartRecordScreen ? 1 : 0;
 		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'StartRecordScreen'";
 		Main.db.execSQL(qry);
 		temp = Main.isStartRecording ? 1 : 0;
 		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'StartRecording'";
 		Main.db.execSQL(qry);
-		temp = Main.isBatchDownload ? 1 : 0;
-		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'BatchDownload'";
-		Main.db.execSQL(qry);
+		//temp = Main.isBatchDownload ? 1 : 0;
+		//qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'BatchDownload'";
+		//Main.db.execSQL(qry);
 		temp = Main.isLoadDefinition ? 1 : 0;
 		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'LoadDefinition'";
 		Main.db.execSQL(qry);

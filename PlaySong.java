@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Locale;
 
 import android.annotation.TargetApi;
@@ -21,6 +22,7 @@ import android.graphics.Paint;
 import android.media.MediaPlayer;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -46,15 +48,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	public static int base = 1024;
 	private int baseAvailable = 0;
 	public static int baseStep = 2;
-	//private int bestPhraseLen = 0;
-	//private int bestPhraseLenD2 = 0;
-	//private int bestPhraseLenD4 = 0;
-	//private int bestPhraseLenT2 = 0;
 	RelativeLayout bottomButtons;
 	public static float[] bufIn;
 	public static float[] bufImagOut;
 	public static float[] bufRealOut;
-	public static int buttonHeight = 0;
 	public static int cntr;
 	private int cntSingle = 0;
 	float coefB = 0;
@@ -71,6 +68,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	private int defineInx = 0;
 	private int defineRef = 0;
 	private int defineSeg = 0;
+	long delayTime = 0;
 	private DecodeFileJava dfj;
 	private int dimFix = 0;
 	public static float distance[];
@@ -95,6 +93,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	private static FileOutputStream fos6 = null;
 	public static int[][] freqRank;
 	private float fullMult; //doesn't seem to do anything
+	private Handler handler;
 	public static int highFreqCutoff;
 	// for id debug idXXxxxx only used in print log which is currently commented out
 	private int idCntName = 0; // count of matches in id
@@ -130,8 +129,9 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	public static float[] imagIn;
 	private static float[] imagKernelFreq;
 	private static int incSize;
+	public static int interrupt = 40;
 	public static boolean isInit = false;
-	public static boolean isPlaying = false;
+	//public static boolean isPlaying = false;
 	private boolean isSetCriteria = false; // only use this for calculating new identify criteria
 	//	1) delete from Identify in aSQLiteManager
 	//	2) set this flag true - compile and run the app
@@ -140,6 +140,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	//	5) in aSQLiteManager select table identify then menu > export to csv file
 	//	6) copy identify.csv to computer with file Manager and input to Identify.xls
 	//  7) use the average results in the criteria in identify
+	public static float lenMs = 0;  // length of time in millisec since start of song
 	private float lim1Base = 0;  // either lim1 or Main.filterMaxPower
 	private int[] locationAtMax;  // used to adjust fft frames
 	public static int lowFreqCutoff;
@@ -157,6 +158,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	public static VisualizerView mVisualizerView;
 	public static int numCepstra = 16;  // was 12
 	private int numMelFilters = 128;  // gg was 30 -- then 32 now 64 -- WAIT -- IT IS 128
+	public static int numSamplesPlayed = 0;
 	int cbin[] = new int[numMelFilters + 2];
 	private float offset = 0;
 	private float originalMean = 0;
@@ -172,6 +174,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	private static int previousRef = 0;
 	private static int previousInx = 0;
 	public static float[] pwr;
+	char q = 34;
 	private String qry = "";
 	public static int quality[];
 	private static int qualLow;
@@ -179,14 +182,17 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	public static int rankCntr = 4;
 	private static float[] realKernelFreq;
 	public static int records;
+	int result = 0;
 	private static float[] rmsEnergy;
 	private Cursor rs;  // I see cursor as RecordSet (rs)
 	private Cursor rsTot;
 	private int[] samplesToMax;  // now in each record
+	public static float scalePxPerMs;
 	private static float silPhrRatio = 0;
 	private float snMean = 0;
 	private float stdDev;
 	private float stdLim;
+	private long startTime;
 	public static int stepSize; // 512 = 1024/2
 	float[] temp = new float[base / 2];
 	private int tolerance = 20; // number of times to check for data from the database before giving up (increment delta each pass)
@@ -226,8 +232,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 		bottomButtons = (RelativeLayout) findViewById(R.id.bottom_buttons);
 		playButton = (Button) findViewById(R.id.play_button);
-		buttonHeight = playButton.getHeight();
-		Log.d(TAG, "onCreate buttonHeight:" + buttonHeight);
+		//buttonHeight = playButton.getHeight(); // it is zero here
+		//Log.d(TAG, "onCreate buttonHeight:" + buttonHeight);
 		findViewById(R.id.play_button).setOnClickListener(this);
 		editButton = (Button) findViewById(R.id.edit_button);  // why does the define button hold teal and the edit button does not hold teal
 		findViewById(R.id.edit_button).setOnClickListener(this);
@@ -245,6 +251,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		fft = new FFTjava();
 		fftbas = new FftBas();
 		curveFit = new CurveFit();
+		handler = new Handler();
 		if (Main.isLoadDefinition == true) {
 			playButton.performClick();
 		}
@@ -282,6 +289,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				if (mVisualizerView != null) {
 					mVisualizerView.release();
 				}
+				addLineRenderer();
 				showAdjustView();
 				break;
 			}
@@ -335,6 +343,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 			}
 			identifyPressed(v);
+			//Log.d(TAG, "visualizer detail filterAve:" + VisualizerView.filterAve);
+
 		}
 	}
 
@@ -380,7 +390,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			removeAdjustView();
 			mPlayer.release();
 			mPlayer = null;
-			isPlaying = false;
+			Main.isPlaying = false;
 		}
 		if (rs != null) {
 			rs.close();
@@ -444,16 +454,17 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int left = mVisualizerView.getLeft();
 		int right = mVisualizerView.getRight();
 		Main.lengthEachRecord = ((float) (bottom-top) / (float) (Main.totalCntr+1));
-		if (Main.stopAt < 50) {   // just use part of the screen for shorter than 5 seconds.
-			Main.lengthEachRecord = (float) (bottom - top) / 50f;
-		}
+		// it can go from startup to record to play without getting button height thus no text size
+		Main.buttonHeight = playButton.getHeight();
+		//Main.buttonHeight  = playButton.getBottom() - playButton.getTop(); // works
+		Log.d(TAG, "*  *  addLineRenderer buttonHeight:" + Main.buttonHeight);
 		Log.d(TAG, "*  *  Toolbar top:" + toolbar.getTop() + " bottom:" + toolbar.getBottom() + " left:" + toolbar.getLeft() + " right:" + toolbar.getRight());
 		Log.d(TAG, "*  *  VisualizerView top:" + top + " bottom:" + bottom + " left:" + left + " right:" + right);
 		Log.d(TAG, "*  *  Buttons top:" + bottomButtons.getTop() + " bottom:" + bottomButtons.getBottom() + " left:" + bottomButtons.getLeft() + " right:" + bottomButtons.getRight());
 		Log.d(TAG, "*  *  playButton top:" + playButton.getTop() + " bottom:" + playButton.getBottom() + " left:" + playButton.getLeft() + " right:" + playButton.getRight());
 		Log.d(TAG, "*  *  before addLineRenerer Main.lengthEachRecord:" + Main.lengthEachRecord);
-		LineRenderer lineRenderer = new LineRenderer(linePaint);
-		mVisualizerView.addRenderer(lineRenderer);
+		//LineRenderer lineRenderer = new LineRenderer(linePaint);
+		//mVisualizerView.addRenderer(lineRenderer);
 		isInit = true; // used in AdjustView
 	}
 
@@ -462,17 +473,16 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		if (mPlayer != null) cleanUp();
 		Log.d(TAG, "startSong isNewStartStop:" + Main.isNewStartStop + " songCounter:" + Main.songCounter
 				+ " thisSong:" + Main.thisSong + " activeSong:" + activeSong);
-		char q = 34;
 		if (activeSong == Main.songCounter && Main.isLoadDefinition == false) {
 			activeSong--;  // use the last known
 		}
 		if ((Main.songCounter > 0) && (activeSong < Main.songCounter)) {
 			Main.thisSong = activeSong;
 			Main.existingName = Main.songs[Main.selectedSong[Main.thisSong]]; // first song selected
-			Log.d(TAG, "startSong inside if .. Main.songpath:" + Main.songpath);  // AMRO_1.2
-			Log.d(TAG, "startSong inside if .. Main.existingName:" + Main.existingName);  // AMRO_1.2
+			Log.d(TAG, "startSong inside if .. Main.songpath:" + Main.songpath);
+			Log.d(TAG, "startSong inside if .. Main.existingName:" + Main.existingName);
 			mFileName = Main.songpath + Main.existingName;
-			Log.d(TAG, "startSong inside if .. mFileName:" + mFileName);  // AMRO_1.2
+			Log.d(TAG, "startSong inside if .. mFileName:" + mFileName);
 			Main.existingRef = Main.ref[Main.selectedSong[Main.thisSong]];
 			Main.existingInx = Main.inx[Main.selectedSong[Main.thisSong]];
 			Main.existingSeg = Main.seg[Main.selectedSong[Main.thisSong]];
@@ -490,7 +500,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				rs.moveToFirst();
 				Main.songStartAtLoc = rs.getInt(0);
 				Main.songStopAtLoc = rs.getInt(1);
-				Main.lowFreqCutoff = (int) (((float)rs.getInt(2)/Main.hzPerStep)+ 0.5f);  // frequency in the database 0->511 everywhere else
+				Main.lowFreqCutoff = (int) (((float)rs.getInt(2)/Main.hzPerStep)+ 0.5f);  // frequency in the database; 0->511 everywhere else
 				Main.highFreqCutoff = (int) (((float)rs.getInt(3)/Main.hzPerStep)+ 0.5f);
 				Main.filterStartAtLoc = rs.getInt(4) ; // millisec
 				Main.filterStopAtLoc = rs.getInt(5);
@@ -536,16 +546,12 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Toast.makeText(this, "Please select a song from the list or record a song to play.", Toast.LENGTH_LONG).show();
 			cleanUp();
 		}
-		Log.d(TAG, "existingName to be played / visualized:" + Main.existingName);
-		Main.fftcntr = 0;
+
 		Main.cntrFftCall = 0;
 
 		VisualizerView.mCanvasBitmap = null;
 		VisualizerView.mCanvas = null;
 
-		//removeAdjustView();
-
-		Log.d(TAG, "after visualizer view set null" );
 		try {
 			Log.d(TAG, "before mPlayer = new MediaPlayer");
 			if (mPlayer == null) {
@@ -555,12 +561,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				Log.d(TAG, "else before mPlayer.reset" );
 				mPlayer.reset();
 			}
+			Log.d(TAG, "existingName to be played / visualized:" + Main.existingName);
 			mPlayer.setDataSource(mFileName);
 			mPlayer.prepare();
 			Main.duration = mPlayer.getDuration();    // millisec
 
 			Main.audioDataLength = (int) ((float) Main.duration / 1000f * 22050);  // samples = sec * samples/sec
-			Main.audioDataLength -= Main.audioDataLength % base;
+			//Main.audioDataLength -= Main.audioDataLength % base;
 			Log.d(TAG, "audioDataLength:" + Main.audioDataLength + " duration:" + Main.duration);
 			Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
 			Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
@@ -574,7 +581,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 				Main.duration = Main.songStopAtLoc - Main.songStartAtLoc; // millisec
 				Main.audioDataLength = (int) ((float) Main.duration / 1000f * 22050);  // samples = sec * samples/sec
-				Main.audioDataLength -= Main.audioDataLength % base;
 				Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
 				Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
 				Log.d(TAG, "mPlayer NEW duration:" + Main.duration + " NEW audioDataLength:" + Main.audioDataLength );
@@ -584,33 +590,57 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Log.d(TAG, "startPlaying: Main.totalCntr:" + Main.totalCntr +  " stopAt:" + Main.stopAt );
 			Log.d(TAG, "startPlaying: duration:" + Main.duration);
 			Main.cntrFftCallTotal = new int[Main.totalCntr];
-			Main.fftdata = new byte[base];
-
+			result = 0;
 			filterCntr = 0;
 			filterActive = false;
 			Log.d(TAG, "startSong: isLoadDefinition:" + Main.isLoadDefinition);
 			if (Main.isLoadDefinition == true) {
 				stopPlaying();
-				if (Main.sourceMic == 0) {
+				if (Main.sourceMic == 0) {  // SourceMic  0=pre-recorded 1=internal 2=external
 					defineButton.performClick();
 				} else {
 					identifyButton.performClick();
 				}
 			} else {
 				Main.isPlaying = true;
-				Log.d(TAG, "startSong: mPlayer.start()");
-				mVisualizerView.link(mPlayer);  // moved from below
-				mVisualizerView.clearRenderers();
-				addLineRenderer();
+				Calendar cal = Calendar.getInstance();
+				Log.d(TAG, "gc start");
+				System.gc();
+				Log.d(TAG, "gc complete");
 				mPlayer.start();
+				startTime = cal.getTimeInMillis();
+				Log.d(TAG, "1) startSong: startTime:" + startTime);
+				Main.shortCntr = 0;
+				mVisualizerView.flash(); // shortCntr still 0 -- fill in the axes
+				Log.d(TAG, "2) decodeFile in background");
+				new Thread(new Runnable() {
+					public void run() {
+						Log.d(TAG, "start getPcmData with Decode java");
+						result = dfj.getPcmData(); // put it in the short bigendian buffer audioData[]
+					}
+				}).start();
+				bufIn = new float [base]; // supplies 1024 floats
+				imagIn = new float [base];  // default filled with zeros
+				bufRealOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 inverted (not usable) floats
+				bufImagOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 imaginary inverse floats (not usable data)
+				delayTime = cal.getTimeInMillis();
+				long delay = 0;
+				while (Main.shortCntr < base) {
+					long now = cal.getTimeInMillis();
+					delay = delayTime - now;
+					if (delay > 1000) break;
+				}
+				Log.d(TAG, "3) delay:" + delay + " shortCntr:" + Main.shortCntr);
+				Log.d(TAG, "4) start runnable: startTime:" + startTime + " isPlaying:" + Main.isPlaying);
+				handler.postDelayed(runnable, 5);
 			}
 		} catch (IOException e) {
 			Log.e(TAG, "prepare() failed on file:" + mFileName);
 			//	Toast.makeText(this, "Suspect file format -- failed to Read " + mFileName, Toast.LENGTH_LONG).show();
 			Main.isPlaying = false;
+			result = 0;
 			return;
 		}
-
 
 		if(mPlayer != null) {
 			Log.d(TAG, "mPlayer setOnCompletionListener isPlaying:" + Main.isPlaying );
@@ -622,7 +652,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 			});
 		}
-
 
 		if(mPlayer != null) {
 			Log.d(TAG, "mPlayer setOnErrorListener isPlaying:" + Main.isPlaying );
@@ -636,6 +665,46 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 
 	} // startSong
+
+	private Runnable runnable = new Runnable() {
+		@Override
+		public void run() {
+			// find the location in the extracted file.
+			// file is 22050 bytes saved X file length in seconds.
+			// or 22.050 bytes saved each ms.
+			Calendar cal = Calendar.getInstance();
+			long now = cal.getTimeInMillis();
+			lenMs = (float) (now - startTime); // location at this time.
+			int len = (int) lenMs;
+			// note this 22.050 samples / mSec is samples stored
+			// when file is 44.100 samples / mSec mono or 22.050 stereo, I store every other one
+			float recf = lenMs * 22.050f; // samples per mSec location in the file in samples
+			numSamplesPlayed = (int) recf;
+			//Log.d(TAG, "runnable.run() isPlaying:" + Main.isPlaying + " len(ms):" + len + " duration:" + Main.duration);
+			if ((len < Main.duration) && Main.isPlaying) {
+				handler.postDelayed(this, interrupt);
+				updateVisualize();
+			} else {
+				Log.d(TAG, "runnable isPlaying:" + Main.isPlaying + " len(ms):" + len + " duration:" + Main.duration);
+				Log.d(TAG, "final played:" + numSamplesPlayed + " decoded:" + Main.shortCntr);
+				handler.removeCallbacksAndMessages(null);
+				Log.d(TAG, "removeCallbacksAndMessages");
+				stopPlaying();
+			}
+		}
+	};
+
+	public void updateVisualize() {
+		//Log.d(TAG, "updateVisualize played:" + numSamplesPlayed + " decoded:" + Main.shortCntr);
+		if ((numSamplesPlayed+base) < Main.shortCntr) {
+			for (int i=0; i<base; i++) {
+				bufIn[i] = (float)(Main.audioData[numSamplesPlayed+i]);
+			}
+			fft.windowFunc(3, base, bufIn); // hanning -- sharper than hamming
+			fftbas.fourierTransform(base, bufIn, imagIn, bufRealOut, bufImagOut, false);
+			mVisualizerView.flash();
+		}
+	}
 
 	// not used
 	void warningMessage (final CharSequence idText) {
@@ -652,18 +721,47 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	}
 
 	public void identifyPressed(View view) {
-		Log.d(TAG, "identifyPressed or Define pressed (common function)" );
-		int result = 0;
-		Log.d(TAG, "start getPcmData with Decode java");
-		result = dfj.getPcmData(); // put it in the short bigendian buffer audioData[]
-		if (result < 0) {
-			String msg;
+		Log.d(TAG, "identify or Define (common)- decode result:" + result );
+		String msg;
+		if (Main.audioDataLength == 0) {
+			msg = "Can not identify file.";  // tapped id instead of play
+			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+			return;
+		}
+		if (result == 0) { // hasn't been run -- it returns 1 on success
+			result = dfj.getPcmData(); // put it in the short bigendian buffer audioData[]
+		}
+		if (result <= 0) {
+			if (result == 0) {
+				msg = "Unable to analyze the file";
+			}
 			if (result == -1) {
 				msg = "Unable to analyze the file -- suspect Sample Rate";
+			} else if (result == -2) {
+				//Main.isLoadDefinition = false;
+				msg = "Decoder failed on " + Main.existingName;
+				Main.db.beginTransaction();
+				if (Main.isIdentify == true) {
+					qry = "UPDATE SongList SET Identified = 2";
+				} else {
+					qry = "UPDATE SongList SET Defined = 2";
+				}
+					qry +=	" WHERE FileName = " + q + Main.existingName + q +
+						" AND Path = " + Main.path +
+						" AND Ref = " + Main.existingRef +
+						" AND Inx = " + Main.existingInx +
+						" AND Seg = " + Main.existingSeg;
+				Main.db.execSQL(qry);
+				Main.db.setTransactionSuccessful();
+				Main.db.endTransaction();
 			} else {
 				msg = "Unable to read the file";
 			}
 			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+			Main.songCounter = 0;
+			Main.fileReshowExisting = true;
+			cleanUp();
+			finish();
 			return;
 		}
 		Log.d(TAG, "return from Decode java");
@@ -718,13 +816,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 		if (Main.isShowDetail == true || Main.isShowDefinition == true) {
 			Log.d(TAG, "show Defined or Detail data in VisualizerView");
-			//VisualizerView.isDrawOnce = false;
-			//Canvas canvas = new Canvas(VisualizerView.mCanvasBitmap);
-			//mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
-			//mVisualizerView.definitionData(canvas);
-			//mVisualizerView.onDraw(canvas);
-			//VisualizerView vv = new VisualizerView(this);
-			//showAdjustView(); // show definition
 			if (Main.isShowDefinition == true && Main.isShowDetail == false) {
 				Main.adjustViewOption = "showDefinitionData";
 			}
@@ -740,8 +831,9 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 	// ******************************* identify ***********************************
 	// called from fft because I need to identify phrases as they occur. --- MEMORY
-	void identify(int mode, int pc) {
+	void identify(int mode) {
 		//Log.d(TAG, "identify mode:" + mode + " pc:" + pc);
+		int pc = 0;
 		if (mode == 0) {
 			maxTCrit = 0;
 			qry = "SELECT Area FROM Region WHERE IsSelected = 1";
@@ -767,673 +859,567 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 			return;
 		}
-		if (mode == 1) { // one phrase -- i.e. one totals record and phraseLen detail records
-			// live data from fft
-			int istart = phraseStart[pc];
-			int iend = phraseEnd[pc];
-			int iSilence = phraseSilence[pc];
-			int phraseLen = (iend-istart)+1;
-			int [] voPhrase = new int[phraseLen];
-			int [] stmPhrase = new int[phraseLen];
-			int rec = 0;
-			float meanFreq = 0;
-			float meanVoiced = 0;
-			float meanEnergy = 0;
-			float meanDist = 0;
-			float meanQuality = 0;
-			float meanSamples = 0;
-			float stdDevFreq = 0;
-			float stdDevVoiced = 0;
-			float stdDevEnergy = 0;
-			float stdDevDist = 0;
-			float stdDevQuality = 0;
-			float stdDevSamples = 0;
+		if (mode == 1) { // find the unknown -- read each total from the file
+			qry = "SELECT Ref, Inx, Seg, Phrase, Silence, Records, " +
+					" FreqMean, FreqStdDev, VoicedMean, VoicedStdDev," +
+					" EnergyMean, EnergyStdDev, DistMean, DistStdDev," +
+					" QualityMean, QualityStdDev, SampMean, SampStdDev, Slope, SilPhrRatio " +
+					" FROM DefineTotals WHERE Ref = 0 ORDER BY Phrase";
+			Cursor rsUnk = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+			int phraseCntr = rsUnk.getCount();
+			rsUnk.moveToFirst();
+			for (pc = 0; pc < phraseCntr; pc++) {
+				//pc = rsUnk.getInt(3); // current phrase
+				int iSilence = rsUnk.getInt(4);
+				int phraseLen = rsUnk.getInt(5);
+				float meanFreq = rsUnk.getFloat(6);
+				float stdDevFreq = rsUnk.getFloat(7);
+				float meanVoiced = rsUnk.getFloat(8);
+				float stdDevVoiced = rsUnk.getFloat(9);
+				float meanEnergy = rsUnk.getFloat(10);
+				float stdDevEnergy = rsUnk.getFloat(11);
+				float meanDist = rsUnk.getFloat(12);
+				float stdDevDist = rsUnk.getFloat(13);
+				float meanQuality = rsUnk.getFloat(14);
+				float stdDevQuality = rsUnk.getFloat(15);
+				float meanSamples = rsUnk.getFloat(16);
+				float stdDevSamples = rsUnk.getFloat(17);
+				float slopeU = rsUnk.getFloat(18);
+				float silPhrRatioU = rsUnk.getFloat(19);
 
-			// find the mean and stdDev for the phrase
-			rec = 0;
-			for (int i=istart; i <= iend; i++) {
-				meanFreq += pitch[rec] * pitch[rec]; // sum the square
-				voPhrase[rec] = voiced[i];
-				meanVoiced += voPhrase[rec] * voPhrase[rec];
-				meanEnergy += ienergy[rec] * ienergy[rec];
-				meanDist += idistance[rec] * idistance[rec];
-				meanQuality += quality[rec] * quality[rec];
-				stmPhrase[rec] = samplesToMax[i];
-				meanSamples += stmPhrase[rec] * stmPhrase[rec];
-				rec++;
-			} // next i
-			if (rec == 0) {
-				return; // failure
-			}
-			meanFreq /= rec; // incremented above -- now is phraseLen
-			meanFreq = (float) Math.sqrt(meanFreq);
-			meanVoiced /= rec;
-			meanVoiced = (float) Math.sqrt(meanVoiced);
-			meanEnergy /= rec;
-			meanEnergy = (float) Math.sqrt(meanEnergy);
-			meanDist /= rec;
-			meanDist = (float) Math.sqrt(meanDist);
-			meanQuality /= rec;
-			meanQuality = (float) Math.sqrt(meanQuality);
-			meanSamples /= rec;
-			meanSamples = (float) Math.sqrt(meanSamples);
-			rec = 0;
-			for (int i=istart; i <= iend; i++) {
-				stdDevFreq += (float) Math.pow((double) (meanFreq - pitch[rec]),2); // sum the square
-				stdDevVoiced += (float) Math.pow((double) (meanVoiced - voPhrase[rec]),2);
-				stdDevEnergy += (float) Math.pow((double) (meanEnergy - ienergy[rec]),2);
-				stdDevDist += (float) Math.pow((double) (meanDist - idistance[rec]),2);
-				stdDevQuality += (float) Math.pow((double) (meanQuality - quality[rec]),2);
-				// where is coefB and how should it be analyzed -- it's the slope for that phrase -- leave it alone
-				stdDevSamples += (float) Math.pow((double) (meanSamples - stmPhrase[rec]),2);
-				rec++;
-			} // next i
-			stdDevFreq /= rec; // incremented above -- now is phraseLen
-			stdDevFreq = (float) Math.sqrt(stdDevFreq);
-			stdDevVoiced /= rec;
-			stdDevVoiced = (float) Math.sqrt(stdDevVoiced);
-			stdDevEnergy /= rec;
-			stdDevEnergy = (float) Math.sqrt(stdDevEnergy);
-			stdDevDist /= rec;
-			stdDevDist = (float) Math.sqrt(stdDevDist);
-			stdDevQuality /= rec;
-			stdDevQuality = (float) Math.sqrt(stdDevQuality);
-			stdDevSamples /= rec;
-			stdDevSamples = (float) Math.sqrt(stdDevSamples);
-			tolerance = 20;
-			//53M -- doubled for original see note feb12 or Identify10
-			float critPhrase = 14.16f;
-			float critSilence = 1f;
-			float critFreq = 33.5f;
-			float critVoiced = 53.2f;
-			float critEnergy = 50.0f;
-			float critDistance = 29.86f;
-			float critQuality = 25.16f;
-			float critSamplesToMax = 10.78f;
-			float critSilPhrRatio = 8.08f;
-			float critCoefB = 6.6f;
-			float critCorrCoef = 1f;
-/*
-			//51X
-			float critPhrase = 9.599287f;
-			float critSilence = 43.33705f;
-			float critFreq = 14.81213f;
-			float critVoiced = 25.93658f;
-			float critEnergy = 18.92113f;
-			float critDistance = 14.23107f;
-			float critQuality = 11.94174f;
-			float critSamplesToMax = 5.682124f;
-			float critSilPhrRatio = 4.492271f;
-			float critCoefB = 1.054697f;
-			float critCorrCoef = 1f;
-			//51K
-			float critPhrase = 10.98838f;
-			float critSilence = 42.55263f;
-			float critFreq = 15.17247f;
-			float critVoiced = 24.45829f;
-			float critEnergy = 6.8761f;
-			float critDistance = 5.389652f;
-			float critQuality = 12.65118f;
-			float critSamplesToMax = 8.107005f;
-			float critSilPhrRatio = 5.522703f;
-			float critCoefB = 1.071806f;
-			float critCorrCoef = 1f;
-			//51F
-			float critPhrase = 11.53357f;
-			float critSilence = 49.9339f;
-			float critFreq = 17.18963f;
-			float critVoiced = 31.66235f;
-			float critEnergy = 12.36474f;
-			float critDistance = 40.43345f;
-			float critQuality = 12.75579f;
-			float critSamplesToMax = 8.027091f;
-			float critSilPhrRatio = 5.126031f;
-			float critCoefB = 1.486455f;
-			float critCorrCoef = 1f;
-
-			//51E
-			float critPhrase = 7.108583f;
-			float critSilence = 1f; // 40.59806f; not used -- silPhrRatio better results
-			float critFreq = 11.40951f;
-			float critVoiced = 9.107204f;
-			float critEnergy = 7.512582f;
-			float critDistance = 6.902792f;
-			float critQuality = 9.748707f;
-			float critSamplesToMax = 6.535333f;
-			float critSilPhrRatio = 3.477766f;
-			float critCoefB = 1.084798f;
-			float critCorrCoef = 1f;
-			//46X
-			float critPhrase = 4.616692f;
-			float critSilence = 1f; // 21.16414f; not used -- silPhrRatio better results
-			float critFreq = 7.865018f;
-			float critVoiced = 7.11051f;
-			float critEnergy = 9.630603f;
-			float critDistance = 5.373004f;
-			float critQuality = 8.217671f;
-			float critSamplesToMax = 1f;
-			float critSilPhrRatio = 5.772025f;
-			float critCoefB = 2.523184f;
-			float critCorrCoef = 1f;
-*/
-			float critLocation = 1;
-			if (isSetCriteria == true) {
-				tolerance = 200;
-				critPhrase = 1;
-				critFreq = 1;
-				critVoiced = 1;
-				critEnergy = 1;
-				critDistance = 1;
-				critQuality = 1;
-				critSamplesToMax = 1;
-				critSilPhrRatio = 1;
-				critCoefB = 1;
-				critCorrCoef = 1;
-				critSilence = 1;
-				critLocation = 1;
-			}
-//			Log.d(TAG, "plen:" + critPhrase + " freq:" + critFreq + " voic:" + critVoiced +
-//					" ener:" + critEnergy + " dist:" + critDistance + " qual:" + critQuality +
-//					" samp:" + critSamplesToMax + " spr:" + critSilPhrRatio + " cB:" + critCoefB + " cc:" + critCorrCoef);
-
-//	        Log.d(TAG, "Unk phrase:" + pc + " pLen:" + phraseLen + " sil:" + iSilence +
-//					" mF:" + meanFreq +	" sdF:" + stdDevFreq +
-//	        		" mV:" + meanVoiced + " sdV:" + stdDevVoiced + " mE:" + meanEnergy + " sdE:" + stdDevEnergy +
-//	        		" mD:" + meanDist + " sdD:" + stdDevDist + " mQ:" + meanQuality + " sdQ:" + stdDevQuality +
-//	        		" mS:" + meanSamples + " sdS:" + stdDevSamples + " spr:" + critSilPhrRatio + " cB:" + coefB + " cC:" + coefCorr);
-
-			boolean hasTotals = false;
-			int tCrit = 1;
-			while (hasTotals == false) {
-				// get the totals first to limit the detail -- I don't have Ref, Inx, Seg, or Phrase as criteria -- any phrase is ok
-				qry = "SELECT DefineTotals.Ref, Inx, Seg, Phrase, Silence, Records, " +
-						" FreqMean, FreqStdDev, VoicedMean, VoicedStdDev," +
-						" EnergyMean, EnergyStdDev, DistMean, DistStdDev," +
-						" QualityMean, QualityStdDev, SampMean, SampStdDev, Slope, SilPhrRatio, " +
-						" (Abs(Records - " + phraseLen + ") + " +
-						/* " Abs(Silence - " + iSilence + ") + " + */
-						" Abs(FreqMean - " + meanFreq + ") + " +
-						" Abs(FreqStdDev - " + stdDevFreq + ") + " +
-						" Abs(VoicedMean - " + meanVoiced + ") + " +
-						" Abs(VoicedStdDev - " + stdDevVoiced + ") + " +
-						" Abs(EnergyMean - " + meanEnergy + ") + " +
-						" Abs(EnergyStdDev - " + stdDevEnergy + ") + " +
-						" Abs(DistMean - " + meanDist + ") + " +
-						" Abs(DistStdDev - " + stdDevDist + ") + " +
-						" Abs(QualityMean - " + meanQuality + ") + " +
-						" Abs(QualityStdDev - " + stdDevQuality + ") + " +
-						" Abs(SampMean - " + meanSamples + ") + " +
-						" Abs(SampStdDev - " + stdDevSamples + ") + " +
-						" Abs(Slope - " + coefB + ") + " +
-						" Abs(SilPhrRatio - " + silPhrRatio + ")) AS SumVars";
-				qry += ", CodeName.InArea, CodeName.RedList, CodeName.Region" +
-						" FROM DefineTotals JOIN CodeName ON DefineTotals.Ref = CodeName.Ref ";
-				qry += " WHERE FreqMean BETWEEN " + (meanFreq - critFreq*tCrit) + " AND " + (meanFreq + critFreq*tCrit);
-				qry += " AND FreqStdDev BETWEEN " + (stdDevFreq - critFreq*tCrit) + " AND " + (stdDevFreq + critFreq*tCrit);
-				qry += " AND VoicedMean BETWEEN " + (meanVoiced - critVoiced*tCrit) + " AND " + (meanVoiced + critVoiced*tCrit);
-				qry += " AND VoicedStdDev BETWEEN " + (stdDevVoiced - critVoiced*tCrit) + " AND " + (stdDevVoiced + critVoiced*tCrit);
-				qry += " AND EnergyMean BETWEEN " + (meanEnergy - critEnergy*tCrit) + " AND " + (meanEnergy + critEnergy*tCrit);
-				qry += " AND EnergyStdDev BETWEEN " + (stdDevEnergy - critEnergy*tCrit) + " AND " + (stdDevEnergy + critEnergy*tCrit);
-				qry += " AND DistMean BETWEEN " + (meanDist - critDistance*tCrit) + " AND " + (meanDist + critDistance*tCrit);
-				qry += " AND DistStdDev BETWEEN " + (stdDevDist - critDistance*tCrit) + " AND " + (stdDevDist + critDistance*tCrit);
-				qry += " AND QualityMean BETWEEN " + (meanQuality - critQuality*tCrit) + " AND " + (meanQuality + critQuality*tCrit);
-				qry += " AND QualityStdDev BETWEEN " + (stdDevQuality - critQuality*tCrit) + " AND " + (stdDevQuality + critQuality*tCrit);
-				qry += " AND SampMean BETWEEN " + (meanSamples - critSamplesToMax*tCrit) + " AND " + (meanSamples + critSamplesToMax*tCrit);
-				qry += " AND SampStdDev BETWEEN " + (stdDevSamples - critSamplesToMax*tCrit) + " AND " + (stdDevSamples + critSamplesToMax*tCrit);
-				qry += " AND Slope BETWEEN " + (coefB - critCoefB*tCrit) + " AND " + (coefB + critCoefB*tCrit);
-				qry += " AND SilPhrRatio BETWEEN " + (silPhrRatio - critSilPhrRatio*tCrit) + " AND " + (silPhrRatio + critSilPhrRatio*tCrit);
-				qry += " AND Records BETWEEN " + (phraseLen - critPhrase*tCrit) + " AND " + (phraseLen + critPhrase*tCrit);
-				if (Main.isUseLocation == true) {
-					qry += " AND CodeName.InArea = 1";
+				qry = "SELECT Phrase, Record, Freq, Voiced, Energy, Distance, Quality, Samp" +
+						" FROM DefineDetail WHERE Ref = 0 AND Phrase =" + pc + " ORDER BY Record";
+				Cursor rsUnkD = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+				phraseLen = rsUnkD.getCount();
+				rsUnkD.moveToFirst();
+				int[] pitch = new int[phraseLen];
+				int[] voPhrase = new int[phraseLen];
+				int[] ienergy = new int[phraseLen];
+				int[] idistance = new int[phraseLen];
+				int[] quality = new int[phraseLen];
+				int[] stmPhrase = new int[phraseLen];
+				for (int k = 0; k<phraseLen; k++) {
+					pitch[k] = rsUnkD.getInt(2);
+					voPhrase[k] = rsUnkD.getInt(3);
+					ienergy[k] = rsUnkD.getInt(4);
+					idistance[k] = rsUnkD.getInt(5);
+					quality[k] = rsUnkD.getInt(6);
+					stmPhrase[k] = rsUnkD.getInt(7);
+					rsUnkD.moveToNext();
 				}
-				qry += " AND DefineTotals.Ref > 0"; // don't include unidentified (they are saved when debug true and would be read here)
-				qry += " ORDER BY SumVars";
-				//Log.d(TAG, "identify totals qry:" + qry);
-				rsTot = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-				int tcntr = rsTot.getCount();
-				//Log.d(TAG, "identify totals tCrit:" + tCrit + " tcntr:" + tcntr + " qry:" + qry);
-				rsTot.moveToFirst();
-				if (!rsTot.isAfterLast()) {
-					int[] usedRef = new int[tcntr];
-					boolean bestRec = false;
-					for (int t = 0; t<tcntr; t++) { // number of DefineTotals records returned with last query
-						// totals data
-						if (t == 0) {  // sorted by best
-							bestRec = true;
-						}
-						int tRef = rsTot.getInt(0);
-						usedRef[t] = tRef;
-						int skipRef = 0;
-						// only allow same reference ONCE for each phrase. (was twice) -- the test is below
-						for (int ck = 0; ck < t; ck++) {
-							if (tRef == usedRef[ck]) {
-								skipRef++;
-							}
-						}
-						// the inArea rsTot.getInt(21) is covered with isUseLocation
-						String tRedList = rsTot.getString(22); // LC
-						boolean isRedList = activeRedList.contains(tRedList); // a true shows LC is in the string " NE DD LC NT ? "
-						//Log.d(TAG, "skipRef:" + skipRef + " tRedList:" + tRedList + " isRedList:" + isRedList);
+				rsUnkD.close();
 
-						String tRegion = rsTot.getString(23); // NA
-						boolean isRegion = activeRegion.contains(tRegion); // a true shows NA exists in the string " LA MA NA SA "
-						if(tRegion.contains(";") && isRegion == false){
-							String[] tRegn = tRegion.split(";");
-							for (int r = 0; r < tRegn.length; r++) {
-								isRegion = activeRegion.contains(tRegn[r]);
-								if (isRegion == true) {
-									break;
+				tolerance = 20;
+				//56B ave*3 -- Identify10.xls
+				float critPhrase = 13.70558376f;
+				float critSilence = 1f;
+				float critFreqMn= 43.63248731f;
+				float critFreqDv = 25.24263959f;
+				float critVoicedMn = 61.39796954f;
+				float critVoicedDv = 42.39593909f;
+				float critEnergyMn = 44.58883249f;
+				float critEnergyDv = 57.82233503f;
+				float critDistanceMn = 44.5857868f;
+				float critDistanceDv = 17.71979695f;
+				float critQualityMn = 29.72284264f;
+				float critQualityDv = 22.32182741f;
+				float critSamplesToMaxMn = 11.2142132f;
+				float critSamplesToMaxDv = 10.35837563f;
+				float critSilPhrRatio = 8.579695431f;
+				float critCoefB = 12.77360406f;
+				float critCorrCoef = 1f;
+				float critLocation = 1;
+				if (isSetCriteria == true) {
+					tolerance = 200;
+					critPhrase = 1;
+					critFreqMn = 1;
+					critFreqDv = 1;
+					critVoicedMn = 1;
+					critVoicedDv = 1;
+					critEnergyMn = 1;
+					critEnergyDv = 1;
+					critDistanceMn = 1;
+					critDistanceDv = 1;
+					critQualityMn = 1;
+					critQualityDv = 1;
+					critSamplesToMaxMn = 1;
+					critSamplesToMaxDv = 1;
+					critSilPhrRatio = 1;
+					critCoefB = 1;
+					critCorrCoef = 1;
+					critSilence = 1;
+					critLocation = 1;
+				}
+				//			Log.d(TAG, "plen:" + critPhrase + " freq:" + critFreq + " voic:" + critVoiced +
+				//					" ener:" + critEnergy + " dist:" + critDistance + " qual:" + critQuality +
+				//					" samp:" + critSamplesToMax + " spr:" + critSilPhrRatio + " cB:" + critCoefB + " cc:" + critCorrCoef);
+
+				//	        Log.d(TAG, "Unk phrase:" + pc + " pLen:" + phraseLen + " sil:" + iSilence +
+				//					" mF:" + meanFreq +	" sdF:" + stdDevFreq +
+				//	        		" mV:" + meanVoiced + " sdV:" + stdDevVoiced + " mE:" + meanEnergy + " sdE:" + stdDevEnergy +
+				//	        		" mD:" + meanDist + " sdD:" + stdDevDist + " mQ:" + meanQuality + " sdQ:" + stdDevQuality +
+				//	        		" mS:" + meanSamples + " sdS:" + stdDevSamples + " spr:" + critSilPhrRatio + " cB:" + slopeU + " cC:" + coefCorr);
+
+				boolean hasTotals = false;
+				int tCrit = 1;
+				while (hasTotals == false) {
+					// get the totals first to limit the detail -- I don't have Ref, Inx, Seg, or Phrase as criteria -- any phrase is ok
+					qry = "SELECT DefineTotals.Ref, Inx, Seg, Phrase, Silence, Records, " +
+							" FreqMean, FreqStdDev, VoicedMean, VoicedStdDev," +
+							" EnergyMean, EnergyStdDev, DistMean, DistStdDev," +
+							" QualityMean, QualityStdDev, SampMean, SampStdDev, Slope, SilPhrRatio, " +
+							" (Abs(Records - " + phraseLen + ") + " +
+							/* " Abs(Silence - " + iSilence + ") + " + */
+							" Abs(FreqMean - " + meanFreq + ") + " +
+							" Abs(FreqStdDev - " + stdDevFreq + ") + " +
+							" Abs(VoicedMean - " + meanVoiced + ") + " +
+							" Abs(VoicedStdDev - " + stdDevVoiced + ") + " +
+							" Abs(EnergyMean - " + meanEnergy + ") + " +
+							" Abs(EnergyStdDev - " + stdDevEnergy + ") + " +
+							" Abs(DistMean - " + meanDist + ") + " +
+							" Abs(DistStdDev - " + stdDevDist + ") + " +
+							" Abs(QualityMean - " + meanQuality + ") + " +
+							" Abs(QualityStdDev - " + stdDevQuality + ") + " +
+							" Abs(SampMean - " + meanSamples + ") + " +
+							" Abs(SampStdDev - " + stdDevSamples + ") + " +
+							" Abs(Slope - " + slopeU + ") + " +
+							" Abs(SilPhrRatio - " + silPhrRatioU + ")) AS SumVars";
+					qry += ", CodeName.InArea, CodeName.RedList, CodeName.Region" +
+							" FROM DefineTotals JOIN CodeName ON DefineTotals.Ref = CodeName.Ref ";
+					qry += " WHERE FreqMean BETWEEN " + (meanFreq - critFreqMn * tCrit) + " AND " + (meanFreq + critFreqMn * tCrit);
+					qry += " AND FreqStdDev BETWEEN " + (stdDevFreq - critFreqDv * tCrit) + " AND " + (stdDevFreq + critFreqDv * tCrit);
+					qry += " AND VoicedMean BETWEEN " + (meanVoiced - critVoicedMn * tCrit) + " AND " + (meanVoiced + critVoicedMn * tCrit);
+					qry += " AND VoicedStdDev BETWEEN " + (stdDevVoiced - critVoicedDv * tCrit) + " AND " + (stdDevVoiced + critVoicedDv * tCrit);
+					qry += " AND EnergyMean BETWEEN " + (meanEnergy - critEnergyMn * tCrit) + " AND " + (meanEnergy + critEnergyMn * tCrit);
+					qry += " AND EnergyStdDev BETWEEN " + (stdDevEnergy - critEnergyDv * tCrit) + " AND " + (stdDevEnergy + critEnergyDv * tCrit);
+					qry += " AND DistMean BETWEEN " + (meanDist - critDistanceMn * tCrit) + " AND " + (meanDist + critDistanceMn * tCrit);
+					qry += " AND DistStdDev BETWEEN " + (stdDevDist - critDistanceDv * tCrit) + " AND " + (stdDevDist + critDistanceDv * tCrit);
+					qry += " AND QualityMean BETWEEN " + (meanQuality - critQualityMn * tCrit) + " AND " + (meanQuality + critQualityMn * tCrit);
+					qry += " AND QualityStdDev BETWEEN " + (stdDevQuality - critQualityDv * tCrit) + " AND " + (stdDevQuality + critQualityDv * tCrit);
+					qry += " AND SampMean BETWEEN " + (meanSamples - critSamplesToMaxMn * tCrit) + " AND " + (meanSamples + critSamplesToMaxMn * tCrit);
+					qry += " AND SampStdDev BETWEEN " + (stdDevSamples - critSamplesToMaxDv * tCrit) + " AND " + (stdDevSamples + critSamplesToMaxDv * tCrit);
+					qry += " AND Slope BETWEEN " + (slopeU - critCoefB * tCrit) + " AND " + (slopeU + critCoefB * tCrit);
+					qry += " AND SilPhrRatio BETWEEN " + (silPhrRatioU - critSilPhrRatio * tCrit) + " AND " + (silPhrRatioU + critSilPhrRatio * tCrit);
+					qry += " AND Records BETWEEN " + (phraseLen - critPhrase * tCrit) + " AND " + (phraseLen + critPhrase * tCrit);
+					if (Main.isUseLocation == true) {
+						qry += " AND CodeName.InArea = 1";
+					}
+					qry += " AND DefineTotals.Ref > 0"; // don't include unidentified (they are saved when debug true and would be read here)
+					qry += " ORDER BY SumVars";
+					//Log.d(TAG, "identify totals qry:" + qry);
+					rsTot = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+					int tcntr = rsTot.getCount();
+					//Log.d(TAG, "identify totals tCrit:" + tCrit + " tcntr:" + tcntr + " qry:" + qry);
+					rsTot.moveToFirst();
+					if (!rsTot.isAfterLast()) {
+						int[] usedRef = new int[tcntr];
+						boolean bestRec = false;
+						for (int t = 0; t < tcntr; t++) { // number of DefineTotals records returned with last query
+							// totals data
+							if (t == 0) {  // sorted by best
+								bestRec = true;
+							}
+							int tRef = rsTot.getInt(0);
+							usedRef[t] = tRef;
+							int skipRef = 0;
+							// only allow same reference ONCE for each phrase. (was twice) -- the test is below
+							for (int ck = 0; ck < t; ck++) {
+								if (tRef == usedRef[ck]) {
+									skipRef++;
 								}
 							}
-						}
-						//Log.d(TAG, "skipRef:" + skipRef + " tRegion:" + tRegion + " isRegion:" + isRegion);
-						if (skipRef < 2 && isRegion == true && isRedList == true) {  // this reference has not been seen more than ONCE this phrase
-							int tInx = rsTot.getInt(1);
-							int tSeg = rsTot.getInt(2);
-							int tPhrase = rsTot.getInt(3);
-							int tSilence = rsTot.getInt(4);
-							int tRecords = rsTot.getInt(5);  // number of detail records
-							float tFreq = rsTot.getFloat(6);
-							float tFreqSd = rsTot.getFloat(7);
-							float tVoiced = rsTot.getFloat(8);
-							float tVoicedSd = rsTot.getFloat(9);
-							float tEnergy = rsTot.getFloat(10);
-							float tEnergySd = rsTot.getFloat(11);
-							float tDist = rsTot.getFloat(12);
-							float tDistSd = rsTot.getFloat(13);
-							float tQuality = rsTot.getFloat(14);
-							float tQualitySd = rsTot.getFloat(15);
-							float tSamples = rsTot.getFloat(16);
-							float tSamplesSd = rsTot.getFloat(17);
-							float tCoefB = rsTot.getFloat(18);
-							float tSilPhrRatio = rsTot.getFloat(19);
-							float sumVars = rsTot.getFloat(20);
-							if (tRef == previousRef && tInx == previousInx) {
-								idMatchRefInx++;
+							// the inArea rsTot.getInt(21) is covered with isUseLocation
+							String tRedList = rsTot.getString(22); // LC
+							boolean isRedList = activeRedList.contains(tRedList); // a true shows LC is in the string " NE DD LC NT ? "
+							//Log.d(TAG, "skipRef:" + skipRef + " tRedList:" + tRedList + " isRedList:" + isRedList);
+
+							String tRegion = rsTot.getString(23); // NA
+							boolean isRegion = activeRegion.contains(tRegion); // a true shows NA exists in the string " LA MA NA SA "
+							if (tRegion.contains(";") && isRegion == false) {
+								String[] tRegn = tRegion.split(";");
+								for (int r = 0; r < tRegn.length; r++) {
+									isRegion = activeRegion.contains(tRegn[r]);
+									if (isRegion == true) {
+										break;
+									}
+								}
 							}
-							// these data are only used in log which is currenly commented out (below)
-							if (bestRec == true) {
-								idSilence = Math.abs(tSilence-iSilence);
-								idRecords = Math.abs(tRecords-phraseLen);
-								idMFreq = Math.abs(tFreq-meanFreq);  // to compare memory with selected database record
-								idSdFreq = Math.abs(tFreqSd-stdDevFreq);
-								idMVoice = Math.abs(tVoiced-meanVoiced);
-								idSdVoice = Math.abs(tVoicedSd-stdDevVoiced);
-								idMEnergy = Math.abs(tEnergy-meanEnergy);
-								idSdEnergy = Math.abs(tEnergySd-stdDevEnergy);
-								idMDist = Math.abs(tDist-meanDist);
-								idSdDist = Math.abs(tDistSd-stdDevDist);
-								idMQuality = Math.abs(tQuality-meanQuality);
-								idSdQuality = Math.abs(tQualitySd-stdDevQuality);
-								idMSamples = Math.abs(tSamples-meanSamples);
-								idSdSamples = Math.abs(tSamplesSd-stdDevSamples);
-								idSilPhr = Math.abs(tSilPhrRatio-silPhrRatio);
-								idCoefB = Math.abs(tCoefB - coefB);
-							}
-							Main.db.beginTransaction();
-							ContentValues val = new ContentValues();
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) Math.abs(tRecords - phraseLen));
-							val.put("Criteria", "Records" + pc + "_" + t);
-							Main.db.insert("Identify", null, val);
-							int len = phraseLen / 50;
-							if (len > 0) {
-								for (int l=0; l<len; l++) {
+							//Log.d(TAG, "skipRef:" + skipRef + " tRegion:" + tRegion + " isRegion:" + isRegion);
+							if (skipRef < 1 && isRegion == true && isRedList == true) {  // this reference has not been seen more than ONCE this phrase
+								int tInx = rsTot.getInt(1);
+								int tSeg = rsTot.getInt(2);
+								int tPhrase = rsTot.getInt(3);
+								int tSilence = rsTot.getInt(4);
+								int tRecords = rsTot.getInt(5);  // number of detail records
+								float tFreq = rsTot.getFloat(6);
+								float tFreqSd = rsTot.getFloat(7);
+								float tVoiced = rsTot.getFloat(8);
+								float tVoicedSd = rsTot.getFloat(9);
+								float tEnergy = rsTot.getFloat(10);
+								float tEnergySd = rsTot.getFloat(11);
+								float tDist = rsTot.getFloat(12);
+								float tDistSd = rsTot.getFloat(13);
+								float tQuality = rsTot.getFloat(14);
+								float tQualitySd = rsTot.getFloat(15);
+								float tSamples = rsTot.getFloat(16);
+								float tSamplesSd = rsTot.getFloat(17);
+								float tCoefB = rsTot.getFloat(18);
+								float tSilPhrRatio = rsTot.getFloat(19);
+								float sumVars = rsTot.getFloat(20);
+								if (tRef == previousRef && tInx == previousInx) {
+									idMatchRefInx++;
+								}
+								// these data are only used in log which is currenly commented out (below)
+								if (bestRec == true) {
+									idSilence = Math.abs(tSilence - iSilence);
+									idRecords = Math.abs(tRecords - phraseLen);
+									idMFreq = Math.abs(tFreq - meanFreq);  // to compare memory with selected database record
+									idSdFreq = Math.abs(tFreqSd - stdDevFreq);
+									idMVoice = Math.abs(tVoiced - meanVoiced);
+									idSdVoice = Math.abs(tVoicedSd - stdDevVoiced);
+									idMEnergy = Math.abs(tEnergy - meanEnergy);
+									idSdEnergy = Math.abs(tEnergySd - stdDevEnergy);
+									idMDist = Math.abs(tDist - meanDist);
+									idSdDist = Math.abs(tDistSd - stdDevDist);
+									idMQuality = Math.abs(tQuality - meanQuality);
+									idSdQuality = Math.abs(tQualitySd - stdDevQuality);
+									idMSamples = Math.abs(tSamples - meanSamples);
+									idSdSamples = Math.abs(tSamplesSd - stdDevSamples);
+									idSilPhr = Math.abs(tSilPhrRatio - silPhrRatioU);
+									idCoefB = Math.abs(tCoefB - slopeU);
+								}
+								Main.db.beginTransaction();
+								ContentValues val = new ContentValues();
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) Math.abs(tRecords - phraseLen));
+								val.put("Criteria", "Records" + pc + "_" + t);
+								Main.db.insert("Identify", null, val);
+								int len = phraseLen / 50;
+								if (len > 0) {
+									for (int l = 0; l < len; l++) {
+										val.put("Ref", tRef);
+										val.put("Cntr", 0);
+										val.put("Criteria", "length" + pc + "_" + t + "_" + l);
+										Main.db.insert("Identify", null, val);
+									}
+								}
+								if (pc > 0) {
 									val.put("Ref", tRef);
-									val.put("Cntr", 0);
-									val.put("Criteria", "length" + pc + "_" + t + "_" + l);
+									val.put("Cntr", (int) Math.abs(tSilence - iSilence));
+									val.put("Criteria", "Silence");
 									Main.db.insert("Identify", null, val);
 								}
-							}
-							if (pc > 0) {
 								val.put("Ref", tRef);
-								val.put("Cntr", (int) Math.abs(tSilence - iSilence));
-								val.put("Criteria", "Silence");
-								Main.db.insert("Identify", null, val);
-							}
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tFreq - meanFreq)));
-							val.put("Criteria", "meanFreq");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tFreqSd - stdDevFreq)));
-							val.put("Criteria", "stdDevFreq");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tVoiced - meanVoiced)));
-							val.put("Criteria", "meanVoiced");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tVoicedSd - stdDevVoiced)));
-							val.put("Criteria", "stdDevVoiced");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tEnergy - meanEnergy)));
-							val.put("Criteria", "meanEnergy");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tEnergySd - stdDevEnergy)));
-							val.put("Criteria", "stdDevEnergy");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tDist - meanDist)));
-							val.put("Criteria", "meanDist");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tDistSd - stdDevDist)));
-							val.put("Criteria", "stdDevDist");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tQuality - meanQuality)));
-							val.put("Criteria", "meanQuality");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tQualitySd - stdDevQuality)));
-							val.put("Criteria", "stdDevQuality");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tSamples - meanSamples)));
-							val.put("Criteria", "meanSamples");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tSamplesSd - stdDevSamples)));
-							val.put("Criteria", "stdDevSamples");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tSilPhrRatio - silPhrRatio)));
-							val.put("Criteria", "silPhrRatio");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) (Math.abs(tCoefB - coefB)));
-							val.put("Criteria", "slope");
-							Main.db.insert("Identify", null, val);
-							val.put("Ref", tRef);
-							val.put("Cntr", (int) sumVars); // already subtracted in query
-							val.put("Criteria", "sumVars");
-							Main.db.insert("Identify", null, val);
-							Main.db.setTransactionSuccessful();
-							Main.db.endTransaction();
-							val.clear();
-//							Log.d(TAG, " db tCrit:" + tCrit + " Ref:" + tRef + " Inx:" + tInx + " phrase:" + tPhrase +
-//									" len:" + tRecords + " sil:" + tSilence + " tF:" + tFreq + " sdF:" + tFreqSd +
-//									" tV:" + tVoiced + " sdV:" + tVoicedSd + " tE:" + tEnergy + " sdE:" + tEnergySd +
-//									" tD:" + tDist + " sdD:" + tDistSd + " tQ:" + tQuality + " sdQ:" + tQualitySd +
-//									" sdS:" + tSamplesSd +
-//									" spr:" + tSilPhrRatio + " cb:" + tCoefB + " cc:" + tCorrCoef +
-//									" sumVars:" + sumVars);
-//							if (bestRec == true) {   // just first one
-//								Log.d(TAG, " best freq:" + idMFreq + " sdFreq:" + idSdFreq +
-//									" energy:" + idMEnergy + " sdEnergy:" + idSdEnergy + " dist:" + idMDist + " sdDist:" + idSdDist +
-//									" qual:" + idMQuality + " sdQual:" + idSdQuality + " samp:" + idMSamples + " sdSamp:" + idSdSamples +
-//									" spr:" + idSilPhr + " cb:" + idCoefB + " cc:" + idCorrCoef +
-//									" sumVars:" + sumVars );
-//								bestRec = false;
-//							}
-							// compare phrase in memory with the detail associated with this selected totals record
-							rec = 0;
-							qry = "SELECT * from DefineDetail" +
-									" WHERE Ref = " + tRef +
-									" AND Inx = " + tInx +
-									" AND Seg = " + tSeg +
-									" AND Phrase = " + tPhrase +
-									" ORDER BY Record";
-							rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-							int dcntr = rs.getCount();
-							if (dcntr > 0 && phraseLen > 0) {
-								// compare detail record found with the in-memory record of the current phrase
-								rs.moveToFirst();
-								int dRef = rs.getInt(0);
-								int dInx = rs.getInt(1);
-								int dSeg = rs.getInt(2);
-								int dPhrase = rs.getInt(3);
-								int dRecord = rs.getInt(4);
-								int fit = 0;
-								int lcntr = dcntr;  // loop cntr
-								int lenPlusTwo = 0;
-								if (dcntr == phraseLen) { // the database matches memory
-									lenPlusTwo = phraseLen+2; // use all the phrase of the unknown in memory
-									fit = 1; // offset
-								}
-								if (dcntr < phraseLen) {  // database less than memory
-									lenPlusTwo = dcntr+2; // use all the database and duplicate the first and last
-									fit = 1; // offset
-								}
-								if (dcntr > phraseLen) { // database more than memory
-									lenPlusTwo = phraseLen+2;
-									if (dcntr+1 == lenPlusTwo) { // just one larger
-										fit = 1;
-									} else {
-										fit = 0;
-										lcntr = lenPlusTwo;
-									}
-								}
-								int[] dFreq = new int[lenPlusTwo];
-								int[] dVoic = new int[lenPlusTwo];
-								float[] dEner = new float[lenPlusTwo];
-								float[] dDist = new float[lenPlusTwo];
-								float[] dQual = new float[lenPlusTwo];
-								float[] dSamp = new float[lenPlusTwo];
-								if (fit == 1) { // populate the first row twice
-									dFreq[0] = rs.getInt(5);
-									dVoic[0] = rs.getInt(6);
-									dEner[0] = rs.getInt(7);
-									dDist[0] = rs.getInt(8);
-									dQual[0] = rs.getInt(9);
-									dSamp[0] = rs.getInt(10);
-								}
-								// the first two rows match and the last two rows match
-								//Log.d(TAG, "dcntr:" + dcntr + " phraseLen:" + phraseLen + " plus2:" + lenPlusTwo + " lcntr:" + lcntr + " fit:" + fit);
-								for (int k=0; k < lcntr; k++) {
-									dFreq[k+fit] = rs.getInt(5);
-									dVoic[k+fit] = rs.getInt(6);
-									dEner[k+fit] = rs.getInt(7);
-									dDist[k+fit] = rs.getInt(8);
-									dQual[k+fit] = rs.getInt(9);
-									dSamp[k+fit] = rs.getInt(10);
-									rs.moveToNext();
-								}
-								if (fit == 1 || lcntr == dcntr) { // if fit == 0 I've already positioned with above moveToNext
-									rs.moveToLast(); // the one greater will write over the same data others will add duplicate to the end
-								}
-								dFreq[lenPlusTwo-1] = rs.getInt(5);
-								dVoic[lenPlusTwo-1] = rs.getInt(6);
-								dEner[lenPlusTwo-1] = rs.getInt(7);
-								dDist[lenPlusTwo-1] = rs.getInt(8);
-								dQual[lenPlusTwo-1] = rs.getInt(9);
-								dSamp[lenPlusTwo-1] = rs.getInt(10);
-								lcntr = lenPlusTwo-2;
-								// the data has now been loaded -- time to compare
-								int bestFreq = 0;
-								int bestVoic = 0;
-								float bestEner = 0;
-								float bestDist = 0;
-								float bestQual = 0;
-								float bestSamp = 0;
-								int dF = 0;
-								int dV = 0;
-								float dE = 0;
-								float dD = 0;
-								float dQ = 0;
-								float dS = 0;
-								float temp = 0;
-								int savFitF = 0;
-								int savFitV = 0;
-								int savFitE = 0;
-								int savFitD = 0;
-								int savFitQ = 0;
-								int savFitS = 0;
-								for (fit=0; fit<3; fit++) {
-									dF = 0;
-									dV = 0;
-									dE = 0;
-									dD = 0;
-									dQ = 0;
-									dS = 0;
-									for (int k=0; k < lcntr; k++) {
-										temp = pitch[k] - dFreq[fit+k];
-										dF += temp * temp;
-										temp = voPhrase[k] - dVoic[fit+k];
-										dV += temp * temp;
-										temp = ienergy[rec] - dEner[fit+k];
-										dE += temp * temp;
-										temp = idistance[rec] - dDist[fit+k];
-										dD += temp * temp;
-										temp = quality[rec] - dQual[fit+k];
-										dQ += temp * temp;
-										temp = stmPhrase[rec] - dSamp[fit+k];
-										dS += temp * temp;
-									} // next rec in this phrase
-									if (fit==0) {
-										bestFreq = dF;
-										bestVoic = dV;
-										bestEner = dE;
-										bestDist = dD;
-										bestQual = dQ;
-										bestSamp = dS;
-									} else { // pick the lowest
-										if (bestFreq > dF) {
-											bestFreq = dF;
-											savFitF = fit;
-										}
-										if (bestVoic > dV) {
-											bestVoic = dV;
-											savFitV = fit;
-										}
-										if (bestEner > dE) {
-											bestEner = dE;
-											savFitE = fit;
-										}
-										if (bestDist > dD) {
-											bestDist = dD;
-											savFitD = fit;
-										}
-										if (bestQual > dQ) {
-											bestQual = dQ;
-											savFitQ = fit;
-										}
-										if (bestSamp > dS) {
-											bestSamp = dS;
-											savFitS = fit;
-										}
-									}
-								}
-								bestFreq /= dcntr;
-								bestFreq = (int) Math.sqrt(bestFreq);
-								bestVoic /= dcntr;
-								bestVoic = (int) Math.sqrt(bestVoic);
-								bestEner /= dcntr;
-								bestEner = (float) Math.sqrt(bestEner);
-								bestDist /= dcntr;
-								bestDist = (float) Math.sqrt(bestDist);
-								bestQual /= dcntr;
-								bestQual = (float) Math.sqrt(bestQual);
-								bestSamp /= dcntr;
-								bestSamp = (float) Math.sqrt(bestSamp);
-								Main.db.beginTransaction();
-								val.put("Ref", tRef);
-								val.put("Cntr", bestFreq);
-								val.put("Criteria", "Freq" + savFitF);
+								val.put("Cntr", (int) (Math.abs(tFreq - meanFreq)));
+								val.put("Criteria", "meanFreq");
 								Main.db.insert("Identify", null, val);
 								val.put("Ref", tRef);
-								val.put("Cntr", bestVoic);
-								val.put("Criteria", "Voiced" + savFitV);
+								val.put("Cntr", (int) (Math.abs(tFreqSd - stdDevFreq)));
+								val.put("Criteria", "stdDevFreq");
 								Main.db.insert("Identify", null, val);
 								val.put("Ref", tRef);
-								val.put("Cntr", (int) bestEner);
-								val.put("Criteria", "Energy" + savFitE);
+								val.put("Cntr", (int) (Math.abs(tVoiced - meanVoiced)));
+								val.put("Criteria", "meanVoiced");
 								Main.db.insert("Identify", null, val);
 								val.put("Ref", tRef);
-								val.put("Cntr", (int) bestDist);
-								val.put("Criteria", "Dist" + savFitD);
+								val.put("Cntr", (int) (Math.abs(tVoicedSd - stdDevVoiced)));
+								val.put("Criteria", "stdDevVoiced");
 								Main.db.insert("Identify", null, val);
 								val.put("Ref", tRef);
-								val.put("Cntr", (int) bestQual);
-								val.put("Criteria", "Quality" + savFitQ);
+								val.put("Cntr", (int) (Math.abs(tEnergy - meanEnergy)));
+								val.put("Criteria", "meanEnergy");
 								Main.db.insert("Identify", null, val);
 								val.put("Ref", tRef);
-								val.put("Cntr", (int) bestSamp);
-								val.put("Criteria", "Samples" + savFitS);
+								val.put("Cntr", (int) (Math.abs(tEnergySd - stdDevEnergy)));
+								val.put("Criteria", "stdDevEnergy");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tDist - meanDist)));
+								val.put("Criteria", "meanDist");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tDistSd - stdDevDist)));
+								val.put("Criteria", "stdDevDist");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tQuality - meanQuality)));
+								val.put("Criteria", "meanQuality");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tQualitySd - stdDevQuality)));
+								val.put("Criteria", "stdDevQuality");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tSamples - meanSamples)));
+								val.put("Criteria", "meanSamples");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tSamplesSd - stdDevSamples)));
+								val.put("Criteria", "stdDevSamples");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tSilPhrRatio - silPhrRatioU)));
+								val.put("Criteria", "silPhrRatio");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) (Math.abs(tCoefB - slopeU)));
+								val.put("Criteria", "slope");
+								Main.db.insert("Identify", null, val);
+								val.put("Ref", tRef);
+								val.put("Cntr", (int) sumVars); // already subtracted in query
+								val.put("Criteria", "sumVars");
 								Main.db.insert("Identify", null, val);
 								Main.db.setTransactionSuccessful();
 								Main.db.endTransaction();
 								val.clear();
-							} // if dcntr > 0
-							rs.close();
-						} // skipRef is false
-						rsTot.moveToNext();
-					} // next t totals record
-				} // if there are rsTot records
-				if (maxTCrit < tCrit) {
-					maxTCrit = tCrit;
-					//maxTPhrase = pc;  // phrase cntr -- never used
-				}
-				tCrit++; // look for wider tolerance
-				if (tcntr > 0 || tCrit>tolerance) {  // allow less tolerance here?
-					hasTotals = true;  // totals has data or I'm in trouble
-				}
-			} // while hasTotals test
-			rsTot.close();
+								//							Log.d(TAG, " db tCrit:" + tCrit + " Ref:" + tRef + " Inx:" + tInx + " phrase:" + tPhrase +
+								//									" len:" + tRecords + " sil:" + tSilence + " tF:" + tFreq + " sdF:" + tFreqSd +
+								//									" tV:" + tVoiced + " sdV:" + tVoicedSd + " tE:" + tEnergy + " sdE:" + tEnergySd +
+								//									" tD:" + tDist + " sdD:" + tDistSd + " tQ:" + tQuality + " sdQ:" + tQualitySd +
+								//									" sdS:" + tSamplesSd +
+								//									" spr:" + tSilPhrRatio + " cb:" + tCoefB + " cc:" + tCorrCoef +
+								//									" sumVars:" + sumVars);
+								//							if (bestRec == true) {   // just first one
+								//								Log.d(TAG, " best freq:" + idMFreq + " sdFreq:" + idSdFreq +
+								//									" energy:" + idMEnergy + " sdEnergy:" + idSdEnergy + " dist:" + idMDist + " sdDist:" + idSdDist +
+								//									" qual:" + idMQuality + " sdQual:" + idSdQuality + " samp:" + idMSamples + " sdSamp:" + idSdSamples +
+								//									" spr:" + idSilPhr + " cb:" + idCoefB + " cc:" + idCorrCoef +
+								//									" sumVars:" + sumVars );
+								//								bestRec = false;
+								//							}
+								// compare phrase in memory with the detail associated with this selected totals record
+								qry = "SELECT * from DefineDetail" +
+										" WHERE Ref = " + tRef +
+										" AND Inx = " + tInx +
+										" AND Seg = " + tSeg +
+										" AND Phrase = " + tPhrase +
+										" ORDER BY Record";
+								rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+								int dcntr = rs.getCount();
+								if (dcntr > 0 && phraseLen > 0) {
+									// compare detail record found with the unknown record of the current phrase
+									// if unknown is shorter move it through defined to find best match
+									// if defined is shorter move it through unknown to find best match
+									// if they are the same length make defined two longer and duplicate the first and last
+									// defined is now longer and unknown will move through defined to find best match
+									int fit = 0;
+									if (dcntr == phraseLen) {
+										dcntr +=2;
+										fit=1;
+									}
+									int[] dFreq = new int[dcntr];
+									int[] dVoic = new int[dcntr];
+									float[] dEner = new float[dcntr];
+									float[] dDist = new float[dcntr];
+									float[] dQual = new float[dcntr];
+									float[] dSamp = new float[dcntr];
 
-			return;  // for next phrase
+									rs.moveToFirst();
+									int dRef = rs.getInt(0);
+									int dInx = rs.getInt(1);
+									int dSeg = rs.getInt(2);
+									int dPhrase = rs.getInt(3);
+									int dRecord = rs.getInt(4);
+									if (fit==1) {  // duplicate the first set
+										dFreq[0] = rs.getInt(5);
+										dVoic[0] = rs.getInt(6);
+										dEner[0] = rs.getInt(7);
+										dDist[0] = rs.getInt(8);
+										dQual[0] = rs.getInt(9);
+										dSamp[0] = rs.getInt(10);
+									}
+									for (int k = fit; k < dcntr-fit; k++) {
+										dFreq[k] = rs.getInt(5);
+										dVoic[k] = rs.getInt(6);
+										dEner[k] = rs.getInt(7);
+										dDist[k] = rs.getInt(8);
+										dQual[k] = rs.getInt(9);
+										dSamp[k] = rs.getInt(10);
+										rs.moveToNext();
+									}
+									if (fit==1) {  // duplicate the last set
+										rs.moveToLast();
+										dFreq[dcntr-fit] = rs.getInt(5);
+										dVoic[dcntr-fit] = rs.getInt(6);
+										dEner[dcntr-fit] = rs.getInt(7);
+										dDist[dcntr-fit] = rs.getInt(8);
+										dQual[dcntr-fit] = rs.getInt(9);
+										dSamp[dcntr-fit] = rs.getInt(10);
+									}
+
+									// the data has now been loaded -- time to compare
+									int bestFreq = 0;
+									int bestVoic = 0;
+									float bestEner = 0;
+									float bestDist = 0;
+									float bestQual = 0;
+									float bestSamp = 0;
+									int dF = 0;
+									int dV = 0;
+									float dE = 0;
+									float dD = 0;
+									float dQ = 0;
+									float dS = 0;
+									float temp = 0;
+									int savFitF = 0;
+									int savFitV = 0;
+									int savFitE = 0;
+									int savFitD = 0;
+									int savFitQ = 0;
+									int savFitS = 0;
+									int fitCntr = Math.abs(dcntr - phraseLen);
+
+									for (fit = 0; fit <= fitCntr; fit++) {
+										dF = 0;
+										dV = 0;
+										dE = 0;
+										dD = 0;
+										dQ = 0;
+										dS = 0;
+										if (dcntr > phraseLen) { // the defined data is longer than the unknown phraseLen
+											for (int k = 0; k < phraseLen; k++) {
+												temp = pitch[k] - dFreq[fit + k];
+												dF += temp * temp;
+												temp = voPhrase[k] - dVoic[fit + k];
+												dV += temp * temp;
+												temp = ienergy[k] - dEner[fit + k];
+												dE += temp * temp;
+												temp = idistance[k] - dDist[fit + k];
+												dD += temp * temp;
+												temp = quality[k] - dQual[fit + k];
+												dQ += temp * temp;
+												temp = stmPhrase[k] - dSamp[fit + k];
+												dS += temp * temp;
+											} // next rec in this phrase
+										} else { // the unknown phraseLen is the same or longer than the defined data
+											for (int k = 0; k < dcntr; k++) {
+												temp = pitch[fit + k] - dFreq[k];
+												dF += temp * temp;
+												temp = voPhrase[fit + k] - dVoic[k];
+												dV += temp * temp;
+												temp = ienergy[fit + k] - dEner[k];
+												dE += temp * temp;
+												temp = idistance[fit + k] - dDist[k];
+												dD += temp * temp;
+												temp = quality[fit + k] - dQual[k];
+												dQ += temp * temp;
+												temp = stmPhrase[fit + k] - dSamp[k];
+												dS += temp * temp;
+											} // next rec in this phrase
+										}
+										if (fit == 0) {
+											bestFreq = dF;
+											bestVoic = dV;
+											bestEner = dE;
+											bestDist = dD;
+											bestQual = dQ;
+											bestSamp = dS;
+										} else { // pick the lowest
+											if (bestFreq > dF) {
+												bestFreq = dF;
+												savFitF = fit;
+											}
+											if (bestVoic > dV) {
+												bestVoic = dV;
+												savFitV = fit;
+											}
+											if (bestEner > dE) {
+												bestEner = dE;
+												savFitE = fit;
+											}
+											if (bestDist > dD) {
+												bestDist = dD;
+												savFitD = fit;
+											}
+											if (bestQual > dQ) {
+												bestQual = dQ;
+												savFitQ = fit;
+											}
+											if (bestSamp > dS) {
+												bestSamp = dS;
+												savFitS = fit;
+											}
+										}
+									}
+									int div = dcntr;
+									if (dcntr > phraseLen) { // divide by the loop counter used
+										div = phraseLen;
+									}
+									bestFreq /= div;
+									bestFreq = (int) Math.sqrt(bestFreq);
+									bestVoic /= div;
+									bestVoic = (int) Math.sqrt(bestVoic);
+									bestEner /= div;
+									bestEner = (float) Math.sqrt(bestEner);
+									bestDist /= div;
+									bestDist = (float) Math.sqrt(bestDist);
+									bestQual /= div;
+									bestQual = (float) Math.sqrt(bestQual);
+									bestSamp /= div;
+									bestSamp = (float) Math.sqrt(bestSamp);
+									Main.db.beginTransaction();
+									val.put("Ref", tRef);
+									val.put("Cntr", bestFreq);
+									val.put("Criteria", "Freq" + savFitF);
+									Main.db.insert("Identify", null, val);
+									val.put("Ref", tRef);
+									val.put("Cntr", bestVoic);
+									val.put("Criteria", "Voiced" + savFitV);
+									Main.db.insert("Identify", null, val);
+									val.put("Ref", tRef);
+									val.put("Cntr", (int) bestEner);
+									val.put("Criteria", "Energy" + savFitE);
+									Main.db.insert("Identify", null, val);
+									val.put("Ref", tRef);
+									val.put("Cntr", (int) bestDist);
+									val.put("Criteria", "Dist" + savFitD);
+									Main.db.insert("Identify", null, val);
+									val.put("Ref", tRef);
+									val.put("Cntr", (int) bestQual);
+									val.put("Criteria", "Quality" + savFitQ);
+									Main.db.insert("Identify", null, val);
+									val.put("Ref", tRef);
+									val.put("Cntr", (int) bestSamp);
+									val.put("Criteria", "Samples" + savFitS);
+									Main.db.insert("Identify", null, val);
+									Main.db.setTransactionSuccessful();
+									Main.db.endTransaction();
+									val.clear();
+								} // if dcntr > 0
+								rs.close();
+							} // skipRef is false
+							rsTot.moveToNext();
+						} // next t totals record
+					} // if there are rsTot records
+					if (maxTCrit < tCrit) {
+						maxTCrit = tCrit;
+						//maxTPhrase = pc;  // phrase cntr -- never used
+					}
+					tCrit++; // look for wider tolerance
+					if (tcntr > 0 || tCrit > tolerance) {  // allow less tolerance here?
+						hasTotals = true;  // totals has data or I'm in trouble
+					}
+				} // while hasTotals test
+				rsTot.close();
+
+				//return;  // for next phrase
+				rsUnk.moveToNext(); // read the next phrase
+			}
+			rsUnk.close();
+			return;
 		} // mode == 1
 
 		if (mode == 2) { // this song is done
-			int cntTotals = 0;
-			int sumCntr = 0;
-			int cntr = 0;
-			qry = "SELECT COUNT(Ref) AS CntTotals, SUM(Cntr) AS SumCntr FROM Identify";
-			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-			rs.moveToFirst();
-			cntTotals = rs.getInt(0);
-			sumCntr = rs.getInt(1);
-			rs.close();
-			qry = "SELECT COUNT(Ref) AS PctTop, SUM(Cntr) AS SumCntr" +
-					" FROM Identify" +
-					" WHERE Ref > 0 " +
-					" GROUP BY Ref" +
-					" ORDER BY PctTop DESC, SumCntr LIMIT 2";
-			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-			cntr = rs.getCount();
-			pctTop = 0f; // no records or one record returned
-			if (cntr > 1) {
-				rs.moveToFirst();
-				float r0 = (float) rs.getInt(0);  // highest
-				float s0 = (float) rs.getInt(1);
-				rs.moveToNext();
-				float r1 = (float) rs.getInt(0);  // next highest
-				float s1 = (float) rs.getInt(1);
-				pctTop = (float) ((float) (r0 - r1) / 2f) / r0;  // half the difference
-				// this test should be disabled for test data set
-				if ((s0 * pctTop) > r0 || (s1 * pctTop) > r1) { // high percentage will make cntr numbers negative
-					pctTop = 0f; // don't let it go negative
-				}
-				Log.d(TAG, "ID ref: cntTotals:" + cntTotals + " sumTotals:" + sumCntr + " pctTop:" + pctTop);
-				/*
-				float r01 = r0/r1;  // CntRef0 divided by CntRef1
-				float s01 = s0/s1;  // sumCntr0 divided by sumCntr1
-				float totDr0 = cntTotals / r0;
-				float sumDs0 = sumCntr / s0;
-				Log.d(TAG, "Identify r0:" + r0 + " s0:" + s0 + " r1:" + r1 + " s1:" + s1 + " r01:" + r01 + " s01:" + s01);
-				if (r01 < s01 || totDr0 < r01 || sumDs0 < s01) { // change so large between line0 and 1 that final won't work -- American Bushtit
-					pctTop = 0f; // don't let it go negative
-				}
-				*/
-			}
-			// disabled because I know if they will go negative above
-			//if (pctTop > .03f) {
-			//	pctTop = 0f;
-			//}
-			rs.close();
 			qry = "SELECT Identify.Ref, COUNT(Identify.Ref) AS CntName, SUM(Cntr) AS SumCntr, " +
-					"COUNT(Identify.Ref) - " + pctTop + " * SUM(Cntr) AS PctCount, " +
 					"CommonName, Region, SubRegion " +
 					"FROM Identify JOIN CodeName ON Identify.Ref = CodeName.Ref " +
-					"WHERE Identify.Ref > 0 " +
+					"WHERE Identify.Ref != 0 " +
 					"GROUP BY Identify.Ref " +
-					"ORDER BY PctCount DESC, SumCntr";
-			Log.d(TAG, "Identify PctCount qry:" + qry);
+					"ORDER BY CntName DESC, SumCntr";
+			Log.d(TAG, "Identify qry:" + qry);
+			// rawQuery for Select queries
 			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-			cntr = rs.getCount();
+			int cntr = rs.getCount();
 			int conTot = 0; // confidence total
 			if (cntr > 0) {
 				int displayCount = 0;
@@ -1441,7 +1427,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				String nam;
 				int cntRef;
 				int cntName;
-				int cntPct;
 				int cntSum = 0;
 				int efficTot = 0;
 				rs.moveToFirst();
@@ -1450,18 +1435,16 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					cntRef = rs.getInt(0);
 					cntName = rs.getInt(1);
 					cntSum = rs.getInt(2);
-					cntPct = rs.getInt(3);
-					nam = rs.getString(4);
-					Log.d(TAG, "ID ref:" + cntRef + " cnt:" + cntName + " sum:" + cntSum + " pct:" + cntPct + " nam:" + nam);
+					nam = rs.getString(3);
+					Log.d(TAG, "ID ref:" + cntRef + " cnt:" + cntName + " sum:" + cntSum + " nam:" + nam);
 					if (idRef == -1) {
 						idRef = cntRef;
 						idCntName = cntName;
 						idSum = cntSum;
-						idPct = cntPct;
 						idNam = nam;
 					}
-					if (cntPct > 0) {
-						conTot += cntPct;
+					if (cntName > 0) {
+						conTot += cntName;
 					}
 					rs.moveToNext();
 				} // while
@@ -1470,16 +1453,15 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 				// run through the list again this time with percents
 				rs.moveToFirst();
-				identifiedRef =  rs.getInt(0);
+				identifiedRef = rs.getInt(0);
 				int othcon = 0;
 				while (!rs.isAfterLast()) {
 					cntRef = rs.getInt(0);
 					cntName = rs.getInt(1);
 					cntSum = rs.getInt(2);
-					cntPct = rs.getInt(3);
-					nam = rs.getString(4);
-					String loc = rs.getString(5) + " : " + rs.getString(6);
-					int calccon = (int) (((float) cntPct / (float) conTot) * 100f + 0.5f);
+					nam = rs.getString(3);
+					String loc = rs.getString(4) + " : " + rs.getString(5);
+					int calccon = (int) (((float) cntName / (float) conTot)* 100f + 0.5f);
 					if (calccon < 0) {
 						calccon = 0;
 					}
@@ -1487,7 +1469,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						displayName += nam + " " + calccon + "\n\t" + loc + "\n"  ;
 						displayCount++;
 					} else {
-						othcon += (int) ((float) cntPct + 0.5f) ;
+						othcon += (int) ((float) cntName + 0.5f) ;
 					}
 					rs.moveToNext();
 				}
@@ -1521,7 +1503,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					if (Main.isShowDefinition == true || Main.isShowDetail == true) {
 						Log.d(TAG, "show definition or detail from Identify before dialog.");
 						mVisualizerView.flash();
-						//showAdjustView(); // show definition
 					}
 				}
 
@@ -1540,15 +1521,15 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 							.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog, int id) {
 									dialog.cancel();
-									Log.d(TAG, "Song Identity: CANCEL and close()");
+									Log.d(TAG, "Song Identify: CANCEL and close()");
 								}
 							});
 					builder.show();  //  ************************ memory leak if Unable to Identify Song
-					Log.d(TAG, "Song Identity: db close()" );
+					Log.d(TAG, "Song Identify: db close()" );
 				}
 				Toast.makeText(this, "Unable to Identify Song", Toast.LENGTH_LONG).show();
 			}
-			Log.d(TAG, "*** Identity Done");
+			Log.d(TAG, "*** Identify Done");
 			if (Main.isDebug == true) {
 				writeId(0);
 				writeId(2);
@@ -1565,19 +1546,19 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			switch (resultCode) {
 				case 0: { // No
 					updateSpecAndName(identifiedRef, 0);  // not accepted = 0
-					Log.d(TAG, "Song Identity: NO selected -- update spec and close()");
+					Log.d(TAG, "Song Identify: NO selected -- update spec and close()");
 					break;
 				}
 				case 1: { // Ok
 					if (identifiedRef != 0) { // this section is NOW Enabled
 						updateSpecAndName(identifiedRef, 1);
-						Log.d(TAG, "Song Identity: OK selected -- update spec and close");
+						Log.d(TAG, "Song Identify: OK selected -- update spec and close");
 					}
 					break;
 				}
 				case 2: {  // Cancel
 					//updateSpecAndName(identifiedRef, 2); // leave it alone
-					Log.d(TAG, "Song Identity: Cancel selected");
+					Log.d(TAG, "Song Identify: Cancel selected");
 					break;
 				}
 			}
@@ -1588,7 +1569,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 
 	public void updateSpecAndName(int identifiedRef, int accepted) {
-		char q = 34;
 		int enh = 0;
 		if (Main.isEnhanceQuality == true ){
 			enh = 1;
@@ -1618,7 +1598,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
 					" AND Seg = " + Main.existingSeg;
-			Log.d(TAG, "Song Identity Update SongList qry:" + qry);
+			Log.d(TAG, "Song Identify Update SongList qry:" + qry);
 			Main.db.execSQL(qry);
 			Main.db.setTransactionSuccessful();
 			Main.db.endTransaction();
@@ -1639,7 +1619,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
 					" AND Seg = " + Main.existingSeg;
-			Log.d(TAG, "Song Identity Update Ref matches SongList qry:" + qry);
+			Log.d(TAG, "Song Identify Update Ref matches SongList qry:" + qry);
 			Main.db.execSQL(qry);
 			updateLastIdentified();
 			Main.db.setTransactionSuccessful();
@@ -1669,7 +1649,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
 					" AND Seg = " + Main.existingSeg;
-			Log.d(TAG, "Song Identity Update SongList qry:" + qry);
+			Log.d(TAG, "Song Identify Update SongList qry:" + qry);
 			Main.db.execSQL(qry);
 			updateLastIdentified();
 			Main.db.setTransactionSuccessful();
@@ -1757,7 +1737,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						" AND Ref = 0"  +
 						" AND Inx = " + Main.existingInx +
 						" AND Seg = " + Main.existingSeg;
-				Log.d(TAG, "Song Identity With @ Update SongList qry:" + qry);
+				Log.d(TAG, "Song Identify With @ Update SongList qry:" + qry);
 				Main.db.execSQL(qry);
 				updateLastIdentified();
 				Main.db.setTransactionSuccessful();
@@ -1785,7 +1765,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						" AND Ref = 0"  +
 						" AND Inx = " + Main.existingInx +
 						" AND Seg = " + Main.existingSeg;
-				Log.d(TAG, "Song Identity keep name Update SongList qry:" + qry);
+				Log.d(TAG, "Song Identify keep name Update SongList qry:" + qry);
 				Main.existingRef = identifiedRef;
 				Main.db.execSQL(qry);
 				updateLastIdentified();
@@ -1804,16 +1784,19 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	}
 
 	public void updateLastIdentified() {
-		char q = 34;
 		Log.d(TAG, "*** Update LastIdentified " + Main.existingName);
 		String format = "yyyy_MMdd_HH.mm.ss";
 		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
 		long iNow = System.currentTimeMillis();
+		Main.db.beginTransaction();
 		qry = "UPDATE LastKnown" +
 				" SET FileName = " + q + Main.existingName + q + ", " +
 				" LastDate = '" + sdf.format(iNow) + "'" +
 				" WHERE Activity = 'Identified'";
+		//Log.d(TAG, "LastIdentified qry=" + qry);
 		Main.db.execSQL(qry);
+		Main.db.setTransactionSuccessful();
+		Main.db.endTransaction();
 
 	}
 
@@ -1956,7 +1939,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 		if (mode == 2) { // mode 2 update the song list
 			Log.d(TAG, "*** Update SongList " + Main.existingName);
-			char q = 34;
 			if (Main.isIdentify == false) { // defined
 				Main.db.beginTransaction();
 				qry = "UPDATE SongList" +
@@ -2385,9 +2367,9 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		if (Main.isDebug == true) {
 			writeMelFilter(0,0,0); // open
 		}
-		if (Main.isIdentify == true) {
-			identify(0,0); // open
-		}
+		//if (Main.isIdentify == true) {
+		//	identify(0,0); // open
+		//}
 
 		Main.maxPower = 0f;
 		Main.maxPowerRec = 0;
@@ -2400,13 +2382,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		// *************** defined ******************
 
 		Log.d(TAG, "* * * * records:" + records + " stepSize:" + stepSize + " incSize:" + incSize );
-		bufIn = new float [base]; // supplies 512 floats
+		bufIn = new float [base]; // supplies 1024 floats
 		imagIn = new float [base];
 		for (int i=0; i<base; i++) {  // just do it once
 			imagIn[i] = 0f;
 		}
-		bufRealOut = new float [base]; // returns 512 floats -- 256 real floats and 256 inverted (not usable) floats
-		bufImagOut = new float [base]; // returns 512 floats -- 256 real floats an 256 imaginary inverse floats (not usable data)
+		bufRealOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 inverted (not usable) floats
+		bufImagOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 imaginary inverse floats (not usable data)
 		voicedFreq = new int[records];  // full length of file
 		int rec = 0;
 		baseAvailable = Main.audioData.length - base;
@@ -2464,7 +2446,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					if (j > lowFreqCutoff && j < highFreqCutoff) {
 						pwr[j] = (float) Math.sqrt(bufRealOut[j] * bufRealOut[j] + bufImagOut[j] * bufImagOut[j]);
 					}
-					if (maxEnergy < pwr[j]) { // already found before fix1 and after fix3 -- don't start over -- maybe i should
+					// maxEnergy is really maxPower
+					// already found before fix1 and after fix3 -- but not with offsets so find it again
+					// using existing maxEnergy up to here -- i.e. not zeroed to start again.
+					if (maxEnergy < pwr[j]) {
 						maxEnergy = pwr[j];
 					}
 					if (rmsEnergy[phraseStart[pc]+rec] < pwr[j]) { // new rmsEnergy
@@ -2569,7 +2554,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				rec++;
 			} // next i
 			normalizeMelFilter(phraseLen, pc);  // produces distance  mfcc is normalized
-			//energyDelta(1, phraseLen, pc);  // energyValue to delta energy
 			energyDelta(phraseLen, pc);  // energyValue to delta energy - simple subtract
 
 			if (Main.isDebug == true) {
@@ -2578,15 +2562,17 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			curveFit.calcPolynomial(rec, 0); // rec now is phraseLen calculates pitch polynomial
 			coefB = curveFit.polyCoef[1];  // un-modified slope -- coefA not used - it just tracks freq
 			coefCorr = curveFit.corrCoef;
+			// ******************* ALWAYS SAVE DETAIL -- BUT DON'T CALL IDENTIFY UNTIL DONE SAVING DETAIL GG 5/9/16
 			//Log.d(TAG, "fft return from poly coefB:" + coefB + " coefCoor:" + coefCorr);
-			if (Main.isIdentify == true) {
-				if (Main.isShowDefinition == true || Main.isDebug == true) {  // debug saves id.txt
-					saveDetail(1, pc);
-				}
-				identify(1, pc); // analyze phrase
-			} else {
-				saveDetail(1, pc); // write phrase
-			}
+			//if (Main.isIdentify == true) {
+			//	if (Main.isShowDefinition == true || Main.isDebug == true) {  // debug saves id.txt
+			//		saveDetail(1, pc);
+			//	}
+			//	identify(1, pc); // analyze phrase
+			//} else {
+			saveDetail(1, pc); // always write phrase <-- ******  right here *********************************
+			//}
+			// ******************* ALWAYS SAVE DETAIL -- BUT DON'T CALL IDENTIFY UNTIL DONE SAVING DETAIL GG 5/9/16
 		} // next phrase
 		if (Main.isDebug == true) {
 			writeMfcc(2,0); // close
@@ -2602,15 +2588,21 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 
 		if (Main.isIdentify == true) { // identify
-			if (Main.isShowDefinition == true || Main.isDebug == true) {
-				saveDetail(2,0);
-			}
-			identify(2,0); // identify totals saves id
+			// now do everything
+			identify(0); // open
+			identify(1); // identify -- 1 modified to read phrases from totals for each phrase
+			identify(2); // identify totals saves id
+			// ****************** included above *****************
+			//if (Main.isShowDefinition == true || Main.isDebug == true) {
+			//	saveDetail(2,0);
+			//}
+			//identify(2,0); // identify totals saves id
+			// ****************** included above *****************
 		} else { // define
 			saveDetail(2,0); // close
 			if (Main.isDebug == true) {
-				writeId(1);
-				writeId(2);
+				writeId(1); // define
+				writeId(2); // close
 			}
 		}
 
@@ -2630,38 +2622,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			mfcc[rec][k] = melFilter[k];
 		}
 	}
-
-	/* not being called
-    private void melFilterLinear(int rec) { // linear
-        for (int k = 1; k <= numMelFilters; k++) {
-            float num1 = 0;
-            float num2 = 0;
-            for (int i = cbin[k - 1]; i < cbin[k]; i++) { // 1) 0->7, 2) 7->15, 3) 15->23
-            	   // 1/8 pwr0 + 2/8 pwr1 + 3/8 pwr2 ... + 7/8 pwr6 + 8/8 pwr7
-            	if (i >=0 && i <base/2) {
-            		float n = (float) (i - cbin[k - 1] + 1) / (float) (cbin[k] - cbin[k - 1] + 1);
-                	if (flag <3 ) {
-                	    Log.d(TAG, "num1 mel:" + (k-1) + " n:" + n + " i:" + i);
-                	}
-            	   	num1 +=  n * pwr[i];
-            	}
-            }
-            // removed <= loop so now <
-            for (int i = cbin[k]; i < cbin[k + 1]; i++) { // 1) 8->15 2) 16->23, 3) 24->31
-         	   // 7/8 pwr8 + 6/8 pwr9 + 5/8 pwr10 ...  + 1/8 pwr14 + 0/8 pwr15
-        	    if (i >=0 && i <base/2) {
-                    float n = 1 - ((float)(i - cbin[k]) / (float)(cbin[k + 1] - cbin[k] + 1));
-                	if (flag <3 ) {
-                	    Log.d(TAG, "num2 mel:" + (k-1) + " n:" + n + " i:" + i);
-                	}
-                    num2 += n * pwr[i];
-        	    }
-            	    //Log.d(TAG, "num2 mel:" + (k-1) + " i:" + i);
-            }
-            mfcc[rec][k-1] = num1 + num2;  // get back to zero based
-            flag++;
-        }
-    }    */
 
 	private void normalizeMelFilter(int phraseLen,int pc) {
 		// I can use the same array and write back into it with difference
@@ -2690,7 +2650,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			distance[i] /= numMelFilters;
 			//idistance[i] = (int)(Math.sqrt(distance[i])/fullMult + 0.5);
 			//idistance[i] = (int)(Math.sqrt(distance[i]) / energyPhraseMax[pc] * fullMult + 0.5);
-			idistance[i] = (int)(Math.sqrt(distance[i]) * 512f/maxEnergy + 0.5); // this is really maxPower
+			idistance[i] = (int)(Math.sqrt(distance[i]) * 512f/maxEnergy + 0.5); // this is really maxPower for the whole file
 		}
 	}
 
@@ -2703,87 +2663,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		for (int i=1; i<phraseLen; i++){
 			energy[i] = energyValue[i] - energyValue[i-1];  // energy can now be plus or minus
 			ienergy[i] = (int) (energy[i] * 512f/maxEn + 0.5);
-
-/*			if (min > energy[i]) {
-				min = energy[i];
-			}
-			if (max < energy[i]) {
-				max = energy[i];
-			} */
 		}
-		//fullMult = 32767f / extent; // possible max short / extent (largest short found in file)
-		// fullMult = (float) Math.sqrt(32767f / extent); // possible max short / extent (largest short found in file)
-		//float maxVal = 128f * energyPhraseMax[pc] / (max-min);  // emergyPhraseMax - is normalized data from voiced
-		//Log.d(TAG, "energyDelta pc:" + pc + " fullMult:" + fullMult + " energyPhraseMax[pc]:" + energyPhraseMax[pc]
-		//		+ " maxVal:" + maxVal + " (max-min):" + (max-min));
-/*		int minDist = 10000;
-		int maxDist = 0;
-		int minEnerg = 10000;
-		int maxEnerg = 0;
-		for (int i=0; i<phraseLen; i++){
-			//ienergy[i] = (int) (energy[i] * fullMult * energyPhraseMax[pc] * 512 + 0.5);
-			//ienergy[i] = (int) (energy[i] * fullMult * 512 + 0.5);
-			ienergy[i] = (int) (energy[i] * 512 + 0.5);
-			if (minDist > idistance[i]) {
-				minDist = idistance[i];
-			}
-			if (maxDist < idistance[i]) {
-				maxDist = idistance[i];
-			}
-			if (minEnerg > ienergy[i]) {
-				minEnerg = ienergy[i];
-			}
-			if (maxEnerg < ienergy[i]) {
-				maxEnerg = ienergy[i];
-			}
-		}
-		Log.d(TAG, "p" + pc + " nDi:" + minDist + " xDi:" + maxDist + " nEn:" + minEnerg + " xEn:" + maxEnerg
-				 + " eph:" + energyPhraseMax[pc]);
-*/	}
-
-	// this is the same as performDelta2D but is done on a single value for the length of the phrase
-	// not used -- see above
-
-	public void energyDelta(int recursion, int phraseLen, int pc) { // offset is where you read from
-
-		float mSqSum = 0;
-		for (int i = -recursion; i < recursion; i++) {
-			mSqSum += Math.pow(i, 2);
-		}
-
-		for (int i = 0; i < recursion; i++) { // the first one
-			energy[i] = energyValue[i];
-		}
-		// from frameCount-M to frameCount //
-		for (int i = phraseLen - recursion; i < phraseLen; i++) { // the last one
-			energy[i] = energyValue[i];
-		}
-		for (int i = recursion; i < phraseLen - recursion; i++) { // the middle of the phrase
-			// travel from -M to +M
-			float sumDataMulM = 0;
-			for (int m = -recursion; m <= +recursion; m++) {
-				// System.out.println("Current m -->\t"+m+ "current j -->\t"+j +
-				// "data [m+j][i] -->\t"+data[m + j][i]);
-				sumDataMulM += m * energyValue[i+m];
-			}
-			// 3. divide
-			energy[i] = sumDataMulM / mSqSum;
-		}
-		// note: this is energy input from bufIn not power out from fft
-		// float maxVal = 255; // <-- original
-		// float maxVal = 128f * phraseMaxEnergy / energyPhraseMax[pc];
-		// remember this is delta -- e.g. the ramp is loud but never changes so energy is straight line
-		//fullMult = 32767f / extent; // possible max short / extent (largest short found in file)
-		//Log.d(TAG, "energyDelta extent:" + extent + " fullMult:" + fullMult + " phraseLen:" + phraseLen );
-		//float maxVal = 128f * energyPhraseMax[pc] * fullMult;  // emergyPhraseMax - is normalized data from voiced
-		float maxVal = 256f; // * fullMult;
-		//Log.d(TAG, "energyDelta pc:" + pc + " energyPhraseMax[pc]:" + energyPhraseMax[pc] + " maxVal:" + maxVal);
-		//float maxVal = 256f * phraseMaxEnergy * fullMult;
-		// apply maxVal
-		for (int i = 0; i < phraseLen; i++) {
-			ienergy[i] = (int) (energy[i] * maxVal + 0.5);
-		}
-
 	}
 
 	public void calcEnergy(int rec, int pc) {  // was log now rms dEnergy for the current record
@@ -2792,11 +2672,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		// NOTE: bufIn is size base but I repeat each incSize so by using incSize I am not duplicating any data and thus not averaging
 		float sum = 0;
 		// bufIn is size base but I repeat each base/2 <-- WRONG --> so by using base/2 I am not duplicating any data and thus not averaging by two
-		// MAYBE averaging over 4 records (512 = base/2 = 128*4) will give me better results but now this energy is not averaged.
-		// I am only taking one eighth of bufIn because I'll get the next piece for the next record next time
-		// note: I am reading 1024 of bufIn each rec -- I need to go back to reading just 128 -- but I will need to find that 128 here -- not first 128
-		for (int j = 0; j < incSize; j++) {  // this is incSize as well as the divide below
-//        for (int j = 0; j < (base/2); j++) {  // this is incSize as well as the divide below
+		// MAYBE averaging over 4 records (each 256) will give me better results but now this energy is not averaged.
+		// I am only taking one quarter of bufIn because I'll get the next piece for the next record next time
+		// note: I am reading 1024 of bufIn each rec -- If I go back to reading just 256 -- I will need to find that 256 here -- not first 256
+		for (int j = 0; j < incSize; j++) {  // this is incSize = 256 as well as the divide below
 			float temp = bufIn[j]; // this is in the time domain
 			sum += temp * temp; // sum the square
 		}
@@ -2972,7 +2851,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		maxAmpCrossing /= 2f;
 		mean = (float) Math.sqrt(mean / rec);  // Definition one ***** power
 		voicedMeanFreq = voicedMeanFreq / rec; // using fft freq not count crossing zero
-		int bestPhraseCount = 1;
+		int bestPhraseCount = 0;
 //		bestPhraseLen = 0;
 		// find filterAve and number of samples to peak
 		stdDev = 0;
@@ -3043,9 +2922,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Log.d(TAG, "voiced() manFilterAve:" + manFilterAve + " manFilterStdDev:" + manFilterStdDev + " manFilterDataCntr:" + manFilterDataCntr);
 		}
 
-//		bestPhraseLen /= bestPhraseCount;
-//		Log.d(TAG, "bestPhraseLen:" + bestPhraseLen + " T2:" + bestPhraseLenT2 + " D2:" + bestPhraseLenD2 + " D4:" + bestPhraseLenD4);
-//		Log.d(TAG, "bestPhraseCount:" + bestPhraseCount + " T2:" + bestPhraseCountT2 + " D2:" + bestPhraseCountD2 + " D4:" + bestPhraseCountD4);
 
 		Log.d(TAG, "voiced() isAuto:" + isEnableAutoFilter + " isManual:" + isManualFilter +
 				" filterAve:" + filterAve + " filterDataCntr:" + filterDataCntr + " autoFilterFreq:" + autoFilterFreq + " freqDataCntr:" + freqDataCntr++);
@@ -3055,8 +2931,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int cntrLow;
 		int prevCntrLow = 0;
 		cntrLow = 0;
-		//int bestPhraseMin = 0;
-		//int bestPhraseMax = bestPhraseCount * 2;
 		float stdDevToMeanRatio = stdDev / originalMean;
 
 		Log.d(TAG, "mean:" + mean + " stdDev:" + stdDev + " stdDevToMeanRatio:" + stdDevToMeanRatio);
@@ -3124,7 +2998,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int fixEnd = 3;
 		if (Main.isEnhanceQuality == true) {
 			fixEnd = 4;
-		}
+	}
 		int fixOffset = 0;
 		idFix = "";  // "Fix:" will be prepended in writeId
 		for (int fix = fixStart; fix < fixEnd; fix++) {
@@ -3169,7 +3043,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					fixStop = dimFix;
 					ratioSigToNoise = 0;
 					aveSigToNoise = 0;
-					//Log.d(TAG, "bestPhraseCount:" + bestPhraseCount + " min:" + bestPhraseMin + " max:" + bestPhraseMax);
 					Log.d(TAG, "bestPhraseCount:" + bestPhraseCount);
 					Log.d(TAG, "loop dimFix:" + dimFix + " snMean:" + snMean + " meanInc:" + meanInc + " to:" + (snMean + meanInc * dimFix));
 					break;
@@ -3186,7 +3059,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					fixStop = dimFix;
 					ratioSigToNoise = 0;
 					aveSigToNoise = 0;
-					//Log.d(TAG, "bestPhraseCount:" + bestPhraseCount + " min:" + bestPhraseMin + " max:" + bestPhraseMax);
 					Log.d(TAG, "bestPhraseCount:" + bestPhraseCount);
 					Log.d(TAG, "narrow range loop snMean:" + snMean + " meanInc:" + meanInc + " dimFix:" + dimFix);
 					break;
@@ -3197,7 +3069,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					aveSigToNoise = 0;
 					idLowFreq = lowFreqCutoff;
 					idHighFreq = highFreqCutoff;
-					//Log.d(TAG, "bestPhraseCount:" + bestPhraseCount + " min:" + bestPhraseMin + " max:" + bestPhraseMax);
 					Log.d(TAG, "bestPhraseCount:" + bestPhraseCount);
 					Log.d(TAG, "custom loop snMean:" + snMean + " meanInc:" + meanInc);
 					break;
@@ -3206,7 +3077,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					meanInc = 0;
 					ratioSigToNoise = 0;
 					aveSigToNoise = 0;
-					//Log.d(TAG, "bestPhraseCount:" + bestPhraseCount + " min:" + bestPhraseMin + " max:" + bestPhraseMax);
 					Log.d(TAG, "bestPhraseCount:" + bestPhraseCount);
 					Log.d(TAG, "best loop snMean:" + snMean + " meanInc:" + meanInc);
 					break;
@@ -3215,7 +3085,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				snMean += meanInc;
 			}
 			if (maxVoiced > 0) {
-				autoGain *= (float) (512f / maxVoiced); // 128 <--------------------
+				autoGain *= (float) (512f / maxVoiced);
 			}
 			Log.d(TAG, "fix:" + fix + " maxVoiced:" + maxVoiced + " autoGain:" + autoGain);
 			maxVoiced = 0;
@@ -3309,15 +3179,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					Log.d(TAG, "find mean using FilterKernel");
 					voicedFrame = new int[records];  // holds -1 or phrase number
 					rmsEnergy = new float[records];
-//					maxPwr = new float[records][rankCntr];
-//					freqRank = new int[records][rankCntr];
 					maxEnergy = 0;
 					rec = 0;
 					int[] freqRankR = new int[rankCntr]; // used in maxPwr 4 one record long
 					float[] maxPwrR = new float[rankCntr]; // used in maxPwr 4 one record long
-//					if (Main.isDebug && Main.isUseSmoothing) { // && Main.lowFreqCutoff == 0) {
-//						writeVoicedMaxPwrRec(0, rec, freqRankR, maxPwrR); // open
-//					}
 					float origAveEnergy = aveEnergy;
 					float origFilterAve = filterAve;
 					float origManFilterAve = manFilterAve;
@@ -3329,23 +3194,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						rmsEnergy[rec] = 0;
 						freqRankR = new int[rankCntr]; // used in maxPwr 4 one record long
 						maxPwrR = new float[rankCntr]; // used in maxPwr 4 one record long
-						// load the next input segment into bufIn[ ]
-						//for (int j = 0; j < stepSize; j++) { // 0 to 255
-						//int locAtMax = locationAtMax[rec];
-						//if (locAtMax > 0) {
-						//phraseAdj = locAtMax;
-						// now move max value to closest stepSize -- removed -- locAtMax 0-255 and I am loading 0-511
-						//if (phraseAdj > stepSize/2) { // greater than half
-						//	phraseAdj -= stepSize;
-						//}
-						//}
 						// warning this is modified from convolution that works with 255 bufIn and 255 zeros
-						for (int j = 0; j < base; j++) { // 0 to 255
+						for (int j = 0; j < base; j++) { // 0 to 1023
 							bufIn[j] = audioNorm[i + j];
 						}
-						//for (int j = stepSize; j < base; j++) { // 256 to 511
-						//	bufIn[j] = 0;
-						//}
 						fftbas.fourierTransform(base, bufIn, imagIn, bufRealOut, bufImagOut, false);
 
 						for (int j = 1; j < stepSize; j++) {
@@ -3362,19 +3214,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 									maxEnergy = temp;
 								}
 							}
-/*
-							for (int k = 0; k < rankCntr; k++) { // concepts from version 15Q (that's been a while!)
-								if (maxPwr[rec][k] < temp) {
-									for (int n = rankCntr - 1; n > k; n--) {
-										freqRank[rec][n] = freqRank[rec][n - 1];  // move them down a row to make room for the new max
-										maxPwr[rec][n] = maxPwr[rec][n - 1];
-									}
-									freqRank[rec][k] = j;
-									maxPwr[rec][k] = temp; // add the new max
-									break; // to nextj
-								}
-							}
-*/
 							for (int k = 0; k < rankCntr; k++) { // concepts from version 15Q (that's been a while!)
 								if (maxPwrR[k] < temp) {
 									for (int n = rankCntr - 1; n > k; n--) {
@@ -3388,83 +3227,16 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 							}
 
 						} // next j
-//						if (Main.isDebug && Main.isUseSmoothing) { // && Main.lowFreqCutoff == 0) {
-//							writeVoicedMaxPwrRec(1, rec, freqRankR, maxPwrR);
-//						}
-/*
-						// do smoothing here
-						if (rec > 0 && Main.isUseSmoothing) { // && Main.lowFreqCutoff == 0) { // the data will be here now
-							int min = Math.abs(voicedFreq[rec-1] - voicedFreq[rec]); // compare prevFreq to thisFreq
-							if (min > 8) { // previous freq not close to this freq
-								//Log.d(TAG, "enter smoothing rec:" + rec + " min:" + min);
-
-								int aveFreq = 0;
-								for (int k = 0; k < rankCntr; k++) {
-									aveFreq += freqRankR[k];
-								}
-								aveFreq /= rankCntr; // of this group
-								int cntBelow = 0;
-								int cntAbove = 0;
-								for (int k = 0; k < rankCntr; k++) {
-									if (aveFreq < freqRankR[k]) {
-										cntAbove++;
-									} else {
-										cntBelow++;
-									}
-								}
-								//Log.d(TAG, "smoothing aveFreq:" + aveFreq + " cntBelow:" + cntBelow + " cntAbove:" + cntAbove);
-								if (cntBelow >= 2 && aveFreq < voicedFreq[rec]) { // this one high - two are low
-									//Log.d(TAG, "smoothing force lower");
-									min = Math.abs(voicedFreq[rec-1] - freqRankR[0]);
-									int minN = 0;
-									for (int n = 1; n < rankCntr; n++) {
-										int test = Math.abs(voicedFreq[rec-1] - freqRankR[n]);
-										if (min > test) {
-											min = test;
-											minN = n;
-										}
-									}
-									rmsEnergy[rec] = maxPwrR[minN]; //
-									voicedFreq[rec] = freqRankR[minN];
-									voiced[rec] = (int) (rmsEnergy[rec - 1] / rmsEnergy[rec] * voiced[rec - 1]);
-								}
-								if (cntAbove >= 2 && aveFreq > voicedFreq[rec]) { // this one low - three are high
-									//Log.d(TAG, "smoothing force higher");
-									min = Math.abs(voicedFreq[rec-1] - freqRankR[0]);
-									int minN = 0;
-									for (int n = 1; n < rankCntr; n++) {
-										int test = Math.abs(voicedFreq[rec-1] - freqRankR[n]);
-										if (min > test) {
-											min = test;
-											minN = n;
-										}
-									}
-									rmsEnergy[rec] = maxPwrR[minN]; //
-									voicedFreq[rec] = freqRankR[minN];
-									voiced[rec] = (int) (rmsEnergy[rec-1] / rmsEnergy[rec] * voiced[rec - 1]);  // fill in the silence
-								}
-							}
-						} // smoothing
-*/
 
 						mean += rmsEnergy[rec] * rmsEnergy[rec];
 						aveEnergy += rmsEnergy[rec];  // toward aveEnergy
 						rec++;
 					} // next i
-//					if (Main.isDebug && Main.isUseSmoothing) { // && Main.lowFreqCutoff == 0) {
-//						writeVoicedMaxPwrRec(2, rec, freqRankR, maxPwrR); // close
-//					}
 
 					Log.d(TAG, "original mean:" + originalMean + " origFilterAve:" + origFilterAve + " origManFilterAve:" + origManFilterAve);
 					mean = (float) Math.sqrt(mean / rec); // definition #2 *********** IS IT EVER USED ??
 					partOfMaxEnergy = maxEnergy / 512;
 					aveEnergy /= records;
-
-					// *********** try both enabled and removed ****************
-					//lowFreqCutoff = 0; //gg removed 12/7/15 - and re-added and removed again 12/11/15
-					//highFreqCutoff = stepSize; //gg removed 12/7/15 - and re-added and removed again 12/11/15
-					// *********** try both enabled and removed ****************
-
 
 					filterAve = 0;
 					filterDataCntr = 0;
@@ -3526,12 +3298,9 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 				for (int i = 1; i < records; i++) {
 					if (voiced[i-1] == 0 && voiced[i] > 0 && voiced[i+1] == 0) {  // phrase length of 1
-						//voiced[i] = 0; // delete single voiced
+						// I don't delete single voiced here -- it messes up signal / noise  --> voiced[i] = 0; // delete single voiced
 						cntSingle++;
 					}
-					//if (voiced[i-1] > 0 && voiced[i] == 0 && voiced[i+1] > 0) {  // fill silence length of 1 -- note first the single voiced deleted above
-					//	voiced[i] = 1; // fill single silence
-					//}
 					if (voiced[i] > 0 && voiced[i-1] == 0) {
 						if (rmsEnergy[i] > 0 && rmsEnergy[i - 1] > 0) {
 							ratioSigToNoise += rmsEnergy[i] / rmsEnergy[i - 1]; // starting voiced ratio  -- this / prev
@@ -3599,11 +3368,16 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				fixGlob[m] = meanGlob;
 				snMean += meanInc;
 				lowFreqCutoff += lowFreqInc;
-				Log.d(TAG, "m:" + m + " phrases:" + fixPhrases[m] + " snMean:" + fixMean[m]
-						+ " s/n:" + signalToNoise[m] + " maxVoiced:" + maxVoiced);
+				//Log.d(TAG, "m:" + m + " phrases:" + fixPhrases[m] + " snMean:" + fixMean[m]
+				//		+ " s/n:" + signalToNoise[m] + " maxVoiced:" + maxVoiced);
 			} // next m -- go back with next snMean
 
-			// *********** SELECT DELTA (10+fix) or MAX (20+fix) or MAX GLOB (30+fix), mostcommon phrase (40+fix), MidGroup (50+fix) **********************************
+			// attemped but didn't improve so maybe a good concept but wrong test criteria -- removed for now
+			//if (fix == 3 && fixEnd == 4 && fixMean[0] < signalToNoise[0]){
+			//	fixEnd = 7;
+			//	Log.d(TAG, "**** extending fixEnd to 7 -- snMean:" + fixMean[0] + " s/n:" + signalToNoise[0] + "****");
+			//}
+
 			int fixOption = fix;
 			// only 3 and 6 have fixStop = 1 -- this is fixStop -- a loop counter not dimension
 			if (fixStop > 1) { 	// only fix 0,1,2,4,5 apply
@@ -3617,6 +3391,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				float snCC = curveFit.corrCoef;
 				Log.d(TAG, "curveFit phrA:" + phrA + ",B:" + phrB + " cc:" + phrCC + " s/nA:" + snA + ",B:" + snB + " cc:" + snCC);
 
+				// *********** SELECT DELTA (10+fix) or MAX (20+fix) or MAX GLOB (30+fix), mostcommon phrase (40+fix), MidGroup (50+fix) **********************************
 				switch (fix) {
 					case 0: { // low freq
 						fixOffset = 10; // smallest delta s/n
@@ -3631,7 +3406,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						break;
 					}
 					case 4: { // wide range
-						fixOffset = 10; // midGroup then test for smallest delta s/n
+						fixOffset = 10; // smallest delta s/n -- was 50 midGroup then test for smallest delta s/n
 						break;
 					}
 					case 5: { // narrow range
@@ -3654,6 +3429,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				case 32:
 				case 33:
 				case 34:
+					/* 30s NOT USED
 					float maxChange = 1;
 					int maxChangeM = 0;
 					for (int m = 0; m < dimFix - 1; m++) {
@@ -3668,6 +3444,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					}
 					bestPhraseCount = fixPhrases[maxChangeM];
 					Log.d(TAG, "maxChangeM:" + maxChangeM + " s/n:" + signalToNoise[maxChangeM] + " lowFreqCutoff:" + lowFreqCutoff + " highFreqCutoff:" + highFreqCutoff);
+					30s NOT USED */
 					break;
 				case 10:
 				case 11: // wide range
@@ -3830,18 +3607,19 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				case 44: // wide range
 				case 42: // narrow range
 				case 45: // narrow range
+					/* 40s NOT USED
 					int sortVersionPhrase = 0;
 					int[] sortPhrase = new int[dimFix];
 					int[] phraseGroup = new int[dimFix + 1];
 					int[] phraseGroupCount = new int[dimFix + 1];
 					int maxPhrase = 0; // incase nothing matches
 					int maxPhraseM = 0;
+					int phraseGroupCntr = 0;
 					for (int m = 0; m < dimFix; m++) {
 						sortPhrase[m] = fixPhrases[m];
 						//Log.d(TAG, "m:" + m + " beforeSort:" + sortPhrase[m]);
 					}
 					Arrays.sort(sortPhrase);
-					int phraseGroupCntr = 0;
 					for (int n = 0; n < dimFix; n++) {
 						if (sortPhrase[n] == phraseGroup[phraseGroupCntr]) { // phrase matches prev
 							phraseGroupCount[phraseGroupCntr]++; // count the number of phrases of this size
@@ -3923,19 +3701,21 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					} else { // didn't find duplicates
 						Log.d(TAG, " no duplicates snMean:" + snMean + " bestPhraseCount:" + bestPhraseCount + " sn:" + signalToNoise[changeN]);
 					}
+					40s NOT USED */
 					break;
+				// 50s only used if phrase count 0
 				case 50: // find most common phrase count -- then pick the middle of that - then look for any better in that range
 				case 51: // wide range
 				case 54: // wide range
 				case 52: // narrow range
 				case 55: // narrow range
-					sortVersionPhrase = 0;
-					sortPhrase = new int[dimFix + 1];
-					phraseGroup = new int[dimFix + 1];
-					phraseGroupCount = new int[dimFix + 1];
-					maxPhrase = 0; // incase nothing matches
-					maxPhraseM = 0;
-					phraseGroupCntr = 0;
+					int sortVersionPhrase = 0;
+					int[] sortPhrase = new int[dimFix + 1];
+					int[] phraseGroup = new int[dimFix + 1];
+					int[] phraseGroupCount = new int[dimFix + 1];
+					int maxPhrase = 0; // incase nothing matches
+					int maxPhraseM = 0;
+					int phraseGroupCntr = 0;
 					for (int m = 0; m < dimFix; m++) {
 						// this is different in that there is no sort -- I want them in order to count the count of most common.
 						if (phraseGroup[phraseGroupCntr] == fixPhrases[m]) { // phrase matches prev
@@ -3982,6 +3762,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				case 24: // wide range
 				case 22: // narrow down
 				case 25: // narrow down
+					/* 20s NOT USED
 					int firstPeak = 0;
 					int firstPeakM = 0;
 					int centerMin = records;
@@ -4093,112 +3874,30 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						bestPhraseCount = fixPhrases[dimFix / 2];
 						Log.d(TAG, "* * * failed to find Best snMean * * * revert to:" + snMean);
 					}
-
+					20s NOT USED */
 					break;
 				case 3: // custom filter
 				case 6: // done
 					break;
 
 			} // switch
-			/* disabled
-			if (fix == 99) {
-				// variable floating low limit -- before fix = 3 (so it will influence s/n) -- and repeated after fix = 6
-				float peak = 0;
-				float vFloor = 0;
-				for (int i = 2; i < records -2; i++) {
-					if (rmsEnergy[i] > rmsEnergy[i-1]){
-						if (rmsEnergy[i] > rmsEnergy[i-2]){
-							if (rmsEnergy[i] > rmsEnergy[i+1]){
-								if (rmsEnergy[i] > rmsEnergy[i+2]){
-									if (peak < rmsEnergy[i]) {
-										peak = rmsEnergy[i];
-										vFloor = peak / 8f;
-									}
-								}
-							}
-						}
-					}
-					if (rmsEnergy[i] < vFloor) {
-						voiced[i] = 0;
-						voicedFrame[i] = -1;
-						peak = 0;
-					}
-				} // next i
-			}
-			disabled */
 		} // next fix
 
-		// find the mean with the largest count of trills -- these can be within or go across phrases
-/*
-		float meanDx = 0;
-		int bestCountM = 0;
-		int bestM = 0;
-		float bestMean = 0;
-		//mean = originalMean;
-		float mstart = mean-stdDev;  // using original stdDev here -- NO i'm not
-		float devStep = stdDev/4f;
-		trillLen = 0;
-		int bestTrillCount = 0;
-		for (int m = 0; m<8; m++) { // from 4 steps below mean to 4 above mean
-			bestTrillCount = 0;
-			int bestTrillStart = 0;
-			meanDx = mstart + devStep * m;  // go from minus stdDev to plus stdDev
-			for (int i = 1; i < records; i++) {
-				if (rmsEnergy[i - 1] < meanDx && rmsEnergy[i] > meanDx) { // cross above meanDx
-					bestTrillStart = i;
-				}
-				if (rmsEnergy[i - 1] > meanDx && rmsEnergy[i] < meanDx) { // cross below meanDx
-					// count the number of crossings in 16 records
-					if (i - bestTrillStart < 17) {  // 16 x 128 = 2048 -- trill is no longer than 2004 == 11 trills a second = 22050/2004
-						bestTrillCount++;
-						trillLen += i - bestTrillStart;
-					}
-				}
-			} // next i
-			if (bestCountM < bestTrillCount) {
-				bestCountM = bestTrillCount;
-				bestM = m;
-				bestMean = meanDx;
-			}
-		}
-		if (bestTrillCount > 0) {
-			trillLen /= bestTrillCount;
-		}
-		meanDx = bestMean;
-		Log.d(TAG, "trills -- bestCountM:" + bestCountM + " bestM:" + bestM + " bestMean:" + bestMean + " mean:" + mean + " stdDev:" + stdDev);
-*/
 		samplesToMax = new int[records];  // samples (Length) between max energy
 		int cntrSamplesToMax = 0;
 		// find the peak and mark it with a one
 		float phraseMax = Math.abs(audioNorm[0]);
-		int samples = locationAtMax[0];  // the actual location in the file where max exists for record 0
-		int samplesLocMax = samples;  // location in the file
-		float peak = 0;
-		float vFloor = 0;
 		for (int i = 2; i < records -2; i++) {
 			if (rmsEnergy[i] > rmsEnergy[i-1]){
 				if (rmsEnergy[i-1] > rmsEnergy[i-2]){
 					if (rmsEnergy[i] > rmsEnergy[i+1]){
 						if (rmsEnergy[i+1] > rmsEnergy[i+2]){
-							samplesToMax[i]=1;
+							samplesToMax[i]=1;  // all zeros except set peaks to 1 -- used in DefineDetail
 							cntrSamplesToMax++;
-							if (peak < rmsEnergy[i] && vFloor < rmsEnergy[i]) {
-								peak = rmsEnergy[i];
-								vFloor = peak / 8f;
-								Log.d(TAG, " set -- rec:" + i + " rmsEnergy:" + rmsEnergy[i] + " peak:" + peak + " vFloor:" + vFloor);
-							}
 						}
 					}
 				}
 			}
-			/*
-			if (rmsEnergy[i] < vFloor) {
-				//Log.d(TAG, " use -- rec:" + i + " rmsEnergy:" + rmsEnergy[i] + " peak:" + peak + " vFloor:" + vFloor);
-				voiced[i] = 0;
-				voicedFrame[i] = -1;
-				peak = 0;
-			}
-			*/
 
 		} // next i
 		if (cntrSamplesToMax == 0) {
@@ -4207,8 +3906,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			trillLen = records / cntrSamplesToMax; // records per peak -- this includes silence so is not meaningful
 		}
 		// but samplesToMax is meaningful and used in DefineDetail;
-		Log.d(TAG, "trills -- records:" + records + "/ cntrSamplesToMax:" + cntrSamplesToMax + " =trillLen:" + trillLen);
+		//Log.d(TAG, "trills -- records:" + records + "/ cntrSamplesToMax:" + cntrSamplesToMax + " =trillLen:" + trillLen);
 
+		// remove voiced anywhere in the file if filter exists and energy is less than 3sigma of the average in the filter.
+		int cntrRemovedViaFilter = 0;
 		if (isManualFilter == true && (filterDataStart > 0 || filterDataStop > 0) && filterDataCntr > 0) {
 			float man3Sigma = manFilterAve + manFilterStdDev*3f;
 			Log.d(TAG, "isManualFilter man3Sigma:" + man3Sigma );
@@ -4218,43 +3919,43 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						// leave it alone if it is a single silence else zero out if will be single phrase
 						if (rmsEnergy[i-2] < man3Sigma || rmsEnergy[i+2] < man3Sigma ) {
 							voiced[i] = 0;
+							cntrRemovedViaFilter++;
 						}
 					} else {
 						voiced[i] = 0;
+						cntrRemovedViaFilter++;
 					}
 				}
 			}
 		}
 
-		int cntrEstimatePhrases = 0;
-		int cntrEstimateSilence = 0;
-		int avePhraseLen = 0;
-		int maxConsecutivePhrase = 0;
-		int minSilence = records;
-		int maxConsecutiveSilence = 0;
-		int minConsecutivePhrase = records;
-		int minSize = 1000000;
-		int recMinSilence = 0; // keep track of the shortest so I can find it
-		int recMinPhrase = 0;
-		int cntrSilence = 0;  // pointer into array -- increment if another silence at current length is found
-		int cntrPhrase = 0;  // pointer into array -- increment if another phrease at current length is found
-		int cntrRemoved = 0;
-		int cntrFilled = 0;
-		int desired = 0;
-		int simpleAve = 0; // just count 1 from each silence length group
-		int shortSilence = 0;  // remove silences below this number
+		int cntrRemovedViaFreq = 0;
 
+		// remove voiced anywhere in the file if frequecy outside a manual limit
+		if (isManualFilter == true && (Main.lowFreqCutoff > 0 || Main.highFreqCutoff > 0)) {
+			for (int i = 0; i < records; i++) {
+				if (voiced[i] > 0) {
+					if (voicedFreq[i] < Main.lowFreqCutoff) {
+						voiced[i] = 0;
+						cntrRemovedViaFreq++;
+					}
+					if (Main.highFreqCutoff > 0 && voicedFreq[i] > Main.highFreqCutoff) {
+						voiced[i] = 0;
+						cntrRemovedViaFreq++;
+					}
+				}
+			}
+		}
 
 		Log.d(TAG, "*** find Voiced");
 		Log.d(TAG, " file:" + mFileName + " _" + Main.existingInx + "." + Main.existingSeg );
 		Log.d(TAG, " AutoFilter:" + isEnableAutoFilter + " Strt:" + Main.filterStartAtLoc + " Stop:" + Main.filterStopAtLoc
 				+ " AutoFilterOption:" + Main.isOptionAutoFilter  + " mic:" + Main.sourceMic + " isEnhanceQuality:" + Main.isEnhanceQuality);
 		Log.d(TAG, " mean:" +  originalMean + " stdDev:" + stdDev + " filterAve:" + filterAve + " snMean:" + snMean);
-		//Log.d(TAG, " bestPhraseLenT2:" + bestPhraseLenT2 + " bestPhraseLen:" + bestPhraseLen + " bestPhraseLenD2:" + bestPhraseLenD2);
+		Log.d(TAG, " cntrRemovedViaFilter:" + cntrRemovedViaFilter + " cntrRemovedViaFreq:" + cntrRemovedViaFreq);
 		Log.d(TAG, " stdLim:" + stdLim + " voiceLim:" + voiceLim
 				+ " debug:" + Main.isDebug + " audsrc:" + audsrc + " filterCntr:" + filterCntr );
-		Log.d(TAG, " aveEnergy:" + aveEnergy + " simpleAve:" + simpleAve + " shortSilence:" + shortSilence
-				+ " lowFreqCutoff:" + lowFreqCutoff);
+		Log.d(TAG, " aveEnergy:" + aveEnergy + " lowFreqCutoff:" + lowFreqCutoff);
 
 		phraseCntr = 0; // count of phrases bounded by silence
 		int silence = 0;
@@ -4270,6 +3971,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int startI = 0;
 		float pwrTotal = 0;
 		int maxVoiced = 0;
+
+		if (records > 3) {  // clear out the first and last two records to force a start and stop if phrase is active else it won't see the last phrase.
+			voiced[0] = 0;
+			voiced[1] = 0;
+			voiced[records - 1] = 0;
+			voiced[records - 2] = 0;
+		}
 
 		for (int i=0; i < records-2; i++) {
 			if (voiced[i] == 0 && voiced[i+1] > 0 && voiced[i+2] == 0) {  // phrase length of 1
@@ -4335,8 +4043,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				phraseEnd[phrase] = i;
 				lastPhraseEnd = i;
 				maxVoiced = 0;
-				Log.d(TAG, "findVoiced phrase:" + phrase + " silence:" + phraseSilence[phrase]
-						+ " len:" + (phraseEnd[phrase]-phraseStart[phrase]+1) + " start:" + phraseStart[phrase]  + " end:" + phraseEnd[phrase]);
+				//Log.d(TAG, "findVoiced phrase:" + phrase + " silence:" + phraseSilence[phrase]
+				//		+ " len:" + (phraseEnd[phrase]-phraseStart[phrase]+1) + " start:" + phraseStart[phrase]  + " end:" + phraseEnd[phrase]);
 			}
 		}
 
@@ -4383,8 +4091,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			int iend = phraseEnd[pc]*incSize;
 			phraseMax = 0;
 			int phraseMaxLoc = 0;
-// ************** possible re-enable this --was disabled because picking up freq outside of phrase **********
-// phraseAdj removed missed 8 birds -- with phraseAdj used missed 6 (with smoothing) missed 5 without smoothing
 			for (int i=istart; i<=iend; i++) {
 				float temp = Math.abs(audioNorm[i]);
 				if (phraseMax < temp) {
@@ -4417,6 +4123,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		if (phraseCntr > 0) {
 			int temp = totalSilence / phraseCntr;  // use the average for silence[0]
 			totalSilence += temp;
+		}
+		if (phraseCntr == 0 && records > 5) {
+			totalSilence = phraseSilence[0];
+			totalPhrase = records - 4 - totalSilence;
+			phraseStart[0] = phraseSilence[0]+1;
+			phraseEnd[0] = phraseStart[0] + totalPhrase;
+			phraseCntr = 1;
 		}
 		silPhrRatio = (totalPhrase*100f)/(totalSilence+totalPhrase); // it is now really percent phrase of total
 		Log.d(TAG, "pctPhrase:" + silPhrRatio + " totSilence:" + totalSilence + " silence[0]:" + phraseSilence[0] + " totalPhrase:" + totalPhrase + " records:" + records);

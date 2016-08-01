@@ -5,13 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class SongData extends SQLiteOpenHelper {
     private static final String TAG = "SongData";
 	private String qry = "";
-	
+
 	public SongData(Context context, String name, CursorFactory factory, int version) {
 		super(context, name, factory, version);
 		// TODO Auto-generated constructor stub
@@ -21,12 +22,11 @@ public class SongData extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		Log.d(TAG, "onCreate table and (maybe) insert records");
 	    // disable the following line if you upgrade database then re-enable
-		if (db != null) { // i was getting null pointer
+	//	if (db != null) { // i was getting null pointer
 	//		Main.db.enableWriteAheadLogging();   // re-add trying to find SQLiteDiskIOException: disk I/O error (code 1802)
-		}
+	//	}
 
-
-	/*		
+	/*
 
 		qry = "CREATE TABLE CodeName (Ref INTEGER PRIMARY KEY, Spec TEXT," + 
 				" CommonName TEXT, Region TEXT, SubRegion TEXT, InArea INTEGER," + 
@@ -115,7 +115,7 @@ public class SongData extends SQLiteOpenHelper {
 //		qry = "CREATE TABLE Filter (XcName TEXT, FilterType TEXT, FilterVal INTEGER, PRIMARY KEY (XcName,FilterType))";
 //		db.execSQL(qry);
 
-		onCreate(db);
+		//onCreate(db); // now that you have deleted a table -- call the above function to re-create it.
 
 	}
 

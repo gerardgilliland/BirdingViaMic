@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -60,7 +61,7 @@ public class RedList extends AppCompatActivity implements android.view.View.OnCl
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "Navigation Icon tapped");

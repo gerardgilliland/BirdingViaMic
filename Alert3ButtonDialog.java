@@ -71,18 +71,6 @@ public class Alert3ButtonDialog extends Activity implements OnClickListener {
                 b2.setText("No - Cancel");
                 b3.setVisibility(View.GONE);
                 break;
-            case 5: // meta data info box
-                //Log.d(TAG, "metadata:" + Main.metaData);
-                setResult(0); // cancel in case they exit out
-                textTitle.setText("Meta Data:");
-                msg = Main.metaData;
-                textName.setText(msg);
-                LinearLayout ll = new LinearLayout(this);
-                ll.layout(ll.getTop(), ll.getLeft(), ll.getRight(), 50);
-                b1.setText("OK");
-                b2.setVisibility(View.GONE);
-                b3.setVisibility(View.GONE);
-                break;
         }
     }
 

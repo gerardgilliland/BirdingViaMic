@@ -5,13 +5,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.Scanner;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.appindexing.Action;
-//import com.google.android.gms.appindexing.AppIndex;
-//import com.google.android.gms.common.api.GoogleApiClient;
-//import com.modelsw.birdingviamic.R;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,6 +19,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -54,15 +48,6 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 	private TextView locationStats;
 	Toolbar toolbar;
 	private Button update;
-	/**
-	 * ATTENTION: This was auto-generated to implement the App Indexing API.
-	 * See https://g.co/AppIndexing/AndroidStudio for more information.
-	 */
-//	private GoogleApiClient client;
-
-	/**
-	 * Called when the activity is first created.
-	 */
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -74,7 +59,7 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 		setSupportActionBar(toolbar);
 		toolbar.setNavigationIcon(R.drawable.ic_action_back);
 		toolbar.setLogo(R.drawable.treble_clef_linen);
-		toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+		toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
 		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Log.d(TAG, "Navigation Icon tapped");
@@ -123,9 +108,16 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		// Define the criteria how to select the location provider -> use default
 		Criteria criteria = new Criteria();
-		provider = locationManager.getBestProvider(criteria, false);
+		provider = null;
+		Location location = null;
 		try {
-			Location location = locationManager.getLastKnownLocation(provider);
+			provider = locationManager.getBestProvider(criteria, false);
+			if (provider != null) {
+				location = locationManager.getLastKnownLocation(provider);
+			} else {
+				latitudeField.setText("Location not available");
+				longitudeField.setText("Location not available");
+			}
 		// Initialize the location fields
 			if (location != null) {
 				Log.d(TAG, "Provider " + provider + " has been selected.");
@@ -150,10 +142,6 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 			Log.e(TAG, "Get Location manager -- Location Security exception:" + e);
 		}
 		showStats();
-
-		// ATTENTION: This was auto-generated to implement the App Indexing API.
-		// See https://g.co/AppIndexing/AndroidStudio for more information.
-		//client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 	}
 
 	/* Request updates at startup -- does this work ??? or is it a to do */

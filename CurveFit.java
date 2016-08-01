@@ -215,10 +215,10 @@ public class CurveFit {
 		float pivot;
 		
 	    for (int i = 0; i < lastCol; i++) {
-		      for (int j = 0; j < lastCol; j++) {
-		          workBuf[i][j] = coefArry[i][j];
-		      } // Next j
-		      solutnVectr[i] = constVectr[i];
+		    for (int j = 0; j < lastCol; j++) {
+		        workBuf[i][j] = coefArry[i][j];
+		    } // Next j
+		    solutnVectr[i] = constVectr[i];
 		} // Next i
 		for (int i = 0; i < lastCol; i++) {  // zero out index
 		    rowIndex[i] = 0;
@@ -228,54 +228,54 @@ public class CurveFit {
 		determinant = 1;
 		for (int i=0; i<lastCol; i++) { // find the polynomial
 		    largeElement = 0;
-		      for (int j = 0; j < lastCol; j++) {
-		        if (workIndex[j] != 1) {  // == 1 GoTo ContLargJ;
-		          for (int k = 0; k < lastCol; k++) {
-		            if (workIndex[k] > 1) {
-		              errFlag = 1;
-		              return errFlag;
-		            }
-		            if (workIndex[k] != 1) { // == 1 GoTo ContLargK
-		              if (largeElement < Math.abs(workBuf[j][k])) { // >= GoTo ContLargK;
-		                rowInx = j;
-		                colInx = k;
-		                largeElement = Math.abs(workBuf[j][k]);
-		              } // ContLargK
-		            } // ContLargK 
-		          } // Next k
-		        }  // ContLargJ
-		      } // Next j
-		      workIndex[colInx] = workIndex[colInx] + 1;
-		      rowIndex[i] = rowInx;
-		      colIndex[i] = colInx;
-		      if (rowInx != colInx) { // goto GetPivot  //largest pivot on diagonal
-		        determinant = -determinant;
-		        for (int j = 0; j < lastCol; j++) {
-		          tempX = workBuf[rowInx][j];
-		          workBuf[rowInx][j] = workBuf[colInx][j];
-		          workBuf[colInx][j] = tempX;
-		        } // Next j
-		        tempX = solutnVectr[rowInx];
-		        solutnVectr[rowInx] = solutnVectr[colInx];
-		        solutnVectr[colInx] = tempX;
-		      } // GetPivot:    // divide pivot row by pivot element
-		      pivot = workBuf[colInx][colInx];
-		      determinant = determinant * pivot;
-		      workBuf[colInx][colInx] = 1;
-		      for (int j = 0; j < lastCol; j++) {
-		        workBuf[colInx][j] = workBuf[colInx][j] / pivot;
-		      } // Next j
-		      solutnVectr[colInx] = solutnVectr[colInx] / pivot;
-		    for (int j = 0; j < lastCol; j++) { // reduce nonpivot rows
-		        if (j != colInx) { // goto ContReduce;
-		          tempX = workBuf[j][colInx];
-		          workBuf[j][colInx] = 0;
-		          for (int k = 0; k < lastCol; k++) {
-		             workBuf[j][k] = workBuf[j][k] - workBuf[colInx][k] * tempX;
-		          } // Next k
-		          solutnVectr[j] = solutnVectr[j] - solutnVectr[colInx] * tempX;
-		        } // ContReduce:
-		    } // Next j
+			for (int j = 0; j < lastCol; j++) {
+				if (workIndex[j] != 1) {  // == 1 GoTo ContLargJ;
+					for (int k = 0; k < lastCol; k++) {
+						if (workIndex[k] > 1) {
+							errFlag = 1;
+							return errFlag;
+						}
+						if (workIndex[k] != 1) { // == 1 GoTo ContLargK
+							if (largeElement < Math.abs(workBuf[j][k])) { // >= GoTo ContLargK;
+								rowInx = j;
+								colInx = k;
+								largeElement = Math.abs(workBuf[j][k]);
+							} // ContLargK
+						} // ContLargK
+					} // Next k
+				}  // ContLargJ
+			} // Next j
+			workIndex[colInx] = workIndex[colInx] + 1;
+			rowIndex[i] = rowInx;
+			colIndex[i] = colInx;
+			if (rowInx != colInx) { // goto GetPivot  //largest pivot on diagonal
+				determinant = -determinant;
+				for (int j = 0; j < lastCol; j++) {
+					tempX = workBuf[rowInx][j];
+					workBuf[rowInx][j] = workBuf[colInx][j];
+					workBuf[colInx][j] = tempX;
+				} // Next j
+				tempX = solutnVectr[rowInx];
+				solutnVectr[rowInx] = solutnVectr[colInx];
+				solutnVectr[colInx] = tempX;
+			} // GetPivot:    // divide pivot row by pivot element
+			pivot = workBuf[colInx][colInx];
+			determinant = determinant * pivot;
+			workBuf[colInx][colInx] = 1;
+			for (int j = 0; j < lastCol; j++) {
+				workBuf[colInx][j] = workBuf[colInx][j] / pivot;
+			} // Next j
+			solutnVectr[colInx] = solutnVectr[colInx] / pivot;
+			for (int j = 0; j < lastCol; j++) { // reduce nonpivot rows
+				if (j != colInx) { // goto ContReduce;
+					tempX = workBuf[j][colInx];
+					workBuf[j][colInx] = 0;
+					for (int k = 0; k < lastCol; k++) {
+						workBuf[j][k] = workBuf[j][k] - workBuf[colInx][k] * tempX;
+					} // Next k
+					solutnVectr[j] = solutnVectr[j] - solutnVectr[colInx] * tempX;
+				} // ContReduce:
+			} // Next j
 		} // Next i
 		
 		for (int i = 0; i < lastCol; i++) { // interchange columns
@@ -290,65 +290,65 @@ public class CurveFit {
 		           workBuf[j][colInx] = tempX;
 		        } // Next j
 		    } //  ContIntrchg:
-		 } // Next i
-		 for (int j = 0; j < lastCol; j++) {
-		     if (workIndex[j] != 1) { 
+		} // Next i
+		for (int j = 0; j < lastCol; j++) {
+		    if (workIndex[j] != 1) {
 		        errFlag = 1;
 		        // echo "Error in WorkIndex not 1<br>";
 		        return errFlag;
-		      }  
-		    } // Next j
-		    // echo "In CalcPoly LastCol= $LastCol ErrFlag=$ErrFlag<br>";
-		    for (int i = 0; i < lastCol; i++) {      
-		      polyCoef[i] = (float) solutnVectr[i];
-		      if (i > lastCol) {
-		    	  polyCoef[i] = 0;
-		      }
-			  //Log.d(TAG, "i:" + i + " coef:" + PlaySong.polyCoef[i] );			 			
+		    }
+		} // Next j
+		// echo "In CalcPoly LastCol= $LastCol ErrFlag=$ErrFlag<br>";
+		for (int i = 0; i < lastCol; i++) {
+		    polyCoef[i] = (float) solutnVectr[i];
+		    if (i > lastCol) {
+		    	polyCoef[i] = 0;
+		    }
+			//Log.d(TAG, "i:" + i + " coef:" + PlaySong.polyCoef[i] );
 	    } // Next i		 
 		return 0;
 	} // CalcPoly
 
 	private int calcResiduals() {
-		    // echo "CalcResiduals" . "<br>\n";
-		    corrCoef = 0.0f;
-			float denom = 0;
-		    float sumY = 0.0f;
-		    float sumYSqrd = 0.0f;
-		    float sumResidSqrd = 0.0f;
-		    float corrCoef1 = 0.0f;
-		    for (int i = 0; i < lastRow; i++) {
-		      float yCalcVal = 0f;
-		      for (int j = 0; j < lastCol; j++) {
-		        yCalcVal = yCalcVal + polyCoef[j] * datMatrix[i][j];
-		      } // Next j
-		      float resid = yCalcVal - y[i];
-		      sumResidSqrd = sumResidSqrd + resid * resid;
-		      sumY += y[i];
-		      sumYSqrd +=  y[i] * y[i];
-		    } // Next i
-		    if (sumYSqrd == 0) { 
-		    	corrCoef = -1;
-		      return -1;
-		    } else if (sumResidSqrd == 0) {
-		        corrCoef = 1;
-		    } else {
-		    	denom = (sumYSqrd - sumY * sumY / lastRow);
-		    	if (denom == 0) {
-		    		corrCoef = 1;
-		    	} else {
-					//calcResiduals denom:312.90625 sumResidSqrd:312.91495 corrCoef:NaN
-					// sqrt of a negative number --> NaN
-					if (sumResidSqrd > denom) {
-						//corrCoef = (float) Math.sqrt(1.0f - sumResidSqrd / denom);
-						corrCoef = 0;
-					} else {
-						corrCoef = (float) Math.sqrt(1.0f - sumResidSqrd / denom);
-					}
+		// echo "CalcResiduals" . "<br>\n";
+		corrCoef = 0.0f;
+		float denom = 0;
+		float sumY = 0.0f;
+		float sumYSqrd = 0.0f;
+		float sumResidSqrd = 0.0f;
+		float corrCoef1 = 0.0f;
+		for (int i = 0; i < lastRow; i++) {
+		    float yCalcVal = 0f;
+			for (int j = 0; j < lastCol; j++) {
+				yCalcVal = yCalcVal + polyCoef[j] * datMatrix[i][j];
+			} // Next j
+			float resid = yCalcVal - y[i];
+			sumResidSqrd = sumResidSqrd + resid * resid;
+			sumY += y[i];
+			sumYSqrd +=  y[i] * y[i];
+		} // Next i
+	    if (sumYSqrd == 0) {
+	    	corrCoef = -1;
+	        return -1;
+		} else if (sumResidSqrd == 0) {
+		    corrCoef = 1;
+		} else {
+		   	denom = (sumYSqrd - sumY * sumY / lastRow);
+		   	if (denom == 0) {
+		   		corrCoef = 1;
+		   	} else {
+				//calcResiduals denom:312.90625 sumResidSqrd:312.91495 corrCoef:NaN
+				// sqrt of a negative number --> NaN
+				if (sumResidSqrd > denom) {
+					//corrCoef = (float) Math.sqrt(1.0f - sumResidSqrd / denom);
+					corrCoef = 0;
+				} else {
+					corrCoef = (float) Math.sqrt(1.0f - sumResidSqrd / denom);
 				}
-		    } // End If
-			//Log.d(TAG, "calcResiduals denom:" + denom + " sumResidSqrd:" + sumResidSqrd + " corrCoef:" + corrCoef);
-		    return 0;
+			}
+		} // End If
+		//Log.d(TAG, "calcResiduals denom:" + denom + " sumResidSqrd:" + sumResidSqrd + " corrCoef:" + corrCoef);
+		return 0;
 	} // CalcResiduals
 
 }	// CurveFit

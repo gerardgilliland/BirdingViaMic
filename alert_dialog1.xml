@@ -62,12 +62,13 @@
                 android:text=""/>
 
         </ScrollView>
+
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/bottom_buttons"
         android:layout_width="wrap_content"
-        android:layout_height="50dp"
+        android:layout_height="80dp"
         android:layout_alignParentBottom="true" >
 
         <LinearLayout

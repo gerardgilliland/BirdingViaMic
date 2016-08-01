@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -45,7 +46,7 @@ public class WebList extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.teal));
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "Navigation Icon tapped");
@@ -98,7 +99,7 @@ public class WebList extends AppCompatActivity {
     
     public OnClickListener listener = new OnClickListener() {  // for non-list items -- i.e. buttons
       	public void onClick(View v) {
-      	   	switch (v.getId()) {
+      	switch (v.getId()) {
         	case R.id.rename_button:
             	if (webLink == null || isWebSiteSelected == false ) {
             		String msg = "Please select a Web Site name to change.";
@@ -151,25 +152,25 @@ public class WebList extends AppCompatActivity {
             		finish(); 
             	}
         		break;
-      	   	} // switch
-        } // onclick
+       	} // switch
+    } // onclick
     }; // onClickListener (because it does NOT extend OnClickListener)
 
-      public void getNewName() {
-    	  if (existingWebId == 0 && myRequest == 2) {
-         	  Log.d(TAG, "*** 1a *** getNewName existing name is null -- returning");
-    		  Toast.makeText(this, "Please select a name to change.", Toast.LENGTH_LONG).show();
-    		  return;
-    	  } 
-    	  if (myRequest == 1) {    		  
-    		  Main.existingWebName = "";
-    		  Main.existingLink = "";
-    	  }
-     	  Log.d(TAG, "*** 1b *** getNewName: existingWebName:" + Main.existingWebName + " newWebName:" + Main.newWebName +
-     			  " existingLink:" + Main.existingLink + " newLink:" + Main.newLink);
-  		  Intent nwd = new Intent(this, NewWebDialog.class);
-  		  startActivityForResult(nwd, myRequest);
-      }
+    public void getNewName() {
+  	    if (existingWebId == 0 && myRequest == 2) {
+            Log.d(TAG, "*** 1a *** getNewName existing name is null -- returning");
+    		Toast.makeText(this, "Please select a name to change.", Toast.LENGTH_LONG).show();
+    		return;
+    	}
+    	if (myRequest == 1) {
+    		Main.existingWebName = "";
+    		Main.existingLink = "";
+    	}
+     	Log.d(TAG, "*** 1b *** getNewName: existingWebName:" + Main.existingWebName + " newWebName:" + Main.newWebName +
+     		  " existingLink:" + Main.existingLink + " newLink:" + Main.newLink);
+  		Intent nwd = new Intent(this, NewWebDialog.class);
+  		startActivityForResult(nwd, myRequest);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {    	 
