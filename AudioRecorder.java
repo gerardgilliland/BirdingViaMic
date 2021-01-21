@@ -27,10 +27,14 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.ActionBarActivity;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,7 +45,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
 
-import com.google.android.gms.cast.Cast;
 
 public class AudioRecorder extends AppCompatActivity implements OnClickListener {
 	// this reads the mic and saves the data and reads the data and plays it.
@@ -76,7 +79,10 @@ public class AudioRecorder extends AppCompatActivity implements OnClickListener 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		if (Main.songpath == null || Main.songdata == null) {
+			finish();
+			return;
+		}
 		Main.db = Main.songdata.getWritableDatabase();
 		String qry = "SELECT Value from Options WHERE Name='audsrc'";
 		Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);

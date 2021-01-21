@@ -71,7 +71,8 @@ public class WebBrowser extends Activity {
 				//startActivity(intent);
             	Main.existingSpec = null;
             	Main.wikipedia = false;
-        	}
+				Main.fileReshowExisting = true;
+			}
         } else if (Main.xenocanto == true) { 
         	if (Main.existingSpec == null) {        	
             	Log.d(TAG, "No bird selected ");        

@@ -1,5 +1,6 @@
 package com.modelsw.birdingviamic;
 /*
+ * 55.F BirdSongs.db IOC World Bird List version 61 -- 2016.03.16
  * 55.L fix Load Definitions -- was failing if song was Stereo test Main.sourceMic == 0 needed (Main.sourceMic & 1) == 0
  * 		fix LastKnown Identified -- in Clean Database -- was 'Identified ' (with space at end), and in runPatch()
  * 55.M	use entire screen regardless of song length -- was use part if less than 5 seconds.
@@ -36,9 +37,77 @@ package com.modelsw.birdingviamic;
  * 56.X Using Low And Hi Limits
  * 56.Y Visualizer Using Average Modify Help
  * 56.Z Remove Accounts Requirement From Code And Manifest_Ver64
- *
+ * 57.A Working On Realtime Plot
+ * 57.B Minor Changes Extend Range In VisualizerView
+ * 57.C Extend Range Of Visualizer_Ver65
+ * 57.D Start Song Before Decode Else Song Hangs
+ * 57.E Decoder Seek Works With M4a Not With Mp3
+ * 57.F Should Be Same As 57.E Just Saving In Case
+ * 57.G Seek Works And Fix 48000 Adjust_Ver66
+ * 57.H Documentation
+ * 57.I Set Initial Max In Plot To Remove Noise
+ * 57.J Minor Cleanup
+ * 57.K Remove Noise Cleanup Decoder And VisualizerView _Ver67
+ * 57.L Fix Filter Not Saving FullName _Ver68
+ * 57.M If Song Data Null Then Finish Why Is Flash On PlaySong
+ * 57.N Under Android Studio 3.1.4 using SDK 28 -- Ver 69 -- Loaded 10/28/18
+ * 57.O Add option to save decoded file
+ * 57.P Upgrade from ioc World Bird List 61 to version 92 with new BirdLife bounding boxes -- 2019.09.12 -- code ver 70
+ * 57.Q Move upgrade from Main to SongList -- code ver 71
+ * 57.R Move upgrade back to Main from SongList - code ver 71 -- ioc version 92
+ * 57.S Copy upgrade logic from 57.N -- use 57.P to load version 92 -- code ver 72
+ *      add missing SavePcmData to Options in database dbVersion 82
+ * 57.T Clean with upgrade Detail imbedded in Totals to avoid memory failure but Fails On super.Start()
+ * 57.U Not Clean but Runs with upgrade detail imbedded in totals. -- code ver 73 -- ioc version 92
+ * 57.V load in Google Play but complains version 61 after delete and install (did I load ioc version 61 by mistake? )
+ * 57.W code ver 75; db ver 83; verified ico ver 92
+ * 57.X with 57.T clean upgrade -- code ver 76; db ver 83; verified ico ver 92
+ * 57.Y start with 57.X -- attempt to fix crash from google robot attempting to run an empty file. code ver 77;
+ * 		NOT LOADED in Google -- I can't make it fail here. -- staying with 57.X
+ * 57.Z Upgrade to Android 10; SDK 29; ver 78
+ * 58.A attempt to add assets -- failed and lost code
+ * 58.B start with 57.Z ver 78; run as aab file -- and BACK UP as 58.B -- still using external songs.
+ * 58.C start with 58.B ver 79; run as aab file -- change assetpack name: BirdingViaMicAssets
+ * 58.C ver 79; run as aab file -- 4 asset packs SongsNW; SongsOW; SongsOA; SongsNAC;
+ * 58.D ver 80; -- Old World set as install at Delivery -- the others set as On Demand
+ * 58.E ver 81; -- attempt to get through step 7 of On Demand -- doesnt load
+ * 58.F ver 82; -- Build an APK -- start with 57U; menu > Refactor > Migrate to AndroidX
+ * 58.G ver 83; -- start with 58E -- using new install C:\Users\Owner\.android\keystore.jks Alias name: upload
+ * 58.H ver 84; -- attempt to enable SongsXX to be OnDemand
+ * error app-release.aab Your Android App Bundle is signed with the wrong key.
+ * Ensure that your App Bundle is signed with the correct signing key and try again:
+ * SHA1: A5:55:F8:49:D6:BE:FE:55:AC:D5:4C:C2:24:D8:28:BF:7A:47:62:6E.
+ * request upload the existing C:\Users\Owner\.android\keystore.jks to be loaded for com.modelsw.birdingviamic
+ * 58.H1 ver 84 -- loaded in Play as ver 83 (from gradle) with string at 84 --Example OnDemand Does not compile
+ * I saw an APK (not aab bundle) out there as V 85
+ * 58.I ver 86 -- working on asset packs.
+ * 58.J ver 87 -- Loading on Closed testing -- until I get asset packs working
+ * 58.K ver 88 -- AssetPackLocation -- compiles -- but messed up attempting load asset packs On Demand
+ * 58.L ver 89 -- remove load asset packs code  (the pack are still there - the code to load them is not.
+ * 58.M_V90 -- clean up Select Song Path so it will install.
+ * 58.N_V91 -- add Load Asset Pack SongsNW in SelectSongPath and LoadAssetPack
+ * 58.O_V92	-- add LoadAssetPack class -- add ShowPermission class
+ * 58.P_V93 -- store assetPackName on Main -- I have removed all the calls in LoadAssetPack
+ * 58.Q_V94 -- get debug stack overflow in LoadAssetPack > LoadOnePack -- totalSize = assetLocation.size(); suspect not seeing asset.
  */
-
+// CHECK build.gradle for the 4 items that need to be updated: 1)versionCode 2)versionName 3)versionName(in string) 4) DatabaseVersion (in Main)
+// Where is android studio building my .apk file?
+//  	 YourApplication\app\build\outputs\apk name: app-release.apk
+// or -- YourApplication\app\release\app.aab
+//  https://play.google.com/console/developers/5224623645443335130/app-list
+// the following is how to load asset packs:
+// https://codelabs.developers.google.com/codelabs/native-gamepad#0
+/* -- got to be one of these to get asset packs to work
+https://developer.android.com/guide/app-bundle/asset-delivery
+https://developer.android.com/guide/app-bundle/asset-delivery/build-native-java <-- done
+https://developer.android.com/guide/playcore/asset-delivery
+https://developer.android.com/guide/playcore/asset-delivery/integrate-java <-- I will come back
+https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackLocation#assetspath <-- I'm here
+https://developer.android.com/guide/playcore#java-kotlin
+https://developer.android.com/guide/playcore#import-library
+https://codelabs.developers.google.com/codelabs/native-gamepad#3
+https://developer.android.com/guide/playcore/play-feature-delivery
+ */
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,8 +121,8 @@ import java.util.List;
 import java.util.Scanner;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -61,15 +130,14 @@ import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.graphics.Bitmap;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -81,28 +149,27 @@ import android.os.Environment;
 
 public class Main extends AppCompatActivity implements OnClickListener {
 	private static final String TAG = "Main";
-	Activity activity;
-	public static String adjustViewOption;
+	public static String adjustViewOption; // AdjustView: clear, move, save, exclude, cancel, edit -- used in playSong, VisualizerView
 	public static int alertRequest = 0; // 2=delete files; 3=delete species; 4=delete web; 5=meta data info box; 6=database upgrade complete;
+	public static String assetPackName;  //
 	public static short[] audioData;  // the entire song -- -32767 +32767 (16 bit)
-	public static int audioDataLength;
-	public static int audioDataSeek;
+	public static int audioDataLength;  // the usable file length without overflows
+	public static int audioDataSeek;  // in playSong and decodeFile
 	public static int audioSource = -1; // stored in SongList -- 0=default, 1=mic, 5=camcorder, 6 voice recognition, -1=unknown
-	public static int bitmapWidth;
-	public static int bitmapHeight;
-	public static int buttonHeight;
+	public static int bitmapWidth; // set from VisualizerView used in AdjustView
+	public static int bitmapHeight; // set from VisualizerView used in AdjustView
+	public static int buttonHeight;  // fails to set in Main -- set in PlaySong used in VisualizerView
 	public static Boolean[] ck;  // used in SongList -- song selected
-	public static int cntrFftCall; // counts the blocks of 1024 visualizer View byte data - cleared in PlaySong -- incremented and tested in LineRenderer
-	public static int[] cntrFftCallTotal; // sum of power of each fft Block
+	public static String codeNameFile;
 	public static String commonName; // stored in species table CodeName
 	public static String customPathLocation = null;
-	public static String databaseName;
-	public static int databaseVersion = 79; // increment if change database -- calls SongData
+	public static String databaseName; // birdingviamic/Define/BirdSongs.db
+	public static int databaseVersion = 83; // increment if change database -- calls SongData -- bad name databases is 92 (aka 9.2)
 	public static SQLiteDatabase db;
-	public static String definepath = null;
-	public static File definePathDir;
-	public static String displayName = "";
-	public static int duration;
+	public static String definepath = null; // birdingviamic/Define
+	public static File definePathDir; // file format
+	public static String displayName = ""; // used in PlaySong identify to hold identification
+	public static int duration; // song length in milliseconds
 	public static String environment = null;   // /storage/sdcard0
 	public static int existingInx;
 	public static String existingLink;
@@ -117,53 +184,50 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static String existingWebName;
 	public static Boolean fileRenamed = false; // used in restart to refresh the songlist
 	public static Boolean fileReshowExisting = false; // used in restart to refresh the songlist
-	//public static int fftcntr = 0; // pointer - increments for every line saved
-	//public static byte[] fftdata;
-	public static float filterMaxPower;  // max of fft power calc between exclude filterStartAtLoc and filterStopAtLoc
 	public static int filterStartAtLoc = 0; // set in AdjustView -- used in PlaySong
-	public static int filterStopAtLoc = 0;
+	public static int filterStopAtLoc = 0; // set in AdjustView -- used in PlaySong
 	public static int highFreqCutoff = 0;  // user entered from adjust view
 	public static float hzPerStep = 11025f / 512f;  // 21.53 hz per step -- in the file as hz; 0-511 everywhere else.
-	public static int[] inx;
-	public static boolean isAutoLocation = true;
-	public static boolean isCheckPermissions = false;
-	public static boolean isDebug = false;
+	public static int[] inx;  // holds existingInx from songList
+	public static boolean isAutoLocation = true; // ShowLocation use GPS vs manual
+	public static boolean isCheckPermissions = false; // set true if you need to check permissions (Android 6.0+)
+	public static boolean isDebug = false; // save extra files
+	public static boolean isDecodeBackground = true; // manual=false / background=true
 	public static boolean isEdit = false; // set true when edit button on play is tapped
 	public static boolean isEnhanceQuality = true; // build s/n kernel and apply to normalized audio
-	public static boolean isExternalMic = false;
-	public static boolean isFilterExists = false;
-	public static Boolean isIdentify = true;
+	public static boolean isExternalMic = false; // set true when plugged in else false if internal mic
+	public static boolean isFilterExists = false; // has a manual filter been set in AdjustView
+	public static Boolean isIdentify = true;  // has PlaySong identify button been pushed
 	public static boolean isLoadDefinition = false;  // (set in options) any checked in the list -- define if not mic -- identify if mic
-	public static boolean isNewStartStop = false;
+	public static boolean isNewStartStop = false; // set in AdjustView for song segment
 	public static boolean isOptionAutoFilter = true;  // find mean in Voiced overruled if manual filter
-	public static boolean isPlaying = false;
-	public static boolean isSampleRate = false;
-	public static boolean isShowDetail = false;
-	public static boolean isShowDefinition = false;  // Show the definition (frequency, distance) on the adjust view screen
-	public static boolean isSortByName = true;
-	public static boolean isStartRecordScreen = false;
-	public static boolean isStartRecording = false;
-	public static boolean isShowWeb = false;
-	public static boolean isStereo = false;
-	public static boolean isUseAudioRecorder = false;
-	public static boolean isUseLocation = false;
-	public static boolean isUseSmoothing = false;
-	public static boolean isViewDistance = true;
-	public static boolean isViewEnergy = true;
-	public static boolean isViewFrequency = true;
-	public static boolean isViewQuality = true;
-	public static boolean isWebLink = false;
-	public static int latitude = 40;
-	public static float lengthEachRecord = 5.0f; // number of records * lengthEachRecord = size required for dimension of bitmap
-	private Button songButton;
+	public static boolean isPlaying = false; // is the song currently playing
+	public static boolean isSampleRate = false; // option used for recording false=22050, true=44100
+	public static boolean isSavePcmData = false; // save audioData output from DecodeFileJava
+	public static boolean isShowDetail = false; // show the fft on the visualizerView screen
+	public static boolean isShowDefinition = false;  // Show the definition (frequency, distance, energy, quality) on the VisualizerView screen
+	public static boolean isSortByName = true; // songList sort by CommonName vs sort by species
+	public static boolean isStartRecordScreen = false; // start the app with the record screen showing
+	public static boolean isStartRecording = false; // start the app with the record screen showing and start recording
+	public static boolean isShowWeb = false; // option if true attempt show xeno-canto or Wikipedia
+	public static boolean isStereo = false; // vs mono
+	public static boolean isUseAudioRecorder = false; // option true = wav / false media = m4a
+	public static boolean isUseLocation = false; // option - limit list in identification
+	public static boolean isUseSmoothing = false; // option - use smoothing
+	public static boolean isViewDistance = true; // option - display distance in VisualizerView
+	public static boolean isViewEnergy = true; // option - display energy in VisualizerView
+	public static boolean isViewFrequency = true; // option - display frequency in VisualizerView
+	public static boolean isViewQuality = true; // option - display quality in VisualizerView
+	public static boolean isWebLink = false; // in WebList if true show web page else Wikipedia or xeno-canto
+	public static int latitude = 40; // location can be auto or manual
+	//public static float lengthEachRecord = 5.0f; // number of records * lengthEachRecord = size required for dimension of bitmap
 	public static int listOffset = 0;
 	public static List<String> listPermissionsNeeded;
-	public static int longitude = -100;
+	public static int longitude = -100; // location can be auto or manual
 	public static int lowFreqCutoff = 0;  // user entered from adjust view
 	public static int manualLat;
 	public static int manualLng;
 	public static float maxPower;  // max of fft power calc.
-	//public static int maxEnergy; // from decode file
 	public static int maxPowerJ = 0; // frequency where power is max (don't know if it is lo or hi for harmonics and percent peak)
 	public static int maxPowerRec = 0; // record at which the max power occurred
 	public static String metaData = null;
@@ -183,36 +247,37 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static boolean optionsRead = false; // set true when read and in memory
 	public static int path = 1;  // internal songs are default
 	public static int permCntr = 6;
-	String[] permissions = new String[]{
+	public static String[] permissions = new String[]{
 			Manifest.permission.WRITE_EXTERNAL_STORAGE,
 			Manifest.permission.READ_EXTERNAL_STORAGE,
 			Manifest.permission.RECORD_AUDIO,
-			Manifest.permission.GET_ACCOUNTS,
+			Manifest.permission.INTERNET,
 			Manifest.permission.ACCESS_FINE_LOCATION,
 			Manifest.permission.ACCESS_COARSE_LOCATION };
 	public static int phoneLat;
 	public static int phoneLng;
+	private Button playButton;
 	public String qry = "";
 	private Button recordButton;
-	private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
 	public static String recordedName;
 	public static int[] ref;  // reference (to replace defineName)
-	private Cursor rs;
+	private Cursor rs; // I think of Cursor as Record Set
+	private Cursor rsd; // record set Detail
 	public static int sampleRate = 22050;
 	public static int sampleRateOption = 0;
 	public static int[] seg;
 	public static int[] selectedSong;
 	public static String sharedDefine;
-	public static String sharedStorage;
 	public static int shortCntr;
 	public static Boolean showPlayFromList = false;
 	public static Boolean showPlayFromRecord = false;
 	public static Boolean showWebFromIdentify = false;
+	private Button songButton;
 	public static int songCounter = 0;  // count of songs selected (checked)
 	public static String songpath = null;   // environment + /birdingviamic/Songs/ or environment + /iBird_Lite/ or custom
 	public static String[] songs; // names from the file (to string)
 	public static String[] songsCombined;  // the listing (fileName newLine Spec Inx Seg)
-	public static SongData songdata;
+	public static SongData songdata = null;
 	public static int songsDbLen; // count of songs in the SongList
 	public static File[] songFile; // names from the file (file format)
 	public static File songPathDir;
@@ -223,10 +288,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static int specOffset = 0;
 	public static Boolean specRenamed = false;
 	public static int stereoFlag = 0; // used in sampleRateOption 0=mono / 1=stereo
-	public static int stopAt = 0;
+	//public static int stopAt = 0;
 	int targetSdkVersion;
 	public static int thisSong = 0;  // current song
-	public static int totalCntr = 0;  // I have to keep this for mediaPlayer and visualizerView
+	//public static int totalCntr = 0;  // I have to keep this for mediaPlayer and visualizerView
 	Toolbar toolbar;
 	public static int userRefStart = 40000;
 	private int versionNum = 0;
@@ -234,7 +299,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	private Button webButton;
 	public static int webOffset = 0;
 	public static Boolean webRenamed = false;
-	public static boolean wikipedia = true;  // true show identified bird - false bring up a different web site 
+	public static boolean wikipedia = true;  // true show identified bird - false bring up a different web site
 	public static boolean xenocanto;
 	Bundle savedInstanceState;
 
@@ -257,12 +322,13 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		findViewById(R.id.record_button).setOnClickListener(this);
 		recordButton = (Button) findViewById(R.id.record_button);
 		findViewById(R.id.play_button).setOnClickListener(this);
+		playButton = (Button) findViewById(R.id.play_button);
 		findViewById(R.id.song_button).setOnClickListener(this);
 		songButton = (Button) findViewById(R.id.song_button);
 		findViewById(R.id.select_songpath_button).setOnClickListener(this);
 		findViewById(R.id.options_button).setOnClickListener(this);
 		findViewById(R.id.species_button).setOnClickListener(this);
-		//findViewById(R.id.signin_button).setOnClickListener(this);
+		findViewById(R.id.permissions_button).setOnClickListener(this);
 		findViewById(R.id.help_button).setOnClickListener(this);
 		findViewById(R.id.redlist_button).setOnClickListener(this);
 		findViewById(R.id.region_button).setOnClickListener(this);
@@ -271,16 +337,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		findViewById(R.id.web_browser_button).setOnClickListener(this);
 		webButton = (Button) findViewById(R.id.web_browser_button);
 		findViewById(R.id.register_button).setOnClickListener(this);
-		isCheckPermissions = true;
-		boolean ckPerms = checkPermissions();
-		if (ckPerms == true) {
-			isCheckPermissions = false;
-			init();
-			Log.d(TAG, "App is enabled. Permissions granted.");
-		} else {
-			Log.d(TAG, "App is degraded. Request enable permissions.");
-			Intent pd = new Intent(this, PermissionDetail.class);
-			startActivityForResult(pd,99);
+		if (Main.songpath == null || Main.songdata == null) {
+			isCheckPermissions = true;
+			boolean ckPerms = checkPermissions();
+			if (ckPerms == true) {
+				isCheckPermissions = false;
+				init();
+				Log.d(TAG, "App is enabled. Permissions granted.");
+			} else {
+				Log.d(TAG, "App is degraded. Request enable permissions.");
+				Intent pd = new Intent(this, PermissionDetail.class);
+				startActivityForResult(pd, 99);
+			}
 		}
 	}
 
@@ -312,9 +380,6 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		// I have disabled all but path = 1 here in main.
 		songpath = Main.songPathDir.toString() + "/";
 		Log.d(TAG, "onCreate definepath:" + definepath + " songpath:" + songpath);
-		if (sharedDefine != null) {
-			Log.d(TAG, "onCreate sharedDefine:" + sharedDefine);
-		}
 
 		readTheOptions();
 		commonName = "CommonName: ";
@@ -356,9 +421,6 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			}
 		}
 		if (listPermissionsNeeded.isEmpty()) { // either none added or failed to add
-			/*ActivityCompat.requestPermissions(this,
-					listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),
-					REQUEST_ID_MULTIPLE_PERMISSIONS);*/
 			return true;
 		} else {
 			return false; // list is not empty go get permissions
@@ -485,6 +547,13 @@ public class Main extends AppCompatActivity implements OnClickListener {
 				break;
 			}
 
+			case R.id.permissions_button: {
+				Log.d(TAG, "onClick Permissions");
+				Intent p = new Intent(this, ShowPermissions.class);
+				startActivity(p);
+				break;
+			}
+
 			case R.id.help_button: {
 				Log.d(TAG, "onClick Help");
 				Intent h = new Intent(this, HelpActivity.class);
@@ -511,11 +580,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			return;
 		}
 
+		Log.d(TAG, "onResume check songpath or songdata");
+		if (songpath == null || songdata == null) {
+			Log.d(TAG, "** onResume songpath or songdata is null");
+			init();
+		}
+
 		Log.d(TAG, "onResume newStartStop:" + isNewStartStop);
 		if (isNewStartStop == true) {
 			isNewStartStop = false;
-			Intent nss = new Intent(this, PlaySong.class);
-			startActivity(nss);
+			//Intent nss = new Intent(this, PlaySong.class);
+			//startActivity(nss);
+			playButton.performClick();
 		}
 
 		Log.d(TAG, "onResume showPlayFromRecord:" + showPlayFromRecord);
@@ -523,16 +599,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			showPlayFromRecord = false;
 			// copy the recorded song into the existing name and start the PlaySong screen
 			existingName = songpath + recordedName;
-			Intent spfr = new Intent(this, PlaySong.class);
-			startActivity(spfr);
+			//Intent spfr = new Intent(this, PlaySong.class);
+			//startActivity(spfr);
+			playButton.performClick();
 		}
 
 		Log.d(TAG, "onResume showPlayFromList:" + showPlayFromList);
 		if (showPlayFromList == true) {
 			showPlayFromList = false;
-			// use the generated list of songs 
-			Intent spfl = new Intent(this, PlaySong.class);
-			startActivity(spfl);
+			// use the generated list of songs
+			//Intent spfl = new Intent(this, PlaySong.class);
+			//startActivity(spfl);
+			playButton.performClick();
 		}
 
 		Log.d(TAG, "onResume fileRenamed:" + fileRenamed);
@@ -551,9 +629,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 
 		Log.d(TAG, "onResume webRenamed:" + webRenamed);
 		if (webRenamed == true) {
-			//fileRenamed = false;  will be cleared to false later in SongList
-			Intent wn = new Intent(this, WebList.class);
-			startActivity(wn);
+			//fileRenamed = false;  will be cleared to false later in WebList
+			//Intent wn = new Intent(this, WebList.class);
+			//startActivity(wn);
+			webButton.performClick();
 		}
 
 		// keep this next to last -- if nothing else runs and return from play song then go back to the list where you were
@@ -562,9 +641,6 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		Log.d(TAG, "onResume fileReshowExisting:" + fileReshowExisting);
 		if (fileReshowExisting == true) {
 			//fileReshowExisting = false;  will be cleared to false later in SongList
-			if (songpath == null || songdata == null) {
-				init();
-			}
 			Intent rn = new Intent(this, SongList.class);
 			startActivity(rn);
 		}
@@ -575,6 +651,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			showWebFromIdentify = false;
 			webButton.performClick();
 		}
+
 		// load single xc file from web
 		if (Main.xenocanto == true && existingRef > 0) { //  && isBatchDownload == false) {  // don't load XC files (from here) if startup
 			environment = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -664,6 +741,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 						val.put("SourceMic", 0);
 						val.put("SampleRate", sr); // solve it when you read it.
 						val.put("AudioSource", -1);
+						val.put("Stereo", -1);
 						val.put("LowFreqCutoff", 0);
 						val.put("HighFreqCutoff", 0);
 						val.put("FilterStart", 0);
@@ -682,169 +760,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 
 	// fix what I can in local database
 	void runPatch() {
-		int patch = 0;
-		qry = "SELECT Value FROM Options WHERE Name = 'patch64'"; // it won't exist if I have never run this.
-		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-		if (rs.getCount() == 1) { // i've been here
-			rs.moveToFirst();
-			patch = rs.getInt(0);
-			if (patch == 64) { // is it my patch from this time?
-				rs.close();
-				return;
-			} else {
-				db.beginTransaction();
-				qry = "UPDATE Options SET Value = 64 WHERE Name = 'patch64'";
-				Main.db.execSQL(qry);
-				Main.db.setTransactionSuccessful();
-				Main.db.endTransaction();
-			}
-			rs.close();
-		} else { // patch doesn't exist
-			// test Songlist for field name Stereo
-			qry = "SELECT sql FROM sqlite_master" +
-					" WHERE type='table' AND name = 'SongList'";
-			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-			rs.moveToFirst();
-			String x = rs.getString(0);
-			rs.close();
-			if (x.indexOf("Stereo") > 0) {
-				String msg = "field Stereo already exists";
-				Log.d(TAG, msg);
-				db.beginTransaction();
-				ContentValues val = new ContentValues();
-				val.put("Name", "patch64");
-				val.put("Value", 64);
-				Main.db.insert("Options", null, val);
-				Main.db.setTransactionSuccessful();
-				Main.db.endTransaction();
-				return;
-			}
-			try {
-				// add a new column Stereo
-				db.beginTransaction();
-				qry = "ALTER TABLE SongList ADD COLUMN Stereo INTEGER";
-				db.execSQL(qry);
-				// move the 8 in SampleRate to its new field as a 0 if mono or 1 of stereo
-				qry = "UPDATE Songlist SET Stereo = ((SampleRate & 8) >> 3)";
-				db.execSQL(qry);
-				// get rid of stereo as an 8 in SampleRate
-				qry = "UPDATE SongList SET SampleRate = (SampleRate & 7)";
-				db.execSQL(qry);
-				db.setTransactionSuccessful();
-				db.endTransaction();
-			} catch (SQLiteException e) {
-				Log.e(TAG, "Patch64 Error:" + e);
-			}
-			Log.d(TAG, "patch 64 applied ");
-			db.beginTransaction();
-			ContentValues val = new ContentValues();
-			val.put("Name", "patch64");
-			val.put("Value", 64);
-			Main.db.insert("Options", null, val);
-			Main.db.setTransactionSuccessful();
-			Main.db.endTransaction();
-		}
 	}
 
 	public void readTheOptions() {
-		// backfit database for new option Stereo
-		/*
-		qry = "SELECT Value FROM Options WHERE Name = 'Stereo'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		if (rs.getCount() == 0) {
-			Log.d(TAG, "backfit database");
-			db.beginTransaction();
-			ContentValues val = new ContentValues();
-			val.put("Name", "Stereo");
-			val.put("Value", 0);
-			Main.db.insert("Options", null, val);
-			Main.db.setTransactionSuccessful();
-			Main.db.endTransaction();
-			// read it below
-		}
-		*/
 		Log.d(TAG, "readTheOptions");
-		qry = "SELECT Value FROM Options WHERE Name = 'AutoFilter'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isOptionAutoFilter = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'EnhanceQuality'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isEnhanceQuality = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ShowDefinition'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isShowDefinition = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ViewDistance'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isViewDistance = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ViewEnergy'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isViewEnergy = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ViewFrequency'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isViewFrequency = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ViewQuality'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isViewQuality = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ShowDetail'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isShowDetail = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'ShowWeb'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isShowWeb = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'SortByName'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isSortByName = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'UseLocation'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isUseLocation = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'UseAudioRecorder'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isUseAudioRecorder = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'UseSmoothing'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isUseSmoothing = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'SampleRate'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isSampleRate = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'Stereo'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isStereo = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'StartRecordScreen'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isStartRecordScreen = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'StartRecording'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isStartRecording = (rs.getInt(0) != 0);
-		//qry = "SELECT Value FROM Options WHERE Name = 'BatchDownload'";
-		//rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		//rs.moveToFirst();
-		//isBatchDownload = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'LoadDefinition'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isLoadDefinition = (rs.getInt(0) != 0);
-		qry = "SELECT Value FROM Options WHERE Name = 'Debug'";
-		rs = songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		isDebug = (rs.getInt(0) != 0);
-		rs.close();
 		optionsRead = true;
 	}
 
@@ -866,18 +785,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			return;
 		}
 		inFileLen = inFile.length; // number of files
-	    if (inFileLen == 0) {
-            Log.d(TAG, "loadAsset inFileLen == 0 -- returning" );
-	        return;
-	    }
+		if (inFileLen == 0) {
+			Log.d(TAG, "loadAsset inFileLen == 0 -- returning" );
+			return;
+		}
 		Log.d(TAG, "loadAsset inFileLen:" + inFileLen);
 		for (int i = 0; i < inFileLen; i++) {
 			tryNext:
 			try {
 				if (folder.equals("Define")) {
-					in = assetManager.open("Define/" + inFile[i]);
-					outFile = new File(definePathDir + "/" + inFile[i]);
-					if (outFile.exists()) { // if the database is out there already don't load an empty one and trash the users files
+					in = assetManager.open("Define/" + inFile[i]); // in from assets
+					outFile = new File(definePathDir + "/" + inFile[i]);  // out to definePathDir
+					if (outFile.exists()) { // if the database or any file is there already don't load an empty one and trash the users files
 						Log.d(TAG, "loadAssets outFile exists -- not loading:" + outFile);
 						break tryNext;
 					}
@@ -925,6 +844,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	}
 
 	public void readTheSongPath() {
+		// fix
+		//qry = "Update SongPath set CustomPath = ''";
+		//Main.db.execSQL(qry);
+		// end fix
 		Log.d(TAG, "readTheSongPath");
 		qry = "SELECT Path, CustomPath FROM SongPath";
 		rs = songdata.getReadableDatabase().rawQuery(qry, null);
@@ -969,10 +892,10 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		}
 	}
 
+	// currently NOT called
 	private void rebuildNameList() {
 		// this is a one time event -- change file name from existing to species common name plus existing numbers and extension
 		Log.d(TAG, "rebuildNameList");
-		//pathBase = environment + "/birdingviamic/";
 		songpath = songPathDir + "/";
 		int pathLen = songpath.length();
 		File dir = new File(songpath);
@@ -1051,13 +974,13 @@ public class Main extends AppCompatActivity implements OnClickListener {
 
 
 	void checkVersion() { // ONLY RUN THIS ONCE !!!
-		// this is a one time event -- it will run if it finds RefUpgrade61.csv AND CodeName61.csv
+		// this is a one time event -- it will run if it finds RefUpgrade92.csv AND CodeName92.csv
 		// it deletes those two files on completion
 		// change Ref to new version In SongList, DefineTotals, DefineDetail
 		// replace CodeName with the new data
 		Log.d(TAG, "CheckVersion");
-		// upgrade from version 5.4 to 6.1 -- WITHOUT Loosing the existing songlist or defines.
-		// the table RefUpgrade contains the Species Reference number for the existing version 5.4 and the new version 6.1
+		// upgrade from version 6.1 to 9.2 -- WITHOUT Loosing the existing songlist or defines.
+		// the table RefUpgrade contains the Species Reference number for the existing version 6.1 and the new version 9.2
 		// It has to be the full file because names and species changed
 		// i need a dialog to upgrade -- only ask if upgrade files exist -- yes, later
 		// no files return -- else ask for upgrade
@@ -1071,56 +994,72 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		qry = "SELECT Num from Version";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
-		versionNum = rs.getInt(0);  // this is the old version 54 the first time you check and 61 the next time you check
+		versionNum = rs.getInt(0);  // this is the old version 61 the first time you check and 92 the next time you check
 		rs.close();
+		Log.d(TAG, "checkVersion versionNum " + versionNum);
+        int upgradeCntr = 0;
 		Scanner refup = null;
 		try {
 			// see if it is already loaded
 			File dir = new File(definepath);
-			File[] matches = dir.listFiles(new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return name.startsWith("RefUpgrade") && name.endsWith(".csv");
-				}
-			});
-			if (matches.length == 0) {  // no RefUpgrade files exist
-				Log.d(TAG, "Exit checkVersion -- No RefUpgradeXX.csv files Exist");
-				return;
-			}
-			String verNum = "RefUpgrade" + versionNum + ".csv";
-			refUpgradeFile = matches[0].getName();
-			if (verNum.equals(refUpgradeFile)){	// look for versionNum in the file name -- will not match
-				// it has already been loaded -- now I have enough info to delete the files
-				Log.d(TAG, "checkVersion version matches -- deleting " + refUpgradeFile);
-				File file = new File(definepath + refUpgradeFile);
-				if (file.exists()) {
-					boolean deleted = file.delete();
-				}
-				Log.d(TAG, "checkVersion  -- deleting CodeName" + versionNum + ".csv");
-				file = new File(definepath + "CodeName" + versionNum + ".csv");
-				if (file.exists()) {
-					boolean deleted = file.delete();
-				}
+			File[] files = dir.listFiles();
+            String refUpgradeFileName = "RefUpgrade" + versionNum + ".csv";
+            String codeNameFileName =  "CodeName" + versionNum + ".csv";
+            int checkVersionNum1 = 0;
+            int checkVersionNum2 = 0;
+            for (File inFile : files) {
+                if (inFile.getName().equals(refUpgradeFileName)) {
+                    boolean deleted = inFile.delete();
+                    Log.d(TAG, "checkVersion version matches -- deleting " + refUpgradeFileName + " " + deleted);
+                }
+                if (inFile.getName().equals(codeNameFileName)) {
+                    boolean deleted = inFile.delete();
+                    Log.d(TAG, "checkVersion version matches -- deleting " + codeNameFileName + " " + deleted);
+                }
+                String nam1 = inFile.getName().substring(0, 10);
+                if (nam1.equals("RefUpgrade")) {
+                    int dot = inFile.getName().indexOf(".csv");
+                    String refUpVer = inFile.getName().substring(10, dot);
+                    checkVersionNum1 = Integer.parseInt(refUpVer);
+                    if (checkVersionNum1 > versionNum) {
+                        Log.d(TAG, "checkVersion RefUpgrade is new file version:" + checkVersionNum1);
+                        upgradeCntr++;
+						refUpgradeFile = inFile.getName();
+                    }
+                }
+				String nam2 = inFile.getName().substring(0, 8);
+                if (nam2.equals("CodeName")) {
+                    int dot = inFile.getName().indexOf(".csv");
+                    String codeVer = inFile.getName().substring(8, dot);
+                    checkVersionNum2 = Integer.parseInt(codeVer);
+					if (checkVersionNum2 > versionNum) {
+						Log.d(TAG, "checkVersion CodeName is new file version:" + checkVersionNum2);
+						upgradeCntr++;
+						codeNameFile = inFile.getName();
+					}
+                }
+            } // next
+            if ((upgradeCntr == 2) && (checkVersionNum1 == checkVersionNum2)) {
+				Intent ugd = new Intent(this, UpgradeDialog.class);
+				Log.d(TAG, "checkVersion startActivityForResult request upgrade_dialog.");
+				Main.myRequest = 1;
+				startActivityForResult(ugd, 1);
+			} else {
 				Log.d(TAG, "Exit checkVersion");
 				return;
-			}
-			refup = new Scanner(new BufferedReader(new FileReader(definepath + refUpgradeFile)));
-			// it will crash out of this function under "catch" below if file is missing -- else load a dialog
-			Intent ugd = new Intent(this, UpgradeDialog.class);
-			Log.d(TAG, "checkVersion startActivityForResult request upgrade_dialog.");
-			Main.myRequest = 1;
-			startActivityForResult(ugd, 1);
-
+            }
 		} catch (Exception e) {
 			// the files don't exist leave quitely.
-			Log.d(TAG, "Exit checkVersion -- " + refUpgradeFile + " does NOT Exist:" + e);
+			Log.d(TAG, "catch checkVersion -- refUpgradeFileXX does NOT Exist:" + e);
 			return;
 		}
 	} // checkVersion
 
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// Check which request we're responding to
+		super.onActivityResult(requestCode, resultCode, data);
 		Log.d(TAG, "onActivityResult requestCode:" + Main.myRequest + " resultCode:" + Main.myUpgrade);
 		if (requestCode == 1) {
 			if (resultCode == 0 || resultCode == 2) {
@@ -1140,8 +1079,8 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		int versionNew = 0;
 		try {
 			refup = new Scanner(new BufferedReader(new FileReader(definepath + refUpgradeFile)));
-			Log.d(TAG, "checkVersion: Beyond the dialog. upgradeSpeciesAnswer:" + myUpgrade);
-			Log.d(TAG, "checkVersion: We are going to convert");
+			Log.d(TAG, "upgradeSpecies: Beyond the dialog. upgradeSpeciesAnswer:" + myUpgrade);
+			Log.d(TAG, "upgradeSpecies: We are going to convert");
 			Main.db.beginTransaction();
 			qry = "DELETE FROM RefUpgrade";  // clear out the table first it may have previous data
 			Main.db.execSQL(qry);
@@ -1159,17 +1098,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 				if (tokens.length > 0) {
 					versionExist = Integer.parseInt(tokens[0]);
 					versionNew = Integer.parseInt(tokens[1]);
-					Log.d(TAG, "checkVersion:" + refUpgradeFile + " versionExist:" + versionExist + " ShouldMatch:" + versionNum
+					Log.d(TAG, "upgradeSpecies:" + refUpgradeFile + " versionExist:" + versionExist + " ShouldMatch:" + versionNum
 							+ " VersionNew:" + versionNew);
 					if (versionExist != versionNum) {
-						Log.d(TAG, "checkVersion:" + refUpgradeFile + " versionExist:" + versionExist + " FAILED to Match:" + versionNum);
+						Log.d(TAG, "upgradeSpecies:" + refUpgradeFile + " versionExist:" + versionExist + " FAILED to Match:" + versionNum);
 						String msg = "Species Upgrade STOPPED Existing Version:" + versionExist + " FAILED to Match:" + versionNum;
 						Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+						refup.close();
 						return;
 					}
 				}
 				// load the table RefUpgrade from the csv file RefUpgradeXX.csv
-				Log.d(TAG, "checkVersion load the table RefUpgrade from the csv file RefUpgradeXX.csv");
+				Log.d(TAG, "upgradeSpecies load the table RefUpgrade from the csv file RefUpgradeXX.csv");
 				while ((line = refup.nextLine()) != null) {
 					tokens = line.split(",");
 					if (tokens.length == 2) {
@@ -1182,31 +1122,33 @@ public class Main extends AppCompatActivity implements OnClickListener {
 						val.clear();
 					}
 				}
+				Log.d(TAG, "upgradeSpecies close RefUpgrade file ");
+				refup.close();
 			} catch (Exception e) {
-				Log.d(TAG, "internal error loading RefUpgrade:" + e);
+				Log.d(TAG, "upgradeSpecies catch internal error loading RefUpgrade:" + e);
 			} finally {
-				refup.close(); // does this close cause an exception ?
-				Log.d(TAG, "checkVersion Close and Cleanup file RefUpgrade");
+				Log.d(TAG, "upgradeSpecies try -> at finally ");
 			}
 		} catch (Exception e) {
 			// the files don't exist leave quitely.
-			Log.d(TAG, "checkVersion Exit -- " + refUpgradeFile + " does NOT Exist:" + e);
+			Log.d(TAG, "upgradeSpecies Exit -- " + refUpgradeFile + " does NOT Exist:" + e);
 			return;
 		}
 
-		Log.d(TAG, "checkVersion RefUpgradeXX.csv read in successfully");
+		Log.d(TAG, "upgradeSpecies RefUpgradeXX.csv read in successfully");
 		// load the CodeName table
 		Scanner codnam;
 		try {  // match the new version number in the name
 			codnam = new Scanner(new BufferedReader(new FileReader(definepath + "CodeName" + versionNew + ".csv")));
 			// it will crash out of this function under "catch" below if file is missing -- else build a dialog
-			Log.d(TAG, "checkVersion delete existing from table then re-load the CodeName table");
+			Log.d(TAG, "upgradeSpecies delete existing from table");
 			Main.db.beginTransaction();
 			qry = "DELETE FROM CodeName WHERE Ref > 0 AND Ref < 39997";
 			Main.db.execSQL(qry);
 			Main.db.setTransactionSuccessful();
 			Main.db.endTransaction();
 			ContentValues val = new ContentValues();
+			Log.d(TAG, "upgradeSpecies populate code name with new version");
 			try {
 				String line = "";
 				while ((line = codnam.nextLine()) != null) {
@@ -1237,20 +1179,20 @@ public class Main extends AppCompatActivity implements OnClickListener {
 					}
 				}
 			} catch (Exception e) {
-				Log.d(TAG, "checkVersion internal error loading CodeName:" + e);
+				Log.d(TAG, "upgradeSpecies internal error loading CodeName:" + e);
 			} finally {
 				codnam.close();
-				Log.d(TAG, "checkVersion closed codnam");
+				Log.d(TAG, "upgradeSpecies closed codnam");
 
 			}
 		} catch (Exception e) {
 			// the files don't exist leave quitely.
-			Log.d(TAG, "Exit checkVersion -- CodeName" + versionNew + ".csv does NOT Exist:" + e);
+			Log.d(TAG, "Exit upgradeSpecies -- CodeName" + versionNew + ".csv does NOT Exist:" + e);
 			return;
 		}
-		Log.d(TAG, "checkVersion CodeName" + versionNew + ".csv read in successfully");
+		Log.d(TAG, "upgradeSpecies CodeName" + versionNew + ".csv read in successfully");
 
-		Log.d(TAG, "checkVersion Update the SongList");
+		Log.d(TAG, "upgradeSpecies Update the SongList");
 
 		qry = "SELECT SongList.Ref, RefUpgrade.RefNew" +
 				" FROM SongList JOIN RefUpgrade ON SongList.Ref = RefUpgrade.RefExist" +
@@ -1259,14 +1201,14 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		int cntr = rs.getCount();
-		Log.d(TAG, "checkVersion Modify SongList cntr:" + cntr);
+		Log.d(TAG, "upgradeSpecies Modify SongList cntr:" + cntr);
 		int tempRef = 0;
 		// move the existing Ref out of the way so the new ref doesn't conflict with different old refs
 		for (int i = 0; i < cntr; i++) {
 			existingRef = rs.getInt(0);
 			tempRef = rs.getInt(1);
 			Main.db.beginTransaction();
-			if (tempRef == -1) {
+			if (tempRef == 0) {
 				qry = "DELETE FROM SongList WHERE Ref=" + existingRef;
 			} else {
 				tempRef += bias100k;
@@ -1285,7 +1227,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		cntr = rs.getCount();
-		Log.d(TAG, "SecondPass SongList cntr:" + cntr);
+		Log.d(TAG, "upgradeSpecies SecondPass SongList cntr:" + cntr);
 		for (int i = 0; i < cntr; i++) {
 			tempRef = rs.getInt(0);
 			existingRef = tempRef - bias100k;
@@ -1299,23 +1241,23 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			rs.moveToNext();
 		} // next i
 		rs.close();
+
 		// DefineTotals
-		Log.d(TAG, "checkVersion Update DefineTotals");
+		Log.d(TAG, "upgradeSpecies Update DefineTotals");
 		qry = "SELECT DefineTotals.Ref, RefUpgrade.RefNew" +
 				" FROM DefineTotals JOIN RefUpgrade ON DefineTotals.Ref = RefUpgrade.RefExist" +
 				" WHERE DefineTotals.Ref > 0 AND DefineTotals.Ref < 39997";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		cntr = rs.getCount();
-
-		Log.d(TAG, "checkVersion Update DefineTotals cntr:" + cntr);
+		Log.d(TAG, "upgradeSpecies Update DefineTotals cntr:" + cntr);
 		tempRef = 0;
 		// move the existing Ref out of the way so the new ref doesn't conflict with different old refs
 		for (int i = 0; i < cntr; i++) {
 			existingRef = rs.getInt(0);
 			tempRef = rs.getInt(1);
 			Main.db.beginTransaction();
-			if (tempRef == -1) {
+			if (tempRef == 0) {
 				qry = "DELETE FROM DefineTotals WHERE Ref=" + existingRef;
 			} else {
 				tempRef += bias100k;
@@ -1326,15 +1268,47 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			Main.db.execSQL(qry);
 			Main.db.setTransactionSuccessful();
 			Main.db.endTransaction();
+
+			// upgrade detail for this existing ref -- moved inside loop to return only this existing ref -- crashing on out of memory
+			// DefineDetail
+			//Log.d(TAG, "upgradeSpecies Update DefineDetail");
+			//qry = "SELECT DefineDetail.Ref, RefUpgrade.RefNew" +
+			//		" FROM DefineDetail JOIN RefUpgrade ON DefineDetail.Ref = RefUpgrade.RefExist" +
+			//		" WHERE DefineDetail.Ref > 0 AND DefineDetail.Ref < 39997;
+			qry = "SELECT DefineDetail.Ref" +
+					" FROM DefineDetail" +
+					" WHERE DefineDetail.Ref =" + existingRef;
+			rsd = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+			rsd.moveToFirst();
+			int cntrd = rsd.getCount();
+			//Log.d(TAG, "upgradeSpecies Modify DefineDetail cntr:" + cntr);
+			//tempRef = 0;
+			// move the existing Ref out of the way so the new ref doesn't conflict with different old refs
+			for (int id = 0; id < cntrd; id++) {
+				Main.db.beginTransaction();
+				if (tempRef == 0) {
+					qry = "DELETE FROM DefineDetail WHERE Ref=" + existingRef;
+				} else {
+					qry = "UPDATE DefineDetail" +
+							" SET Ref = " + tempRef +
+							" WHERE Ref = " + existingRef;
+				}
+				Main.db.execSQL(qry);
+				Main.db.setTransactionSuccessful();
+				Main.db.endTransaction();
+				rsd.moveToNext();
+			} // next id
+			rsd.close();
 			rs.moveToNext();
 		} // next i
 		rs.close();
+
 		// now remove the bias
 		qry = "SELECT Ref FROM DefineTotals WHERE Ref > 100000";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
 		cntr = rs.getCount();
-		Log.d(TAG, "checkVersion SecondPass DefineTotals cntr:" + cntr);
+		Log.d(TAG, "upgradeSpecies SecondPass DefineTotals cntr:" + cntr);
 		for (int i = 0; i < cntr; i++) {
 			tempRef = rs.getInt(0);
 			existingRef = tempRef - bias100k;
@@ -1345,68 +1319,38 @@ public class Main extends AppCompatActivity implements OnClickListener {
 			Main.db.execSQL(qry);
 			Main.db.setTransactionSuccessful();
 			Main.db.endTransaction();
-			rs.moveToNext();
-		} // next i
-		rs.close();
-		// DefineDetail
 
-		Log.d(TAG, "checkVersion Update DefineDetail");
-		qry = "SELECT DefineDetail.Ref, RefUpgrade.RefNew" +
-				" FROM DefineDetail JOIN RefUpgrade ON DefineDetail.Ref = RefUpgrade.RefExist" +
-				" WHERE DefineDetail.Ref > 0 AND DefineDetail.Ref < 39997";
-		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		cntr = rs.getCount();
-		Log.d(TAG, "checkVersion Modify DefineDetail cntr:" + cntr);
-		tempRef = 0;
-		// move the existing Ref out of the way so the new ref doesn't conflict with different old refs
-		for (int i = 0; i < cntr; i++) {
-			existingRef = rs.getInt(0);
-			tempRef = rs.getInt(1);
-			Main.db.beginTransaction();
-			if (tempRef == -1) {
-				qry = "DELETE FROM DefineDetail WHERE Ref=" + existingRef;
-			} else {
-				tempRef += bias100k;
+			// now remove the bias
+			qry = "SELECT Ref FROM DefineDetail WHERE Ref =" + tempRef;
+			rsd = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+			rsd.moveToFirst();
+			int cntrd = rsd.getCount();
+			//Log.d(TAG, "upgradeSpecies SecondPass DefineDetail cntr:" + cntr);
+			for (int id = 0; id < cntrd; id++) {
+				Main.db.beginTransaction();
 				qry = "UPDATE DefineDetail" +
-						" SET Ref = " + tempRef +
-						" WHERE Ref = " + existingRef;
-			}
-			Main.db.execSQL(qry);
-			Main.db.setTransactionSuccessful();
-			Main.db.endTransaction();
-			rs.moveToNext();
-		} // next i
-		rs.close();
-		// now remove the bias
-		qry = "SELECT Ref FROM DefineDetail WHERE Ref > 100000";
-		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
-		cntr = rs.getCount();
-		Log.d(TAG, "checkVersion SecondPass DefineDetail cntr:" + cntr);
-		for (int i = 0; i < cntr; i++) {
-			tempRef = rs.getInt(0);
-			existingRef = tempRef - bias100k;
-			Main.db.beginTransaction();
-			qry = "UPDATE DefineDetail" +
-					" SET Ref = " + existingRef +
-					" WHERE Ref = " + tempRef;
-			Main.db.execSQL(qry);
-			Main.db.setTransactionSuccessful();
-			Main.db.endTransaction();
+						" SET Ref = " + existingRef +
+						" WHERE Ref = " + tempRef;
+				Main.db.execSQL(qry);
+				Main.db.setTransactionSuccessful();
+				Main.db.endTransaction();
+				rsd.moveToNext();
+			} // next i
+			rsd.close();
 			rs.moveToNext();
 		} // next i
 		rs.close();
 
-		Log.d(TAG, "checkVersion Delete From RefUpgrade table");
+
+		Log.d(TAG, "upgradeSpecies Delete From RefUpgrade table");
 		Main.db.beginTransaction();
 		qry = "DELETE FROM RefUpgrade";
 		Main.db.execSQL(qry);
 		Main.db.setTransactionSuccessful();
 		Main.db.endTransaction();
 
-		// you can't upgrade more than once old to new --> ok; old to new --> existing new to new --> trash
-		Log.d(TAG, "checkVersion Update Version to:" + versionNew);
+		// you can't upgrade more than once; old to new --> ok; existing new to new --> trash
+		Log.d(TAG, "upgradeSpecies Update Version to:" + versionNew);
 		Main.db.beginTransaction();
 		qry = "UPDATE Version SET Num = " + versionNew;
 		Main.db.execSQL(qry);
@@ -1414,18 +1358,18 @@ public class Main extends AppCompatActivity implements OnClickListener {
 		Main.db.endTransaction();
 
 
-		Log.d(TAG, "checkVersion Delete RefUpgradeXX.csv");
-		File file = new File(definepath + "RefUpgrade" + versionNew + ".csv");
+		Log.d(TAG, "upgradeSpecies Delete " + refUpgradeFile);
+		File file = new File(definepath + refUpgradeFile);
 		if (file.exists()) {
 			boolean deleted = file.delete();
 		}
-		Log.d(TAG, "checkVersion Delete CodeName" + versionNew + ".csv");
-		file = new File(definepath + "CodeName" + versionNew + ".csv");
+		Log.d(TAG, "upgradeSpecies Delete " + codeNameFile);
+		file = new File(definepath + codeNameFile);
 		if (file.exists()) {
 			boolean deleted = file.delete();
 		}
 		String msg = "Species Upgrade complete now Version:" + versionNew;
-		Log.d(TAG, "checkVersion " + msg);
+		Log.d(TAG, "upgradeSpecies " + msg);
 		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 		Main.alertRequest = 6; // database upgrade complete
 		Intent dbc = new Intent(this, Alert1ButtonDialog.class);

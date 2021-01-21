@@ -5,16 +5,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.Scanner;
-
+//import java.lang.Object;
+import java.io.InputStream;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,25 +28,33 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 
+//private String assetPackName;
+//private String assetFilterName;
+//private File assetpath;
+//private File assetPathDir;
+//private File[] assetFile; // names from the file (file format)
+
 public class SelectSongPath extends AppCompatActivity implements OnClickListener {
-	private static final String TAG = "SelectSongPath";  
-	private EditText customPath;
+    private static final String TAG = "SelectSongPath";
+    private EditText customPath;
     private Button loadNow;
-	private RadioButton path1;
-	private RadioButton path2;
-	private RadioButton path3;
+    private RadioButton path1;
+    private RadioButton path2;
+    private RadioButton path3;
     private RadioButton path4;
     private RadioButton path5;
     private RadioButton path6;
     private RadioButton path7;
+    private RadioButton path8;
     private RadioGroup pathGroup;
-	private CharSequence path1Label;
-	private CharSequence path2Label;
-	private CharSequence path3Label;
+    private CharSequence path1Label;
+    private CharSequence path2Label;
+    private CharSequence path3Label;
     private CharSequence path4Label;
     private CharSequence path5Label;
     private CharSequence path6Label;
     private CharSequence path7Label;
+    private CharSequence path8Label;
     Toolbar toolbar;
 
 
@@ -59,7 +69,7 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         toolbar.setNavigationIcon(R.drawable.ic_action_back);
         toolbar.setLogo(R.drawable.treble_clef_linen);
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "Navigation Icon tapped");
                 finish();
@@ -77,6 +87,9 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         path3 = (RadioButton) findViewById(R.id.path_3);
         path3.setOnClickListener(this);
         path3Label = path3.getText();
+        customPath = (EditText) findViewById(R.id.custom_path);
+        customPath.setOnClickListener(this);
+        customPath.setText(Main.customPathLocation);
         path4 = (RadioButton) findViewById(R.id.path_4);
         path4.setOnClickListener(this);
         path4Label = path4.getText();
@@ -89,23 +102,40 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         path7 = (RadioButton) findViewById(R.id.path_7);
         path7.setOnClickListener(this);
         path7Label = path7.getText();
-        customPath = (EditText) findViewById(R.id.custom_path);
-        customPath.setOnClickListener(this);
-        customPath.setText(Main.customPathLocation);
+        path8 = (RadioButton) findViewById(R.id.path_8);
+        path8.setOnClickListener(this);
+        path8Label = path8.getText();
+        path8.setEnabled(false);  // ******* DISABLED *******
         loadNow = (Button) findViewById(R.id.load_now_button);
         loadNow.setOnClickListener(this);
         Log.d(TAG, "path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
         // move the data from assets to definepath and songpath
         String packageName = getPackageName(); // com.modelsw.birdingviamic
-        //Main.sharedStorage = Environment.getExternalStorageDirectory() + "/Android/obb/" + packageName;
         switch (Main.path) {
-        	case 1: path1.setChecked(true); break;
-        	case 2: path2.setChecked(true); break;
-        	case 3: path3.setChecked(true); break;
-            case 4: path4.setChecked(true); break;
-            case 5: path5.setChecked(true); break;
-            case 6: path6.setChecked(true); break;
-            case 7: path7.setChecked(true); break;
+            case 1:
+                path1.setChecked(true);
+                break;
+            case 2:
+                path2.setChecked(true);
+                break;
+            case 3:
+                path3.setChecked(true);
+                break;
+            case 4:
+                path4.setChecked(true);
+                break;
+            case 5:
+                path5.setChecked(true);
+                break;
+            case 6:
+                path6.setChecked(true);
+                break;
+            case 7:
+                path7.setChecked(true);
+                break;
+            case 8:
+                path8.setChecked(true);
+                break;
         }
         if (path1.isChecked() == true) {
             loadNow.setEnabled(false);
@@ -116,75 +146,84 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         if (path1.isChecked() == false) {
             loadNow.setEnabled(true);
         }
-    	switch (v.getId()) {
-    	case R.id.path_1:
-    		Main.songpath = Main.songPathDir.toString() + "/";
-            Main.sharedDefine = null;
-    		Main.path = 1;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-    	case R.id.path_2:
-    		Main.songpath = Main.environment + "/" + getResources().getString(R.string.path2_location) + "/";
-            Main.sharedDefine = null;
-    		Main.path = 2;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-        case R.id.path_3:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path3_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path3_define) + "/";
-            Main.path = 3;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_4:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path4_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path4_define) + "/";
-            Main.path = 4;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_5:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path5_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path5_define) + "/";
-            Main.path = 5;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_6:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path6_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path6_define) + "/";
-            Main.path = 6;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-    	case R.id.path_7:
-    		Main.customPathLocation = customPath.getText().toString();
-    		//if (Main.customPathLocation.substring(0, 1) != "/") {
-    		//	Main.customPathLocation = "/" + Main.customPathLocation;
-    		//}
-    		Main.songpath = Main.environment + "/" + Main.customPathLocation + "/";
-            Main.sharedDefine = null;
-    		Main.path = 7;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-        case R.id.load_now_button:
-            if (path1.isChecked() == false) {
-                checkForNewFiles();
-            } else {
-                String msg = "Please select an external path";
-                Log.d(TAG, msg);
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            }
-            break;
+        switch (v.getId()) {
+            case R.id.path_1:
+                Main.songpath = Main.songPathDir.toString() + "/";
+                Main.sharedDefine = null;
+                Main.path = 1;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_2:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path2_location) + "/";
+                Main.sharedDefine = null;
+                Main.path = 2;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_3:
+                Main.customPathLocation = customPath.getText().toString();
+                Main.songpath = Main.environment + "/" + Main.customPathLocation + "/";
+                Main.sharedDefine = null;
+                Main.path = 3;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_4:
+                //Main.songpath = Main.environment + "/" + getResources().getString(R.string.path4_location) + "/";
+                //Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path4_define) + "/";
+                Main.path = 4;
+                Log.d(TAG, "path:" + Main.path);
+                Main.assetPackName = "SongsNW";
+                Log.d(TAG, "before call assetPackName: SongsNW");
+                Intent ap = new Intent(this, LoadAssetPack.class);
+                startActivity(ap);
+                Log.d(TAG, "after call assetPackName Main.assetPackName: " + Main.assetPackName);
+                break;
+            case R.id.path_5:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path5_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path5_define) + "/";
+                Main.path = 5;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_6:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path6_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path6_define) + "/";
+                Main.path = 6;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_7:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path7_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path7_define) + "/";
+                Main.path = 7;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.path_8:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path8_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path8_define) + "/";
+                Main.path = 8;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath);
+                break;
+            case R.id.load_now_button:
+                if (path1.isChecked() == false) {
+                    checkForNewFiles();
+                } else {
+                    String msg = "Please select an external path";
+                    Log.d(TAG, msg);
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                }
+                break;
         }
-	}
-	
-	protected void onPause() {
-    	super.onPause();
+    }
+
+
+    protected void onPause() {
+        super.onPause();
         //if (Main.isDebug == true) {
-            // keep the external path
+        // keep the external path
         //} else {
-            Main.path = 1; // don't confuse the issue
-            Main.songpath = Main.songPathDir.toString() + "/";
+        Main.path = 1; // don't confuse the issue
+        Main.songpath = Main.songPathDir.toString() + "/";
         //}
-		Main.customPathLocation = customPath.getText().toString();
-	    Log.d(TAG, "onPause saveTheSongPath path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
+        Main.customPathLocation = customPath.getText().toString();
+        Log.d(TAG, "onPause saveTheSongPath path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
         Main.db.beginTransaction();
         String qry = "UPDATE SongPath SET Path = " + Main.path + ", CustomPath = '" + Main.customPathLocation + "'";
         Main.db.execSQL(qry);
@@ -197,15 +236,14 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         // note: this is only called if path > 1
         // after moving the files, path is re-set to 1
         // songpath is selected path which is > 1 -- could be null if invalid path from custom.
-        if (Main.songpath == null) {
-            String msg = "invalid path";
-            Log.d(TAG, msg);
-            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        if (Main.songpath == null || Main.songdata == null) {
+            finish();
             return;
         }
         if (Main.sharedDefine != null) {
             int pathLen = Main.sharedDefine.length();
             Log.d(TAG, "* checkForNewFiles() sharedDefine:" + Main.sharedDefine);
+
             File dirDef = new File(Main.sharedDefine);
             Log.d(TAG, "onCreate: dirDef:" + dirDef);
             File[] defineFile = dirDef.listFiles();
@@ -220,7 +258,7 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
                     String nam = defineFile[i].toString().substring(pathLen);
                     int extLoc = nam.length() - 4;
                     String ext = nam.substring(extLoc);
-                    Log.d(TAG, " definefile:" + nam + " ext:" + ext );
+                    Log.d(TAG, " definefile:" + nam + " ext:" + ext);
                     if (ext.equalsIgnoreCase(".csv")) { // only transfers csv files
                         Boolean success = defineFile[i].renameTo(new File(Main.definepath + nam));
                         Log.d(TAG, " did i move file:" + nam + " ?:" + success);
@@ -255,7 +293,7 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
             Main.songs = new String[songsFileLen];
             for (int i = 0; i < songsFileLen; i++) {
                 Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
-                                                    //  01234567890123456789012345678901234
+                //  01234567890123456789012345678901234
                 String nam = Main.songs[i];         // "16 White-crowned Sparrow Song 1.mp3"
                 //Log.d(TAG, "* checkForNewFiles() songs[" + i + "] " + nam );
                 Boolean isAlbumNumber = false;
@@ -387,5 +425,6 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         //Log.d(TAG, " delete filter.csv ?" + success);
 
     }
+
 
 }

@@ -22,7 +22,8 @@ import android.media.MediaPlayer;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.Visualizer;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
+//import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -78,7 +79,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		super(context, attrs);
 		ctx = context;
 		init();
-		VisualizerView view = (VisualizerView) findViewById(R.id.visualizerView);
+		//VisualizerView view = (VisualizerView) findViewById(R.id.visualizerView);
 	}
 
 	public VisualizerView(Context context, AttributeSet attrs) {
@@ -90,6 +91,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 	}
 
 	private void init() {
+		Log.d(TAG, "init");
 		once = 0;
 		filterAve = 0;
 		aveCntr = 0;
@@ -99,7 +101,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		if(mPaint == null) {
 			mPaint = new Paint();
 		}
-		mPaint.setColor(Color.argb(255, 255, 255, 255));
+		mPaint.setColor(Color.BLACK);
 		vvtop = PlaySong.vvtop;
 		vvHeight = PlaySong.vvHeight;
 		isInit = PlaySong.isInit;
@@ -129,23 +131,62 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		invalidate();
 	}
 
+	// called from PlaySong
+	public void setInitialMax(){
+		filterAve = 0;
+		aveCntr = 1;
+		lowLimit = 0;
+		maxPower = 1;
+		mxpre = 1;
+		cnt = 0;
+		int stepSize = base/2; // 512
+		float pwr = 0;
+		for (int j = 2; j < stepSize; j++) {
+			float rfk = PlaySong.bufRealOut[j];
+			float ifk = PlaySong.bufImagOut[j];
+			float magnitude = rfk * rfk + ifk * ifk;
+			pwr = (float) (Math.sqrt(magnitude));
+			//Log.d(TAG, "j:" + j + " pwr:" + pwr + " lowLimit:" + lowLimit + " maxPower:" + maxPower);
+			if (pwr > lowLimit) {
+				filterAve = (float)(((double)filterAve * aveCntr + pwr) / (aveCntr+1));
+				aveCntr++;
+				//drawLimit = filterAve * adjAve;
+				if (maxPower < pwr) {
+					float prevMaxPower = maxPower;
+					float prevLowLimit = lowLimit;
+					maxPower = pwr;
+					lowLimit = maxPower * minPwrLimit;
+					float mxpre = (maxPower-lowLimit)/(prevMaxPower-prevLowLimit);
+					filterAve *= mxpre;
+					if (filterAve > maxPower) {
+						filterAve = maxPower;
+					}
+					aveCntr /= mxpre;
+					if (aveCntr < 1) {
+						aveCntr = 1;
+					}
+				}
+			}
+		} // next j
+		Log.d(TAG, "setInitialMax lowLimit:" + lowLimit + " maxPower:" + maxPower);
+	}
+
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		//Log.d(TAG, "onDraw: Main.isPlaying=" + Main.isPlaying );
-		if (Main.totalCntr == 0) {
-			Log.d(TAG, "onDraw totalCntr:" + Main.totalCntr );
+		if (Main.duration == 0) {
+			Log.d(TAG, "onDraw duration:" + Main.duration );
 			return;
 		}
 		if(Main.isPlaying == true) {
 			// Create canvas once we're ready to draw
-			int h = getHeight();
-			int w = getWidth();
-			Main.lengthEachRecord = ((float) h / (float) (Main.totalCntr));  // *** HERE
+			int h = canvas.getHeight();
+			int w = canvas.getWidth();
 
 			if (once == 0) {
-				Log.d(TAG, "onDraw stopAt:" + Main.stopAt + " lengthEachRecord:" + Main.lengthEachRecord + " h:" + h);
+				//Log.d(TAG, "onDraw  h:" + h + " w:" + w);
 				once = 1;
 			}
 			if(mPaint == null) {
@@ -172,8 +213,6 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 				mCanvas.drawLine(w, 0, w, h, mPaint);
 				mCanvas.drawLine(w, h, 0, h, mPaint);
 				mCanvas.drawLine(0, h, 0, 0, mPaint);
-				//mPaint.setColor(Color.GREEN);
-				//float scaleText = scaleW * 5;
 				float scaleText = Main.buttonHeight / 4;
 				mPaint.setTextSize(scaleText);
 				mPaint.setColor(Color.WHITE);
@@ -185,9 +224,8 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 					mCanvas.drawText(si, freq, scaleText, mPaint);
 				}
 				int d = Main.duration;   // 6224 ms
-				float totLen = (Main.stopAt) * Main.lengthEachRecord;  // 64 records * width of 6 = 384
-				float oneSec = totLen / (float)((float) d / 1000f);  //  384 / 6.224 = oneSecond every 61.7 pixels
-				Log.d(TAG, "time duration:" + d + " stopAt:" + (Main.stopAt) + " totLen:" + totLen + " oneSec:" + oneSec );
+				float oneSec = PlaySong.scalePxPerMs * 1000f;  //  384 / 6.224 = oneSecond every 61.7 pixels
+				Log.d(TAG, "time duration:" + d + " oneSec:" + oneSec );
 				int di = d / 1000;  // 6 sec
 				int incr = (int) ((scaleText*3)/oneSec);
 				if (incr < 1) {
@@ -204,13 +242,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 				mPaint.setTextAlign(Paint.Align.RIGHT);
 				mCanvas.drawText(Main.existingName, w - scaleText, 3.0f * scaleText, mPaint);
 				Log.d(TAG, "onDraw existingName:" + Main.existingName);
-				filterAve = 0;
-				aveCntr = 1;
-				//drawLimit = 0;
-				lowLimit = 0;
-				maxPower = 1;
-				mxpre = 1;
-				cnt = 0;
+				Log.d(TAG, "lowLimit:" + lowLimit + " maxPower:" + maxPower);
 				paintWidth = scalePxPerMs * 32;
 				if(paintWidth < 2) {
 					paintWidth = 2;
@@ -297,7 +329,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 
 	void detailData(Canvas canvas) {
 		Log.d(TAG, "onDraw: showDetailData");
-		Log.d(TAG, "showDetailData totalCntr:" + Main.totalCntr + " records:" + records + " aveEnergy:" + aveEnergy);
+		Log.d(TAG, "showDetailData records:" + records + " aveEnergy:" + aveEnergy);
 		mPaint.setStrokeWidth(3);
 		float y = 0f;
 		FFTjava fft;
@@ -316,7 +348,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		int cntRec = (Main.audioDataLength-base);  // the usable file length without overflows
 		scaleW = ((float) bitmapWidth) / stepSize; // (PlaySong.base/2);  // i.e. 512
 		scaleH = (float) bitmapHeight / (cntRec/incSize); // length of screen (vs width)
-		Log.d(TAG, "VisualizerView() detailData audioDataLength:" + Main.audioDataLength + " lengthEachRecord:" + Main.lengthEachRecord);
+		Log.d(TAG, "VisualizerView() detailData audioDataLength:" + Main.audioDataLength);
 		Log.d(TAG, "VisualizerView() cntRec:" + cntRec + " screenHeight:" + bitmapHeight + " scaleH:" + scaleH + " base:" + base);
 		Log.d(TAG, "VisualizerView() mCanvas:" + mCanvas + " mPaint:" + mPaint + " scaleW:" + scaleW);
 
@@ -361,6 +393,9 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 	void definitionData(Canvas canvas) {
 		Log.d(TAG, "showDefinitionData");
 		//canvas.restore();
+		if (Main.songpath == null || Main.songdata == null) {
+			return;
+		}
 		mPaint.setStrokeWidth(4);
 		scaleH = (float) bitmapHeight / (float) (records); // pixels per record        // *** HERE
 		scaleW = ((float) bitmapWidth) / (base/2);  // i.e. 512 -- so screen width represents 11025 hz
@@ -369,7 +404,6 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		Log.d(TAG, "scaleH:" + scaleH + " scaleW:" + scaleW + " screenCenterH:" + screenCenterH + " screenCenterW:" + screenCenterW);
 
 		float y = scaleH;  // first silence is missing record 0 so start with 1 -- is it ??
-		Log.d(TAG, "showDefinitionData totalCntr:" + Main.totalCntr + " lengthEachRecord:" + Main.lengthEachRecord);
 		Log.d(TAG, "definitionData() playSong.Records:" + records + " screenHeight:" + bitmapHeight + " scaleH:" + scaleH);
 		if (Main.isIdentify == true) {
 			qry = "SELECT Phrase, Silence, Records" +

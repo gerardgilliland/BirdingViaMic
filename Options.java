@@ -5,9 +5,12 @@ import java.io.FileOutputStream;
 
 import android.annotation.TargetApi;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -46,6 +49,8 @@ public class Options extends AppCompatActivity implements OnClickListener{
 	private static Boolean isStartRecording;
     //public static CheckBox checkBatchDownload;
     //private static Boolean isBatchDownload;
+	public static CheckBox checkSavePcmData;
+	private static Boolean isSavePcmData;
     public static CheckBox checkLoadDefinition;
     private static Boolean isLoadDefinition;
 	public static CheckBox checkDebug;
@@ -170,6 +175,11 @@ public class Options extends AppCompatActivity implements OnClickListener{
         //checkBatchDownload.setOnClickListener(this);
         //Options.isBatchDownload = Main.isBatchDownload;
         //checkBatchDownload.setChecked(isBatchDownload);
+
+		checkSavePcmData = (CheckBox) findViewById(R.id.save_pcm_data_check);
+		checkSavePcmData.setOnClickListener(this);
+		Options.isSavePcmData = Main.isSavePcmData;
+		checkSavePcmData.setChecked(isSavePcmData);
 
         checkLoadDefinition = (CheckBox) findViewById(R.id.load_definition_check);
         checkLoadDefinition.setOnClickListener(this);
@@ -296,6 +306,11 @@ public class Options extends AppCompatActivity implements OnClickListener{
             //    isBatchDownload = checkBatchDownload.isChecked();
             //    Main.isBatchDownload = isBatchDownload; break;
             //}
+			case R.id.save_pcm_data_check: {
+			    Log.d(TAG, "onClick save_pcm_data_check");
+			    isSavePcmData = checkSavePcmData.isChecked();
+			    Main.isSavePcmData = isSavePcmData; break;
+			}
             case R.id.load_definition_check: {
                 Log.d(TAG, "onClick load_definition_check");
                 isLoadDefinition = checkLoadDefinition.isChecked();
@@ -398,6 +413,9 @@ public class Options extends AppCompatActivity implements OnClickListener{
 		//temp = Main.isBatchDownload ? 1 : 0;
 		//qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'BatchDownload'";
 		//Main.db.execSQL(qry);
+		temp = Main.isSavePcmData ? 1 : 0;
+		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'SavePcmData'";
+		Main.db.execSQL(qry);
 		temp = Main.isLoadDefinition ? 1 : 0;
 		qry = "UPDATE Options SET Value = " + temp + " WHERE Name =  'LoadDefinition'";
 		Main.db.execSQL(qry);

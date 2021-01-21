@@ -10,9 +10,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -52,8 +55,7 @@ public class RegionList extends AppCompatActivity implements android.view.View.O
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
-	    setContentView(R.layout.region_header);
-
+		setContentView(R.layout.region_header);
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -66,7 +68,10 @@ public class RegionList extends AppCompatActivity implements android.view.View.O
                 finish();
             }
         });
-
+		if (Main.songpath == null || Main.songdata == null) {
+			finish();
+			return;
+		}
 
         findViewById(R.id.update_button).setOnClickListener(this);
 		// read from text file

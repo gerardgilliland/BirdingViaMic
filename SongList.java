@@ -18,9 +18,12 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -59,12 +62,7 @@ public class SongList extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {    	
         super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate songpath:" + Main.songpath + " songdata:" + Main.songdata);
-		if (Main.songdata == null || Main.songpath == null) {
-			Intent sm = new Intent(this, Main.class); // restart it is not in memory.
-			startActivity(sm);
-		}
         setContentView(R.layout.songlist_header );
-
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,8 +77,9 @@ public class SongList extends AppCompatActivity {
                 finish();
             }
         });
-		if (Main.songpath == null || Main.songdata == null) { // knocked out of memory re-init the database
+		if (Main.songdata == null || Main.songpath == null) { // knocked out of memory re-init the database
 			Main.fileReshowExisting = true;
+			finish();
 			return;
 		}
 		songPath = Main.songpath;
@@ -167,7 +166,7 @@ public class SongList extends AppCompatActivity {
      	   	finish();
 			return;
     	}
-		Log.d(TAG, "onCreate songFile is not null -- length:" + Main.songFile.length );
+		Log.d(TAG, "buildList songFile is not null -- length:" + Main.songFile.length );
 		String z = "zzzzzzzz";
 		ContentValues val = new ContentValues();
 		qry = "SELECT FileName FROM SongList" +
@@ -199,15 +198,22 @@ public class SongList extends AppCompatActivity {
    			Main.db.setTransactionSuccessful();
    			Main.db.endTransaction();
    			val.clear();
+			rs.close();
 		}
-		rs.close();
 		qry = "SELECT FileName FROM SongList" +
 				" WHERE Path = " + Main.path +
 				" GROUP BY FileName" + 
     			" ORDER BY FileName";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-		rs.moveToFirst();
 		songsDbLen = rs.getCount();  // count (indexed 0 to < count
+		if (songsDbLen == 0) {
+			String msg = "No songs are available. Please load or record some. See Help.";
+			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+			Log.d(TAG, msg);
+			finish();
+			return;
+		}
+		rs.moveToFirst();
 		songsFileLen = Main.songFile.length;
 		Log.d(TAG, "buildList songsDbLen:" + songsDbLen + " songsFilesLen:" + songsFileLen );
 		songsLen = Math.max(songsDbLen, songsFileLen);  // for dim of arrays
@@ -445,10 +451,10 @@ public class SongList extends AppCompatActivity {
 							} finally {
 								Main.db.endTransaction();
 								val.clear();
-								Log.d(TAG, "new record from filter XC start and stop");
+								Log.d(TAG, "new record from filter start and stop");
 							}
 						} catch( Exception e ) {
-							Log.e(TAG, "failed to add record from XC filter Start Stop: " + e.toString() );
+							Log.e(TAG, "failed to add record from filter Start Stop: " + e.toString() );
 						}
 
 					}
@@ -553,16 +559,16 @@ public class SongList extends AppCompatActivity {
 			int ienh = rs.getInt(8); // Enhanced
 			int ismo = rs.getInt(9); // Smoothing
 			int imic = rs.getInt(10); // SourceMic  0=pre-recorded, 1=internal, 2=external
-            int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown, bit3 8=stereo/0=mono
+            int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown
             int iaud = rs.getInt(12); // AudioSource 0,1,5, or 6, -1=unknown
-			int iste = rs.getInt(13); // Stereo 0=mono, 1=stereo
+			int iste = rs.getInt(13); // Stereo 0=mono, 1=stereo, -1=unknown
 			int if1 = rs.getInt(17); //  lowFreqCutoff
 			int if2 = rs.getInt(18); //  highFreqCutoff
-			int if3 = rs.getInt(19); // filterStart
-			int if4 = rs.getInt(20); // filter Stop
+			int if3 = rs.getInt(19); // filterBegin
+			int if4 = rs.getInt(20); // filterEnd
 			String def = " ";
-			// 0=pre-recorded, 1=internal mic, 2=external mic
-            switch (imic) { // first . microphone
+
+            switch (imic) { // first microphone
                 case 0:
 					def += ".";  // pre-recorded
 					iaud = -1;
@@ -577,6 +583,10 @@ public class SongList extends AppCompatActivity {
 				}
 			}
 			switch (iste) { // second mono/stereo
+				case -1: {
+					def += "."; // unknown
+					break;
+				}
 				case 0:	{
                     def += "m";  // mono
                     break;
@@ -586,21 +596,21 @@ public class SongList extends AppCompatActivity {
 					break;
 				}
             }
-            switch(isrt) { // third . sample rate
+            switch(isrt) { // third sample rate
                 case 0: {
-                    def += "0";  // 0 = 22050
+                    def += "0";  // 22050
                     break;
                 }
                 case 1: {
-                    def += "1"; // 1 = 44100
+                    def += "1"; // 44100
                     break;
                 }
 				case 2: {
-					def += "2";  // 0 = 24000
+					def += "2";  // 24000
 					break;
 				}
 				case 3: {
-					def += "3"; // 1 = 48000
+					def += "3"; // 48000
 					break;
 				}
 				case 4: {
@@ -611,7 +621,7 @@ public class SongList extends AppCompatActivity {
 			if (imic == 0) {  // pre-recorded
 				def += ".";
 			} else {
-				switch (iaud) { // fourth . audio source
+				switch (iaud) { // fourth audio source
 					case 0: {
 						def += "d";  // the default was used
 						break;
@@ -638,12 +648,12 @@ public class SongList extends AppCompatActivity {
 			} else {
 				def += ".";  // not used
 			}
-			if (ienh == 0) { // fifth . enhanced
+			if (ienh == 0) { // fifth enhanced
 				def += ".";  // not processed
 			} else {
 				def += "e";  // use digital filter
 			}
-			if (ismo == 0) { // sixth . smoothing
+			if (ismo == 0) { // sixth smoothing
 				def += ".";  // not processed
 			} else {
 				def += "s";  // use smoothing
@@ -852,7 +862,7 @@ public class SongList extends AppCompatActivity {
     }
 
     public void renameFile() {
-        char q = 34;
+        char q = 34; // the name can contain a single tic so enclose the name in double quote
         if (Main.newName.equals(Main.existingName)) {
             Toast.makeText(this, "The File name didn't change", Toast.LENGTH_LONG).show();
         } else {
@@ -1065,7 +1075,6 @@ public class SongList extends AppCompatActivity {
         } // next i
         Main.fileReshowExisting = true;
 		Main.isNewStartStop = false; // finish was taking me to play
-        //rsDel.close(); already closed
         //db.close();
 		Log.d(TAG, "finish() back to main resume fileReshowExisting:" + Main.fileReshowExisting);
 		finish(); // should resume and back here to songlist -- error "rsrc of package null"
@@ -1286,10 +1295,7 @@ public class SongList extends AppCompatActivity {
 			Toast.makeText(this, "Please select a song first.", Toast.LENGTH_LONG).show();
 			return;
 		}
-
-		//emailIntent = new Intent(Intent.ACTION_SEND);
 		Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "", null));
-		//emailIntent.setType(HTTP.PLAIN_TEXT_TYPE); // fails
 		emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{""}); // recipients
 		emailIntent.putExtra(Intent.EXTRA_SUBJECT, Main.existingName);
 		emailIntent.putExtra(Intent.EXTRA_TEXT, Main.songsCombined[Main.listOffset] + "\n");

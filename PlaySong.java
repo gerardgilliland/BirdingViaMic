@@ -23,8 +23,11 @@ import android.media.MediaPlayer;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -141,7 +144,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	//	6) copy identify.csv to computer with file Manager and input to Identify.xls
 	//  7) use the average results in the criteria in identify
 	public static float lenMs = 0;  // length of time in millisec since start of song
-	private float lim1Base = 0;  // either lim1 or Main.filterMaxPower
 	private int[] locationAtMax;  // used to adjust fft frames
 	public static int lowFreqCutoff;
 	public static float manFilterAve = 0;
@@ -207,7 +209,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		Log.d(TAG, "onCreate");
 		Context mContext = this;
 		Log.d(TAG, "onCreate newStartStop:" + Main.isNewStartStop);
@@ -242,9 +243,21 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		identifyButton = (Button) findViewById(R.id.identify_button);
 		findViewById(R.id.identify_button).setOnClickListener(this);
 		mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
-		VisualizerView.mCanvasBitmap = null;
-		VisualizerView.mCanvas = null;
-		VisualizerView.mPaint = null;
+		mVisualizerView.mCanvasBitmap = null;
+		mVisualizerView.mCanvas = null;
+		mVisualizerView.mPaint = null;
+		if (Main.songpath == null || Main.songdata == null) {
+			finish();
+			return;
+		}
+		mFileName = Main.songpath + Main.existingName;
+		if (mFileName.equals(null)) {
+			String msg = "Please select a file to Play.";
+			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+			Log.d(TAG, msg);
+			finish();
+			return;
+		}
 		Main.db = Main.songdata.getWritableDatabase();
 		Main.isNewStartStop = false;
 		dfj = new DecodeFileJava();
@@ -326,7 +339,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 	void definePressed(View v) {
 		Log.d(TAG, "definePressed ref:" + Main.existingRef);
-		if (Main.existingRef == 0) {  // AVEGSP
+		if (Main.existingRef == 0) {
 			Toast.makeText(this, "You can NOT define an Unknown, Sorry!", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "toast: You can NOT define an Unknown, Sorry!");
 			return;
@@ -453,7 +466,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int bottom = mVisualizerView.getBottom();
 		int left = mVisualizerView.getLeft();
 		int right = mVisualizerView.getRight();
-		Main.lengthEachRecord = ((float) (bottom-top) / (float) (Main.totalCntr+1));
+		//Main.lengthEachRecord = ((float) (bottom-top) / (float) (Main.totalCntr+1));
 		// it can go from startup to record to play without getting button height thus no text size
 		Main.buttonHeight = playButton.getHeight();
 		//Main.buttonHeight  = playButton.getBottom() - playButton.getTop(); // works
@@ -462,7 +475,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		Log.d(TAG, "*  *  VisualizerView top:" + top + " bottom:" + bottom + " left:" + left + " right:" + right);
 		Log.d(TAG, "*  *  Buttons top:" + bottomButtons.getTop() + " bottom:" + bottomButtons.getBottom() + " left:" + bottomButtons.getLeft() + " right:" + bottomButtons.getRight());
 		Log.d(TAG, "*  *  playButton top:" + playButton.getTop() + " bottom:" + playButton.getBottom() + " left:" + playButton.getLeft() + " right:" + playButton.getRight());
-		Log.d(TAG, "*  *  before addLineRenerer Main.lengthEachRecord:" + Main.lengthEachRecord);
+		//Log.d(TAG, "*  *  before addLineRenerer Main.lengthEachRecord:" + Main.lengthEachRecord);
 		//LineRenderer lineRenderer = new LineRenderer(linePaint);
 		//mVisualizerView.addRenderer(lineRenderer);
 		isInit = true; // used in AdjustView
@@ -547,10 +560,9 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			cleanUp();
 		}
 
-		Main.cntrFftCall = 0;
-
-		VisualizerView.mCanvasBitmap = null;
-		VisualizerView.mCanvas = null;
+		// don't know if these two are needed
+		//mVisualizerView.mCanvasBitmap = null;
+		//mVisualizerView.mCanvas = null;
 
 		try {
 			Log.d(TAG, "before mPlayer = new MediaPlayer");
@@ -569,8 +581,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Main.audioDataLength = (int) ((float) Main.duration / 1000f * 22050);  // samples = sec * samples/sec
 			//Main.audioDataLength -= Main.audioDataLength % base;
 			Log.d(TAG, "audioDataLength:" + Main.audioDataLength + " duration:" + Main.duration);
-			Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
-			Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
+			//Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
+			//Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
 			int seek = 0; // millisec
 			Main.audioDataSeek = 0; // samples
 			if (Main.songStartAtLoc > 0 || Main.songStopAtLoc > 0) {
@@ -581,15 +593,15 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				}
 				Main.duration = Main.songStopAtLoc - Main.songStartAtLoc; // millisec
 				Main.audioDataLength = (int) ((float) Main.duration / 1000f * 22050);  // samples = sec * samples/sec
-				Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
-				Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
+
+				//Main.stopAt = (Main.audioDataLength) / 2048;  // records  22050/11025 = 2 * 1024 = 2048
+				//Main.totalCntr = Main.stopAt + 1;  // records the 1 is to avoid overflow.
 				Log.d(TAG, "mPlayer NEW duration:" + Main.duration + " NEW audioDataLength:" + Main.audioDataLength );
 			}
 			Log.d(TAG, "startPlaying: seek:" + seek);
 			mPlayer.seekTo(seek);
-			Log.d(TAG, "startPlaying: Main.totalCntr:" + Main.totalCntr +  " stopAt:" + Main.stopAt );
+			//Log.d(TAG, "startPlaying: Main.totalCntr:" + Main.totalCntr +  " stopAt:" + Main.stopAt );
 			Log.d(TAG, "startPlaying: duration:" + Main.duration);
-			Main.cntrFftCallTotal = new int[Main.totalCntr];
 			result = 0;
 			filterCntr = 0;
 			filterActive = false;
@@ -607,6 +619,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				Log.d(TAG, "gc start");
 				System.gc();
 				Log.d(TAG, "gc complete");
+				/*if (Main.audioDataLength == 0) {
+					String msg = "Are you a robot? Please select a file to Play.";
+					Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+					Log.d(TAG, msg);
+					finish();
+					return;
+				}*/
 				mPlayer.start();
 				startTime = cal.getTimeInMillis();
 				Log.d(TAG, "1) startSong: startTime:" + startTime);
@@ -616,6 +635,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				new Thread(new Runnable() {
 					public void run() {
 						Log.d(TAG, "start getPcmData with Decode java");
+						Main.isDecodeBackground = true;
 						result = dfj.getPcmData(); // put it in the short bigendian buffer audioData[]
 					}
 				}).start();
@@ -623,16 +643,36 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				imagIn = new float [base];  // default filled with zeros
 				bufRealOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 inverted (not usable) floats
 				bufImagOut = new float [base]; // returns 1024 floats -- 512 real floats and 512 imaginary inverse floats (not usable data)
-				delayTime = cal.getTimeInMillis();
 				long delay = 0;
-				while (Main.shortCntr < base) {
+				// wait for decode to have some data
+				int testPeriod = 22050 * 4; // number of seconds to number of shorts
+				int mBase = Math.min(testPeriod, (int)(22.050 * Main.duration-base));
+				while (Main.shortCntr < mBase) {
 					long now = cal.getTimeInMillis();
-					delay = delayTime - now;
+					delay = now - startTime;
 					if (delay > 1000) break;
 				}
 				Log.d(TAG, "3) delay:" + delay + " shortCntr:" + Main.shortCntr);
 				Log.d(TAG, "4) start runnable: startTime:" + startTime + " isPlaying:" + Main.isPlaying);
-				handler.postDelayed(runnable, 5);
+				// a quick look for max in first testPeriod seconds
+				int mMax = 0;
+				int mLoc = 0;
+				for (int j = 0; j< mBase; j++) {
+					if (mMax < Main.audioData[j]) {
+						mMax = Main.audioData[j];
+						mLoc = j;
+					}
+				}
+				Log.d(TAG, "4a) mLoc:" + mLoc + " mMax:" + mMax);
+				mLoc -= mLoc%base;
+				Log.d(TAG, "4b) mLoc:" + mLoc + " mMax:" + mMax);
+				for (int i=0; i<base; i++) {
+					bufIn[i] = (float)(Main.audioData[mLoc+i]);
+				}
+				fft.windowFunc(3, base, bufIn); // hanning -- sharper than hamming
+				fftbas.fourierTransform(base, bufIn, imagIn, bufRealOut, bufImagOut, false);
+				mVisualizerView.setInitialMax();
+				handler.postDelayed(runnable, 1);
 			}
 		} catch (IOException e) {
 			Log.e(TAG, "prepare() failed on file:" + mFileName);
@@ -729,6 +769,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			return;
 		}
 		if (result == 0) { // hasn't been run -- it returns 1 on success
+			Main.isDecodeBackground = false;
 			result = dfj.getPcmData(); // put it in the short bigendian buffer audioData[]
 		}
 		if (result <= 0) {
@@ -754,6 +795,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				Main.db.execSQL(qry);
 				Main.db.setTransactionSuccessful();
 				Main.db.endTransaction();
+			} else if (result == -3) {
+				msg = "Codec interrupted before completion";
 			} else {
 				msg = "Unable to read the file";
 			}
@@ -762,6 +805,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Main.fileReshowExisting = true;
 			cleanUp();
 			finish();
+			result = 0;
 			return;
 		}
 		Log.d(TAG, "return from Decode java");
@@ -2139,7 +2183,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			} // next i
 			fos.close();
 		} catch( Exception e ) {
-			Log.e("saveLayout failed ", "Exception: " + e.toString() );
+			Log.e("saveLayout failed: ", e.toString() );
 		}
 	}
 
@@ -2256,7 +2300,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						fos3.write(buf);
 					}
 				}catch (Exception e) {
-					Log.e("save fftFloatAscii.txt failed ", "Exception: " + e.toString() );
+					Log.e("save fftFloatAscii.txt failed: ", e.toString() );
 				}
 			}
 			if (mode == 2) {
@@ -2311,7 +2355,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					byte buf[] = sb.getBytes();
 					fos6.write(buf);
 				}catch (Exception e) {
-					Log.e("save fftFloatAscii.txt failed ", "Exception: " + e.toString() );
+					Log.e("save fftFloatAscii.txt failed: ", e.toString() );
 				}
 			}
 			if (mode == 2) {
@@ -2340,11 +2384,11 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					fos6.write(buf);
 				}
 			} catch (Exception e) {
-				Log.e("save VoicedMaxPwr.txt failed ", "Exception: " + e.toString() );
+				Log.e("save VoicedMaxPwr.txt failed: ", e.toString() );
 			}
 			fos6.close();
 		} catch( Exception e ) {
-			Log.e("save VoicedMaxPwr.txt failed ", "Exception: " + e.toString() );
+			Log.e("save VoicedMaxPwr.txt failed: ", e.toString() );
 		}
 	}
 
@@ -3964,7 +4008,6 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int lookAhead = 3;
 		int startRec = -1;
 		int endRec = -1;
-		float aboveTheNoise = lim1Base/2; // 0.05f;  //Main.maxPower * limit1;
 		int thisRecordIsGreater = 0;
 		float bestStartRatio = 1.0f; // this/prev > 2;
 		float bestEndRatio = 1.0f;    // this/prev < .6;

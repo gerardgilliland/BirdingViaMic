@@ -156,6 +156,9 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         cancelX = screenWidth-edge;
         cancelY = screenCenterH+screenCenterH/2;
         song = Main.songs[Main.selectedSong[Main.thisSong]];
+        if (Main.songdata == null || Main.songpath == null) { // knocked out of memory re-init the database
+            return;
+        }
         Main.db = Main.songdata.getWritableDatabase();
         Log.d(TAG, "3) AdjustView isInit:" + isInit );
         if (isInit == true) {
@@ -198,7 +201,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         }
         isInit = false;
         Log.d(TAG, "4) AdjustView isInit:" + isInit );
-        Log.d(TAG, "5) AdjustView: Main.totalCntr:" + Main.totalCntr);
+        //Log.d(TAG, "5) AdjustView: Main.totalCntr:" + Main.totalCntr);
     }
 
 
@@ -684,8 +687,6 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         Main.songStartAtLoc = oldStart + newStart;
         Main.songStopAtLoc = oldStart + newStop;  // this is not a bug -- I do mean oldStart + newStop
         Log.d(TAG, "new Adjusted StartAtLoc:" + Main.songStartAtLoc + " new Adjusted songStopAtLoc:" + Main.songStopAtLoc );
-        // so stop will be at = 100 * (songStopAtLoc / 6)
-        // and seekTo (int msec) will be 100 * (songStartAtLoc / 6)
         Log.d(TAG, "ActionDown closing AdjustView songStartAtLoc:" + Main.songStartAtLoc + " songStopAtLoc:" + Main.songStopAtLoc );
         //String defineName = Main.specInxSeg[Main.selectedSong[Main.thisSong]];
         int ref = Main.ref[Main.selectedSong[Main.thisSong]];
@@ -707,7 +708,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
         // int cntr = rs.getCount();
         rs.moveToFirst();
-        int sourceMic = rs.getInt(0); // get a new segment
+        int sourceMic = rs.getInt(0);
         int sampleRate = rs.getInt(1);
         int audioSource = rs.getInt(2);
         Main.db.beginTransaction();
@@ -765,54 +766,47 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         // gg - disabled ((Activity)getContext()).finish();
         // i need to save these above in SongList  FilterStart, FilterStop,
 
-        // is it an XC file?  if yes update Filter table
+        // update Filter table
         Log.d(TAG, "saveSquare song:" + song);
-        int locStart = song.indexOf("XC");
-        int locEnd = song.indexOf(".", locStart);
-        if (locStart > 0 && locEnd > locStart) { // yes an XC file name
-            String xcNam = song.substring(locStart, locEnd);
-            Log.d(TAG, "SaveSquare xcNam:" + xcNam);
-
-            // Start
-            if (Main.songStartAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = " + q + xcNam + q  + " AND FilterType = 'Start'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) {
-                    val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "Start");
-                    val.put("FilterVal", Main.songStartAtLoc);
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else {
-                    String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStartAtLoc +
-                            " WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Start'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+        // Start
+        if (Main.songStartAtLoc > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q + song + q  + " AND FilterType = 'Start'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) {
+                val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "Start");
+                val.put("FilterVal", Main.songStartAtLoc);
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else {
+                String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStartAtLoc +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'Start'";
+                Main.db.execSQL(qry1);
             }
-            // Stop
-            if (Main.songStopAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Stop'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) {
-                    val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "Stop");
-                    val.put("FilterVal", Main.songStopAtLoc);
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else {
-                    String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStopAtLoc +
-                            " WHERE XcName = " + q + xcNam + q + " AND FilterType = 'Stop'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
+        }
+        // Stop
+        if (Main.songStopAtLoc > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q + song + q + " AND FilterType = 'Stop'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) {
+                val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "Stop");
+                val.put("FilterVal", Main.songStopAtLoc);
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else {
+                String qry1 = "UPDATE Filter SET FilterVal = " + Main.songStopAtLoc +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'Stop'";
+                Main.db.execSQL(qry1);
             }
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
         }
 
         Main.adjustViewOption = "clear";
@@ -870,96 +864,89 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         Main.db.setTransactionSuccessful();
         Main.db.endTransaction();
 
-        // is it an XC file?  if yes update Filter table
+        // update Filter table
         Log.d(TAG, "excludeSquare song:" + song);
-        int locStart = song.indexOf("XC");
-        int locEnd = song.indexOf(".", locStart);
-        if (locStart > 0 && locEnd > locStart) { // yes an XC file name
-            String xcNam = song.substring(locStart, locEnd);
-            Log.d(TAG, "excludeSquare xcNam:" + xcNam);
-            // LowFreqCutoff
-            if (Main.lowFreqCutoff > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'LowFreqCutoff'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) {  // insert
-                    ContentValues val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "LowFreqCutoff");
-                    val.put("FilterVal", (int) (Main.lowFreqCutoff * Main.hzPerStep + 0.5));
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else { // update
-                    String qry1 = "UPDATE Filter SET FilterVal = " + (int) (Main.lowFreqCutoff * Main.hzPerStep + 0.5) +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'LowFreqCutoff'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+        // LowFreqCutoff
+        if (Main.lowFreqCutoff > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q + song + q + " AND FilterType = 'LowFreqCutoff'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) {  // insert
+                ContentValues val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "LowFreqCutoff");
+                val.put("FilterVal", (int) (Main.lowFreqCutoff * Main.hzPerStep + 0.5));
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else { // update
+                String qry1 = "UPDATE Filter SET FilterVal = " + (int) (Main.lowFreqCutoff * Main.hzPerStep + 0.5) +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'LowFreqCutoff'";
+                Main.db.execSQL(qry1);
             }
-            // HighFreqCutoff
-            if (Main.highFreqCutoff > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'HighFreqCutoff'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) { // insert
-                    ContentValues val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "HighFreqCutoff");
-                    val.put("FilterVal", (int) (Main.highFreqCutoff * Main.hzPerStep + 0.5));
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else { // update
-                    String qry1 = "UPDATE Filter SET FilterVal = " + (int) (Main.highFreqCutoff * Main.hzPerStep + 0.5) +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'HighFreqCutoff'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
+        }
+        // HighFreqCutoff
+        if (Main.highFreqCutoff > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q  + song + q + " AND FilterType = 'HighFreqCutoff'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) { // insert
+                ContentValues val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "HighFreqCutoff");
+                val.put("FilterVal", (int) (Main.highFreqCutoff * Main.hzPerStep + 0.5));
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else { // update
+                String qry1 = "UPDATE Filter SET FilterVal = " + (int) (Main.highFreqCutoff * Main.hzPerStep + 0.5) +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'HighFreqCutoff'";
+                Main.db.execSQL(qry1);
             }
-            // FilterStart (begin)
-            if (Main.filterStartAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'FilterStart'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) {
-                    ContentValues val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "FilterStart");
-                    val.put("FilterVal", Main.filterStartAtLoc);
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else {
-                    String qry1 = "UPDATE Filter SET FilterVal = " + Main.filterStartAtLoc +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'FilterStart'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
+        }
+        // FilterStart (begin)
+        if (Main.filterStartAtLoc > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q + song + q + " AND FilterType = 'FilterStart'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) {
+                ContentValues val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "FilterStart");
+                val.put("FilterVal", Main.filterStartAtLoc);
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else {
+                String qry1 = "UPDATE Filter SET FilterVal = " + Main.filterStartAtLoc +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'FilterStart'";
+                Main.db.execSQL(qry1);
             }
-            // FilterStop (end)
-            if (Main.filterStopAtLoc > 0) {
-                qry = "SELECT * FROM Filter WHERE XcName = '" + xcNam + "' AND FilterType = 'FilterStop'";
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                Main.db.beginTransaction();
-                if (rs.getCount() == 0) {
-                    ContentValues val = new ContentValues();
-                    val.put("XcName", xcNam);
-                    val.put("FilterType", "FilterStop");
-                    val.put("FilterVal", Main.filterStopAtLoc);
-                    Main.db.insert("Filter", null, val);
-                    val.clear();
-                } else {
-                    String qry1 = "UPDATE Filter SET FilterVal = " + Main.filterStopAtLoc +
-                            " WHERE XcName = '" + xcNam + "' AND FilterType = 'FilterStop'";
-                    Main.db.execSQL(qry1);
-                }
-                Main.db.setTransactionSuccessful();
-                Main.db.endTransaction();
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
+        }
+        // FilterStop (end)
+        if (Main.filterStopAtLoc > 0) {
+            qry = "SELECT * FROM Filter WHERE XcName = " + q + song + q + " AND FilterType = 'FilterStop'";
+            rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+            Main.db.beginTransaction();
+            if (rs.getCount() == 0) {
+                ContentValues val = new ContentValues();
+                val.put("XcName", song);
+                val.put("FilterType", "FilterStop");
+                val.put("FilterVal", Main.filterStopAtLoc);
+                Main.db.insert("Filter", null, val);
+                val.clear();
+            } else {
+                String qry1 = "UPDATE Filter SET FilterVal = " + Main.filterStopAtLoc +
+                        " WHERE XcName = " + q + song + q + " AND FilterType = 'FilterStop'";
+                Main.db.execSQL(qry1);
             }
+            Main.db.setTransactionSuccessful();
+            Main.db.endTransaction();
+        }
 
-        } // update or insert xc data into filter
-        // -- gg disabled ((Activity)getContext()).finish();
         Main.adjustViewOption = "clearExclude";
         invalidate();
         isExcludeOnce = true;
@@ -996,20 +983,10 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
                 " AND Path = " + Main.path +
                 " AND FileName = " + q + song + q;
         Main.db.execSQL(qry);
-
-        // is it an XC file if yes update Filter table?
-        int locStart = song.indexOf("XC");
-        int locEnd = song.indexOf(".", locStart);
-        if (locStart > 0 && locEnd > locStart) { // yes
-            String xcNam = song.substring(locStart, locEnd);
-            Log.d(TAG, "cancel xcNam:" + xcNam);
-            qry = "DELETE FROM Filter WHERE XcName = " + q + xcNam + q;
-            Main.db.execSQL(qry);
-        }
+        qry = "DELETE FROM Filter WHERE XcName = " + q + song + q;
+        Main.db.execSQL(qry);
         Main.db.setTransactionSuccessful();
         Main.db.endTransaction();
-
-        // -- gg disabled ((Activity)getContext()).finish();
         Main.adjustViewOption = "clear";
         invalidate();
         isCancelOnce = true;

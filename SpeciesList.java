@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,8 +39,7 @@ public class SpeciesList extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {    	
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.specieslist_header);
-
+		setContentView(R.layout.specieslist_header);
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -50,6 +52,10 @@ public class SpeciesList extends AppCompatActivity {
                 finish();
             }
         });
+		if (Main.songpath == null || Main.songdata == null) {
+			finish();
+			return;
+		}
 
         Main.db = Main.songdata.getWritableDatabase();
 		buildList();
