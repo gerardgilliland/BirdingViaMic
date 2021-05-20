@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -55,7 +58,6 @@ public class RedList extends AppCompatActivity implements android.view.View.OnCl
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.red_list);
-
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -68,7 +70,10 @@ public class RedList extends AppCompatActivity implements android.view.View.OnCl
                 finish();
             }
         });
-
+        if (Main.songpath == null || Main.songdata == null) {
+            finish();
+            return;
+        }
 
         buildList();
         findViewById(R.id.update_button).setOnClickListener(this);

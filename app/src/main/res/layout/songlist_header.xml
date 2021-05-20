@@ -2,17 +2,18 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    xmlns:support="http://schemas.android.com/tools"
     android:background="#ff000000">
+<!--     xmlns:support="http://schemas.android.com/tools" -->
 
-    <android.support.v7.widget.Toolbar
+
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="@color/linen" >
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <TextView
         android:id="@+id/spacer"

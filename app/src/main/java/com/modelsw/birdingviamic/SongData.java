@@ -9,9 +9,10 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+
 public class SongData extends SQLiteOpenHelper {
     private static final String TAG = "SongData";
-	private String qry = "";
+
 
 	public SongData(Context context, String name, CursorFactory factory, int version) {
 		super(context, name, factory, version);
@@ -86,8 +87,14 @@ public class SongData extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.d(TAG, "onUpgrade");
-		// don't drop everything and call onCreate and start over.
-		// just add the changes here and increment the Main.version
+		// I will only get here if dbOldVersion is incremented
+
+//		ContentValues val = new ContentValues();
+//		val.put("Name", "SavePcmData");
+//		val.put("Value", 0);
+//		db.insert("Options", null, val);
+
+
 //		qry = "DROP TABLE IF EXISTS SongList";
 //		db.execSQL(qry);
 //		qry = "DROP TABLE IF EXISTS DefineTotals";
@@ -116,6 +123,8 @@ public class SongData extends SQLiteOpenHelper {
 //		db.execSQL(qry);
 
 		//onCreate(db); // now that you have deleted a table -- call the above function to re-create it.
+		// I don't know of any table I delete or  re-create.
+		// where do I populate CodeName table ? In main under upgradeSpecies and I don't delete the table just the data -- and repopulate it.
 
 	}
 

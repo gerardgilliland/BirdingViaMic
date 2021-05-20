@@ -1,5 +1,7 @@
 package com.modelsw.birdingviamic;
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -29,6 +31,9 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 import android.media.MediaCodecInfo.CodecProfileLevel;
+
+// Decoder Fails occasionally
+// https://code.google.com/p/android/issues/detail?id=218967
 
 @TargetApi(16)
 public class DecodeFileJava {
@@ -133,6 +138,10 @@ public class DecodeFileJava {
             // get existing
 
             int sourceMic = 0;
+            if (Main.songpath == null || Main.songdata == null) {
+                return -4;
+            }
+
             String qry = "SELECT SourceMic from SongList WHERE FileName =" + q + Main.existingName + q;
             Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
             int cntr = rs.getCount();
@@ -209,58 +218,59 @@ public class DecodeFileJava {
                             }
                         }
                     }
+
+                    int res = codec.dequeueOutputBuffer(info, kTimeOutUs);
+                    if (res >= 0) {
+                        int outputBufIndex = res;
+                        ByteBuffer buf = codecOutputBuffers[outputBufIndex];
+                        // see incr above
+                        // if 1 channel and 22050 then read every short
+                        // if 2 channels and 22050 or 1 channel and 44100 then read every other short
+                        // if 2 channels and 44100 then read every 4th short
+                        // *** was average instead of skipping *** WRONG loses high freq -- and increases noise
+                        // back to skipping by incr each record plus by incr each skipAdj
+                        float skipCnt = 0f;
+                        for (int i = 0; i < info.size; i += incr) {
+                            int lo = buf.get(i);
+                            int hi = buf.get(i + 1);
+                            int hilo = ((hi << 8) & 0xff00) | (lo & 0xff);
+                            Main.audioData[Main.shortCntr] = (short) hilo;
+                            skipCnt += skipAdj; // record or short not byte
+                            if (skipCnt >= 1f) {
+                                i += incr;
+                                skipCnt -= 1f;
+                            }
+                            Main.shortCntr++;
+                            //}
+                            if (Main.shortCntr >= endData) {
+                                sawOutputEOS = true;
+                                Log.d(TAG, "saw output EOS with endData:" + endData + " info.size:" + info.size);
+                                break;
+                            }
+                        }
+                        codec.releaseOutputBuffer(outputBufIndex, false /* render */);
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            Log.d(TAG, "saw output EOS with Flag EndOfStream");
+                            sawOutputEOS = true;
+                        }
+                    } else if (res == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+                        codecOutputBuffers = codec.getOutputBuffers();
+                        Log.d(TAG, "output buffers have changed.");
+                    } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                        MediaFormat oformat = codec.getOutputFormat();
+                        Log.d(TAG, "HERE -- output format has changed to:" + oformat);
+                    } else if (Main.isDecodeBackground == true && Main.isPlaying == false) {
+                        // the codec is running in the background and the song was stopped before codec completed
+                        Log.d(TAG, "codec interrupted returning -3 isPlaying:" + Main.isPlaying + " isDecodeBackground:"+ Main.isDecodeBackground);
+                        return -3;  // interrupted
+                    }
                 } catch (Exception e) {
                     String msg = "Codec exception:" + e;
                     Log.d(TAG, msg);
                     return -3;  // interrupted
                 }
-
-                int res = codec.dequeueOutputBuffer(info, kTimeOutUs);
-                if (res >= 0) {
-                    int outputBufIndex = res;
-                    ByteBuffer buf = codecOutputBuffers[outputBufIndex];
-                    short max = 0;
-                    int maxI = 0;
-                    // see incr above
-                    // if 1 channel and 22050 then read every short
-                    // if 2 channels and 22050 or 1 channel and 44100 then read every other short
-                    // if 2 channels and 44100 then read every 4th short
-                    // *** was average instead of skipping *** WRONG loses high freq -- and increases noise
-                    // back to skipping by incr each record plus by incr each skipAdj
-                    float skipCnt = 0f;
-                    for (int i = 0; i < info.size; i += incr) {
-                        int lo = buf.get(i);
-                        int hi = buf.get(i + 1);
-                        int hilo = ((hi << 8) & 0xff00) | (lo & 0xff);
-                        Main.audioData[Main.shortCntr] = (short) hilo;
-                        skipCnt += skipAdj; // record or short not byte
-                        if (skipCnt >= 1f) {
-                            i += incr;
-                            skipCnt -= 1f;
-                        }
-                        Main.shortCntr++;
-                        //}
-                        if (Main.shortCntr >= endData) {
-                            sawOutputEOS = true;
-                            Log.d(TAG, "saw output EOS with endData:" + endData + " info.size:" + info.size);
-                            break;
-                        }
-                    }
-                    codec.releaseOutputBuffer(outputBufIndex, false /* render */);
-                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        Log.d(TAG, "saw output EOS with Flag EndOfStream");
-                        sawOutputEOS = true;
-                    }
-                } else if (res == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
-                    codecOutputBuffers = codec.getOutputBuffers();
-                    Log.d(TAG, "output buffers have changed.");
-                } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    MediaFormat oformat = codec.getOutputFormat();
-                    Log.d(TAG, "HERE -- output format has changed to:" + oformat);
-                }
             }
             //int mod = Main.audioDataLength % PlaySong.base;
-            //Log.d(TAG, "start audioDataLength:" + Main.audioDataLength + " base:" + PlaySong.base + " modulo:" + mod);
             Main.audioDataLength = Main.shortCntr; // actual
             //Log.d(TAG, "now audioDataLength:" + Main.audioDataLength);
             dbCntr = Main.shortCntr;
@@ -271,7 +281,12 @@ public class DecodeFileJava {
             if (Main.isDebug) {
                 writeDataLen();
             }
-            if (dbDiff > PlaySong.base) {
+            // save output file option
+            if (Main.isSavePcmData == true) {
+                saveAudioDataFile();
+            }
+            Log.d(TAG, "dbAudLen:" + dbAudLen + " dbCntr:" + dbCntr + " dbDiff:" + dbDiff);
+            if (dbDiff > (PlaySong.base*2)) { // it should be 1024, i'm saying 2048, since two came back in 1200s -- but not 91%
                 return -2; // decoder failed on Main.existingName.
             }
         } catch (IOException e) {
@@ -287,6 +302,27 @@ public class DecodeFileJava {
         return 1; // I have got to here so I finished decoding so don't repeat the decode.
         //}
     }
+
+    public static void saveAudioDataFile() {
+        // note this is a raw pcm file -- 16 bit -- big endian -- mono -- 22050
+        int dot = Main.existingName.indexOf(".");
+        String nam = Main.definepath + Main.existingName.substring(0, dot) + ".pcm";
+        Log.d(TAG, "saveAudioDataFile:" + nam);
+        File file = new File(nam);  // ".../Define/AudioDataFile.pcm
+        try {
+            file.createNewFile();
+            OutputStream outputStream = new FileOutputStream(file);
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+            DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
+            for (int i = 0; i < Main.shortCntr; i++) {
+                dataOutputStream.writeShort(Main.audioData[i]);
+            }
+            outputStream.close();
+        } catch (IOException e) {
+            Log.d(TAG, "saveAudioDataFile IOException:" + e);
+            e.printStackTrace();
+        }
+    }  // saveAudioDataFile
 
     void writeDataLen() {
         try {

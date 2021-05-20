@@ -7,9 +7,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,9 +20,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.appdatasearch.GetRecentContextCall;
 
 // import org.apache.http.protocol.HTTP;
 import java.net.HttpURLConnection;
@@ -40,7 +40,6 @@ public class MyList extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.my_list);
-
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -55,7 +54,10 @@ public class MyList extends AppCompatActivity {
                 finish();
             }
         });
-
+        if (Main.songpath == null || Main.songdata == null) {
+            finish();
+            return;
+        }
         idList = (TextView) findViewById(R.id.id_list);
         showIdList();
         defList = (TextView) findViewById(R.id.def_list);
@@ -171,26 +173,5 @@ public class MyList extends AppCompatActivity {
         startActivityForResult(emailIntent, 1);
     }
 
-    public static String getEmail(Context context) {
-        AccountManager accountManager = AccountManager.get(context);
-        Account account = getAccount(accountManager);
-
-        if (account == null) {
-            return null;
-        } else {
-            return account.name;
-        }
-    }
-
-    private static Account getAccount(AccountManager accountManager) {
-        Account[] accounts = accountManager.getAccountsByType("com.google");
-        Account account;
-        if (accounts.length > 0) {
-            account = accounts[0];
-        } else {
-            account = null;
-        }
-        return account;
-    }
 
 }

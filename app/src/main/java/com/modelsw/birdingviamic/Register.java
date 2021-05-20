@@ -7,13 +7,17 @@ import java.net.HttpURLConnection;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Build.VERSION;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,6 +27,8 @@ import android.content.pm.PackageInfo;
 
 public class Register extends AppCompatActivity implements OnClickListener {
     String TAG = "Register";
+	String qry = "";
+	Cursor rs; // I think of Cursor as Record Set
 	EditText comments;
 	String dateFmt; 
 	Intent emailIntent;
@@ -59,6 +65,7 @@ public class Register extends AppCompatActivity implements OnClickListener {
 		 		+ "\nAndroidVersion:" + getAndroidVersion()
 		 		+ "\nAndroidRelease:" + getAndroidRelease()
 		 		+ "\nBirdingViaMic:" + getBirdingViaMicVersion(this)
+				+ "\nIocVersion:" + getIocVersion()
 				+ "\nComments:";
 		
 	    versionInfo = (TextView) findViewById(R.id.version_info);
@@ -103,5 +110,15 @@ public class Register extends AppCompatActivity implements OnClickListener {
 	public static String getBirdingViaMicVersion(Context ctx) {
 	    return ctx.getResources().getString(R.string.app_version_name);
 	}
+
+	public String getIocVersion() {
+		qry = "SELECT Num from Version";
+		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+		rs.moveToFirst();
+		int dbVer = rs.getInt(0);  // this is the old version 61, or 92 if not upgraded -- the new version 111 if done.
+		rs.close();
+		return String.format("%d", dbVer);
+	}
+
 
 }

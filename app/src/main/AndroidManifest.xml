@@ -1,46 +1,48 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.modelsw.birdingviamic"
-    android:versionCode="66"
-    android:versionName="@string/app_version_name" >
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="23" />
+    package="com.modelsw.birdingviamic" >
+
 
     <application
         android:theme="@style/AppTheme"
         android:icon="@drawable/treble_clef_linen"
-        android:label="@string/app_name"
-        >
-        <!--This meta-data tag is required to use Google Play Services.-->
+        android:label="@string/app_name"        >
+        <!--This meta-data tag is required to use Google Play Services.
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+            -->
         <activity
             android:name="com.modelsw.birdingviamic.Main"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
             <intent-filter>
+                <action android:name="android.intent.ActionBarActivity" />
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.PlaySong"
             android:label="@string/playsong_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.RecordSong"
             android:label="@string/recordsong_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>        
         <activity  android:name="com.modelsw.birdingviamic.SongList"
             android:label="@string/songlist_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.PermissionDetail"
             android:label="@string/permission_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.Alert1ButtonDialog"
             android:screenOrientation="portrait"
-            android:theme="@style/AppThemeDialog"  >
+            android:theme="@style/AppThemeDialog">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.Alert3ButtonDialog"
             android:screenOrientation="portrait"
@@ -68,62 +70,79 @@
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.SpeciesList"
             android:label="@string/spec_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>  
         <activity  android:name="com.modelsw.birdingviamic.SelectSongPath"
             android:label="@string/songpath_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>        
         <activity  android:name="com.modelsw.birdingviamic.Options"
             android:label="@string/options_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>        
         <activity  android:name="com.modelsw.birdingviamic.AudioRecorder"
             android:label="@string/recordsong_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black" >
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.RedList"
             android:label="@string/redlist_label"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.RegionList"
             android:label="@string/region_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
+        </activity>
+        <activity  android:name="com.modelsw.birdingviamic.Backup"
+            android:label="@string/backup_label"
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.MyList"
             android:label="@string/my_list"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.HelpActivity"
             android:label="@string/help_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.ShowLocation"
             android:label="@string/location_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.WebBrowser"
             android:label="@string/show_web_title"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.WebList"
             android:label="@string/weblist_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
         <activity  android:name="com.modelsw.birdingviamic.Register"
             android:label="@string/register_title"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:background="@color/black">
         </activity>
 
         
         </application>
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- <uses-permission android:name="android.permission.GET_ACCOUNTS" /> -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" />
     <!-- <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" /> -->
     <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> -->
 

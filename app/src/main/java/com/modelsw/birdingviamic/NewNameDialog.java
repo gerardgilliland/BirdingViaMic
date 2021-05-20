@@ -34,9 +34,11 @@ public class NewNameDialog extends Activity implements OnClickListener {
 
     public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "*** 3 *** onCreate existingName:" + Main.existingName + " existingRef:" + Main.existingRef + " existingInx:" + Main.existingInx);	
-        super.onCreate(savedInstanceState);      
+        super.onCreate(savedInstanceState);
+        if (Main.songpath == null || Main.songdata == null) {
+            return;
+        }
         Main.db = Main.songdata.getWritableDatabase();
-                
         setContentView(R.layout.newname_dialog);
 		findViewById(R.id.done_button).setOnClickListener(this);
         findViewById(R.id.cancel_button).setOnClickListener(this);
@@ -73,9 +75,9 @@ public class NewNameDialog extends Activity implements OnClickListener {
     private void loadSpinnerData() {
         // Spinner Drop down elements
 		Log.d(TAG, "loadSpinnerData:" + Main.existingName + " existingRef:" + Main.existingRef);	
-        List<String> lables = this.getAllLabels();
+        List<String> labels = this.getAllLabels();
         // Creating adapter for spinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, lables);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, labels);
         // Drop down layout style 
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
         // attach data adapter to spinner

@@ -1,23 +1,27 @@
 package com.modelsw.birdingviamic;
 
-import android.Manifest;
+//import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
+//import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
+//import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.app.ActivityCompat;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 
 @TargetApi(23)
 public class PermissionDetail extends AppCompatActivity implements View.OnClickListener {
@@ -26,14 +30,6 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
     int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     int targetSdkVersion;
     Toolbar toolbar;
-    String[] permissions = new String[]{
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.GET_ACCOUNTS,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION };
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,9 +58,9 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
     private int checkPermissions() {
         try {
             int cntr = 0;
-            for (String p : permissions) {
+            for (String p : Main.permissions) {
                 int result = ContextCompat.checkSelfPermission(this, p);
-                boolean showRationale = shouldShowRequestPermissionRationale(p);
+                boolean showRationale = shouldShowRequestPermissionRationale( p );
                 Log.d(TAG, "check:" + p + " result:" + result + " Rationale:" + showRationale);
                 if (result != PackageManager.PERMISSION_GRANTED) {
                     if (showRationale == true) {

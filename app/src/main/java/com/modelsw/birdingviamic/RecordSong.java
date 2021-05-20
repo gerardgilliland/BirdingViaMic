@@ -19,9 +19,12 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v4.content.ContextCompat;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -65,14 +68,6 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        Main.db = Main.songdata.getWritableDatabase();
-		String qry = "SELECT Value from Options WHERE Name='audsrc'";
-        Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-        rs.moveToFirst();
-        audsrc = rs.getInt(0);
-        rs.close();
-
         setContentView(R.layout.record_song);
 
         // action bar toolbar
@@ -87,6 +82,16 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
                 finish();
             }
         });
+        if (Main.songpath == null || Main.songdata == null) {
+            finish();
+            return;
+        }
+        Main.db = Main.songdata.getWritableDatabase();
+        String qry = "SELECT Value from Options WHERE Name='audsrc'";
+        Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+        rs.moveToFirst();
+        audsrc = rs.getInt(0);
+        rs.close();
 
         TextView mediaType = (TextView) findViewById(R.id.media_type);
         AudioManager am1 = (AudioManager)getSystemService(Context.AUDIO_SERVICE);

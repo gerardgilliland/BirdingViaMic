@@ -41,7 +41,10 @@ public class NewSpecDialog extends Activity implements OnClickListener {
 
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate existingName:" + Main.existingSpecName );	
-        super.onCreate(savedInstanceState);      
+        super.onCreate(savedInstanceState);
+        if (Main.songpath == null || Main.songdata == null) {
+            return;
+        }
         Main.db = Main.songdata.getWritableDatabase();
         setContentView(R.layout.newspec_dialog);
         textTitle = (TextView) findViewById(R.id.add_rename_title);
