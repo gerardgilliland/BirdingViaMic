@@ -1,0 +1,124 @@
+com/modelsw/birdingviamic/FftBas.java
+ com.modelsw.birdingviamic.FftBas
+com/modelsw/birdingviamic/SongList.java
+ com.modelsw.birdingviamic.SongList
+ com.modelsw.birdingviamic.SongList$1
+ com.modelsw.birdingviamic.SongList$2
+com/modelsw/birdingviamic/ViewHolder.java
+ com.modelsw.birdingviamic.ViewHolder
+com/modelsw/birdingviamic/RegionAdapter.java
+ com.modelsw.birdingviamic.RegionAdapter
+ com.modelsw.birdingviamic.RegionAdapter$1
+com/modelsw/birdingviamic/IndexedListView.java
+ com.modelsw.birdingviamic.IndexedListView
+ com.modelsw.birdingviamic.IndexedListView$1
+com/modelsw/birdingviamic/IndexedScroller.java
+ com.modelsw.birdingviamic.IndexedScroller
+ com.modelsw.birdingviamic.IndexedScroller$1
+com/modelsw/birdingviamic/WebAdapter.java
+ com.modelsw.birdingviamic.WebAdapter
+ com.modelsw.birdingviamic.WebAdapter$1
+com/modelsw/birdingviamic/BuildConfig.java
+ com.modelsw.birdingviamic.BuildConfig
+com/modelsw/birdingviamic/FFTjava.java
+ com.modelsw.birdingviamic.FFTjava
+com/modelsw/birdingviamic/HelpActivity.java
+ com.modelsw.birdingviamic.HelpActivity
+ com.modelsw.birdingviamic.HelpActivity$1
+com/modelsw/birdingviamic/SongData.java
+ com.modelsw.birdingviamic.SongData
+com/modelsw/birdingviamic/StringMatcher.java
+ com.modelsw.birdingviamic.StringMatcher
+com/modelsw/birdingviamic/NewWebDialog.java
+ com.modelsw.birdingviamic.NewWebDialog
+com/modelsw/birdingviamic/PermissionDetail.java
+ com.modelsw.birdingviamic.PermissionDetail
+ com.modelsw.birdingviamic.PermissionDetail$1
+com/modelsw/birdingviamic/ShowLocation.java
+ com.modelsw.birdingviamic.ShowLocation
+ com.modelsw.birdingviamic.ShowLocation$1
+com/modelsw/birdingviamic/RecordSong.java
+ com.modelsw.birdingviamic.RecordSong
+ com.modelsw.birdingviamic.RecordSong$1
+ com.modelsw.birdingviamic.RecordSong$2
+ com.modelsw.birdingviamic.RecordSong$3
+com/modelsw/birdingviamic/RedList.java
+ com.modelsw.birdingviamic.RedList
+ com.modelsw.birdingviamic.RedList$1
+com/modelsw/birdingviamic/WebList.java
+ com.modelsw.birdingviamic.WebList
+ com.modelsw.birdingviamic.WebList$1
+ com.modelsw.birdingviamic.WebList$2
+com/modelsw/birdingviamic/Register.java
+ com.modelsw.birdingviamic.Register
+ com.modelsw.birdingviamic.Register$1
+com/modelsw/birdingviamic/IdentifyDialog.java
+ com.modelsw.birdingviamic.IdentifyDialog
+com/modelsw/birdingviamic/MyList.java
+ com.modelsw.birdingviamic.MyList
+ com.modelsw.birdingviamic.MyList$1
+com/modelsw/birdingviamic/SelectSongPath.java
+ com.modelsw.birdingviamic.SelectSongPath
+ com.modelsw.birdingviamic.SelectSongPath$1
+com/modelsw/birdingviamic/Alert1ButtonDialog.java
+ com.modelsw.birdingviamic.Alert1ButtonDialog
+com/modelsw/birdingviamic/SpeciesAdapter.java
+ com.modelsw.birdingviamic.SpeciesAdapter
+ com.modelsw.birdingviamic.SpeciesAdapter$1
+com/modelsw/birdingviamic/SpeciesList.java
+ com.modelsw.birdingviamic.SpeciesList
+ com.modelsw.birdingviamic.SpeciesList$1
+ com.modelsw.birdingviamic.SpeciesList$2
+com/modelsw/birdingviamic/NewNameDialog.java
+ com.modelsw.birdingviamic.NewNameDialog
+ com.modelsw.birdingviamic.NewNameDialog$1
+com/modelsw/birdingviamic/Backup.java
+ com.modelsw.birdingviamic.Backup
+ com.modelsw.birdingviamic.Backup$1
+com/modelsw/birdingviamic/UpgradeDialog.java
+ com.modelsw.birdingviamic.UpgradeDialog
+com/modelsw/birdingviamic/Alert3ButtonDialog.java
+ com.modelsw.birdingviamic.Alert3ButtonDialog
+com/modelsw/birdingviamic/WebBrowser.java
+ com.modelsw.birdingviamic.WebBrowser
+ com.modelsw.birdingviamic.WebBrowser$1
+ com.modelsw.birdingviamic.WebBrowser$2
+com/modelsw/birdingviamic/AudioRecorder.java
+ com.modelsw.birdingviamic.AudioRecorder
+ com.modelsw.birdingviamic.AudioRecorder$1
+ com.modelsw.birdingviamic.AudioRecorder$2
+ com.modelsw.birdingviamic.AudioRecorder$3
+ com.modelsw.birdingviamic.AudioRecorder$4
+com/modelsw/birdingviamic/Options.java
+ com.modelsw.birdingviamic.Options
+ com.modelsw.birdingviamic.Options$1
+com/modelsw/birdingviamic/SongAdapter.java
+ com.modelsw.birdingviamic.SongAdapter
+ com.modelsw.birdingviamic.SongAdapter$1
+com/modelsw/birdingviamic/RegionList.java
+ com.modelsw.birdingviamic.RegionList
+ com.modelsw.birdingviamic.RegionList$1
+com/modelsw/birdingviamic/NewSpecDialog.java
+ com.modelsw.birdingviamic.NewSpecDialog
+ com.modelsw.birdingviamic.NewSpecDialog$1
+ com.modelsw.birdingviamic.NewSpecDialog$2
+com/modelsw/birdingviamic/CurveFit.java
+ com.modelsw.birdingviamic.CurveFit
+com/modelsw/birdingviamic/DecodeFileJava.java
+ com.modelsw.birdingviamic.DecodeFileJava
+com/modelsw/birdingviamic/Main.java
+ com.modelsw.birdingviamic.Main
+ com.modelsw.birdingviamic.Main$1
+com/modelsw/birdingviamic/AdjustView.java
+ com.modelsw.birdingviamic.AdjustView
+com/modelsw/birdingviamic/VisualizerView.java
+ com.modelsw.birdingviamic.VisualizerView
+com/modelsw/birdingviamic/PlaySong.java
+ com.modelsw.birdingviamic.PlaySong
+ com.modelsw.birdingviamic.PlaySong$1
+ com.modelsw.birdingviamic.PlaySong$2
+ com.modelsw.birdingviamic.PlaySong$3
+ com.modelsw.birdingviamic.PlaySong$4
+ com.modelsw.birdingviamic.PlaySong$5
+ com.modelsw.birdingviamic.PlaySong$6
+ com.modelsw.birdingviamic.PlaySong$7

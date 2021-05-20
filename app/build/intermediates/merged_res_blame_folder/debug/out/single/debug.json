@@ -1,0 +1,174 @@
+[
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_weblist_header.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\weblist_header.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_region_header.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\region_header.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_song_path.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\song_path.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_ic_action_back.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-xhdpi\\ic_action_back.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_newname_dialog.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\newname_dialog.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_treble_clef_linen.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-mdpi\\treble_clef_linen.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_register.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\register.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_newweb_dialog.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\newweb_dialog.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_upgrade_dialog.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\upgrade_dialog.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_alert_dialog1.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\alert_dialog1.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_play_song.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\play_song.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_audio_recorder.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\audio_recorder.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_help_text.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\help_text.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_song_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\song_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_record_song.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\record_song.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_ic_action_back.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-ldpi\\ic_action_back.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_specieslist_header.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\specieslist_header.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_backup.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\backup.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable_spinner_state.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable\\spinner_state.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_ic_action_back.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-hdpi\\ic_action_back.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_red_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\red_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\menu_menu_share.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\menu\\menu_share.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_location.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\location.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_my_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\my_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_options.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\options.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_main.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\main.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_treble_clef_linen.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-xhdpi\\treble_clef_linen.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_web_browser.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\web_browser.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable_text_state.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable\\text_state.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_alert_dialog3.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\alert_dialog3.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_songlist_header.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\songlist_header.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_ic_action_back.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-mdpi\\ic_action_back.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\menu_menu.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\menu\\menu.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_newspec_dialog.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\newspec_dialog.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_identify_dialog.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\identify_dialog.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_treble_clef_linen.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-ldpi\\treble_clef_linen.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_region_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\region_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_treble_clef_linen.png.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable-hdpi\\treble_clef_linen.png"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_species_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\species_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable_background_state.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable\\background_state.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_web_list.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\web_list.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\layout_permission_detail.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\layout\\permission_detail.xml"
+    },
+    {
+        "merged": "C:\\AndroidProjects\\BirdingViaMic\\app\\build\\intermediates\\res\\merged\\debug\\drawable_spinner_background_state.xml.flat",
+        "source": "C:\\AndroidProjects\\BirdingViaMic\\app\\src\\main\\res\\drawable\\spinner_background_state.xml"
+    }
+]
