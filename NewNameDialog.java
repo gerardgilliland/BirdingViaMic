@@ -75,9 +75,9 @@ public class NewNameDialog extends Activity implements OnClickListener {
     private void loadSpinnerData() {
         // Spinner Drop down elements
 		Log.d(TAG, "loadSpinnerData:" + Main.existingName + " existingRef:" + Main.existingRef);	
-        List<String> lables = this.getAllLabels();
+        List<String> labels = this.getAllLabels();
         // Creating adapter for spinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, lables);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, labels);
         // Drop down layout style 
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
         // attach data adapter to spinner

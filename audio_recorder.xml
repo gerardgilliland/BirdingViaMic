@@ -6,13 +6,13 @@
     android:background="#ff000000"
     >
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="@color/linen" >
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <RelativeLayout
         android:id="@+id/top"
@@ -44,7 +44,7 @@
             android:textColor="@drawable/text_state"
             android:background="@drawable/background_state"
             android:textSize="32sp"
-            android:text="@string/record_lable" />
+            android:text="@string/record_label" />
 
             <TextView
                 android:id="@+id/more_space"
@@ -94,7 +94,7 @@
             android:textColor="@drawable/text_state"
             android:background="@drawable/background_state"
             android:textSize="16sp"
-            android:text="@string/listen_lable" />
+            android:text="@string/listen_label" />
 
         <TextView
             android:text=""
@@ -128,7 +128,7 @@
             android:gravity="right" />
 
         <TextView
-            android:text="@string/selectmic_lable"
+            android:text="@string/selectmic_label"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textSize="20sp"
@@ -142,22 +142,22 @@
             <RadioButton android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textColor="@color/linen"
-                android:text="@string/mic0_lable"
+                android:text="@string/mic0_label"
                 android:id="@+id/mic_0"/>
             <RadioButton android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textColor="@color/linen"
-                android:text="@string/mic1_lable"
+                android:text="@string/mic1_label"
                 android:id="@+id/mic_1"/>
             <RadioButton android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textColor="@color/linen"
-                android:text="@string/mic5_lable"
+                android:text="@string/mic5_label"
                 android:id="@+id/mic_5"/>
             <RadioButton android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textColor="@color/linen"
-                android:text="@string/mic6_lable"
+                android:text="@string/mic6_label"
                 android:id="@+id/mic_6"/>
 
         </RadioGroup>

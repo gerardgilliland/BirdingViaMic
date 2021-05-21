@@ -265,7 +265,7 @@ public class SongList extends AppCompatActivity {
 				}
 				// this code when added changes time to list 174 songs from 10 ms to over 3 sec -- two errors for every file
 				// so only run this when adding a file
-				sourceMic = 0; // adding a file so it has not been recorded here
+				sourceMic = 0; // adding a file -- it has not been recorded here -- it is external
 				Main.audioSource = -1;
 				try {
 					MediaExtractor extractor = new MediaExtractor();
@@ -790,7 +790,11 @@ public class SongList extends AppCompatActivity {
 
     public OnClickListener listener = new OnClickListener() {  // for non-list items -- i.e. buttons -- see SongAdaptor for click on list
         public void onClick(View v) {
-            switch (v.getId()) {
+			if (Main.existingName == null) {
+				Toast.makeText(SongList.this, "Please select a song first.", Toast.LENGTH_LONG).show();
+				return;
+			}
+			switch (v.getId()) {
                 case R.id.rename_button:
                     Log.d(TAG, "*** 1 *** Rename clicked existingInx:" + Main.existingInx);
                     getNewName(); // I will now allow rename of files regardless of path
@@ -824,42 +828,43 @@ public class SongList extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request we're responding to
-        Log.d(TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
-        if (requestCode == 1) { // rename
+		// Check which request we're responding to
+		super.onActivityResult(requestCode, resultCode, data);
+		Log.d(TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
+		if (requestCode == 1) { // rename
 			Log.d(TAG, "*** 6 *** onActivityResult requestCode:" + requestCode + " existingInx:" + Main.existingInx);
-            Log.d(TAG, "*** 7 *** onActivityResult resultCode:" + resultCode);
-            // Make sure the request was successful
-            if (resultCode == 1) {
-                // The user picked a FileName.
-                Log.d(TAG, "*** 8 *** data:" + data);
-                if (Main.newName == null) {
-                    Log.d(TAG, "newName is null:");
-                    return;
-                } else {
-                    Log.d(TAG, "*** 9 *** Main.newName: " + Main.newName);
-                    renameFile();
-                    Main.fileRenamed = true;
-                    finish();
-                    rs.close();
-                }
-            }
-            if (resultCode == 0) {
-                // The user canceled
-                Log.d(TAG, "*** 8 *** data:" + data);
-                Log.d(TAG, "new name canceled:");
-                Main.fileRenamed = false;
-                return;
-            }
+			Log.d(TAG, "*** 7 *** onActivityResult resultCode:" + resultCode);
+			// Make sure the request was successful
+			if (resultCode == 1) {
+				// The user picked a FileName.
+				Log.d(TAG, "*** 8 *** data:" + data);
+				if (Main.newName == null) {
+					Log.d(TAG, "newName is null:");
+					return;
+				} else {
+					Log.d(TAG, "*** 9 *** Main.newName: " + Main.newName);
+					renameFile();
+					Main.fileRenamed = true;
+					finish();
+					rs.close();
+				}
+			}
+			if (resultCode == 0) {
+				// The user canceled
+				Log.d(TAG, "*** 8 *** data:" + data);
+				Log.d(TAG, "new name canceled:");
+				Main.fileRenamed = false;
+				return;
+			}
 
-        }
+		}
 		if (requestCode == 2) { // delete file(s)
 			deleteOk(resultCode);
 		}
 		if (requestCode == 5) {  // meta data info box anything clicked
 			return;
 		}
-    }
+	}
 
     public void renameFile() {
         char q = 34; // the name can contain a single tic so enclose the name in double quote

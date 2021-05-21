@@ -87,7 +87,7 @@ public class SongData extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.d(TAG, "onUpgrade");
-		// I will only get here if databaseVersion is incremented
+		// I will only get here if dbOldVersion is incremented
 
 //		ContentValues val = new ContentValues();
 //		val.put("Name", "SavePcmData");
@@ -123,6 +123,8 @@ public class SongData extends SQLiteOpenHelper {
 //		db.execSQL(qry);
 
 		//onCreate(db); // now that you have deleted a table -- call the above function to re-create it.
+		// I don't know of any table I delete or  re-create.
+		// where do I populate CodeName table ? In main under upgradeSpecies and I don't delete the table just the data -- and repopulate it.
 
 	}
 

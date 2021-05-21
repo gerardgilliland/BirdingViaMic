@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -561,8 +562,8 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 
 		// don't know if these two are needed
-		//mVisualizerView.mCanvasBitmap = null;
-		//mVisualizerView.mCanvas = null;
+		mVisualizerView.mCanvasBitmap = null;
+		mVisualizerView.mCanvas = null;
 
 		try {
 			Log.d(TAG, "before mPlayer = new MediaPlayer");
@@ -1585,6 +1586,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// Check which request we're responding to
+		super.onActivityResult(requestCode, resultCode, data);
 		Log.d(TAG, "onActivityResult requestCode:" + Main.myRequest + " resultCode:" + Main.myResult);
 		if (requestCode == 1) {
 			switch (resultCode) {
@@ -2285,6 +2287,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	}
 
 
+	@SuppressLint("LongLogTag")
 	public void writeFftMaxAscii(int mode, int pc, int i, float[]temp) {
 		try {
 			if (mode == 0) {
@@ -2339,6 +2342,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 	}
 */
+	@SuppressLint("LongLogTag")
 	public void writeVoicedMaxPwrRec(int mode, int i, int[] freqRank, float[] maxPwr) {
 		try {
 			if (mode == 0) {
@@ -2369,6 +2373,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 
 
+	@SuppressLint("LongLogTag")
 	public void writeVoicedMaxPwr() {
 		try {
 			Log.d(TAG, "Save VoicedMaxPwr");

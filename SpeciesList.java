@@ -277,105 +277,106 @@ public class SpeciesList extends AppCompatActivity {
     }
 
       @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {    	 
-        //         super.onActivityResult(requestCode, resultCode, data);
-        // Check which request we're responding to
-		Log.d(TAG, "onActivityResult requestCode:" + requestCode  );
-        if (requestCode == 1) {  // add a species
-        	Log.d(TAG, "*** 7 *** onActivityResult resultCode:" + resultCode  );
-            // Make sure the request was successful
-            if (resultCode == 1) {
-            	// The user picked a FileName.
-            	if (!Main.newSpecName.isEmpty()) { // if NOT blank add 
-            		try {        	
-            			Log.d(TAG, "db begin transaction");
-            			Main.db.beginTransaction();
-        				ContentValues val = new ContentValues();
-            			try {
-            				Log.d(TAG, "Add Species:" + Main.newSpec + " CommonName:" + Main.newSpecName + " region:" + Main.newRegion + " : " + Main.newSubRegion);
-            				val.put("Ref", Main.newSpecRef);
-            				val.put("Spec", Main.newSpec);
-            				val.put("CommonName", Main.newSpecName);
-            				val.put("Region", Main.newRegion);
-            				val.put("SubRegion", Main.newSubRegion);
-							val.put("RedList", Main.newRedList);
-            				if (Main.isUseLocation == false) {
-                				val.put("InArea", 1);
-            					val.put("MinX", -180);
-            					val.put("MinY", -90);
-            					val.put("MaxX", 180);
-            					val.put("MaxY", 90);
-            				} else {
-            					int lat = Main.latitude;
-            					int lng = Main.longitude;
-                				val.put("InArea", 1);
-								val.put("MinX", lat-1);
-								val.put("MinY", lng-1);
-								val.put("MaxX", lat+1);
-								val.put("MaxY", lng+1);
-            				}
-            				Main.db.insert("CodeName", null, val);
-            			} finally {
-							Main.db.setTransactionSuccessful();
-            				Main.db.endTransaction();
-	   	            		val.clear();
-            				Log.d(TAG, "db end transaction");
-            			}
-            		} catch( Exception e ) {
-            			Log.e(TAG, "Database Exception: " + e.toString() );     	    
-            		}
-            	}  // if not empty
-            } // result code 1
-			Main.specRenamed = true;
-			finish();
-        }  // request code 1
-        if (requestCode == 2) {
-        	if(resultCode == 1) {
-        		Log.d(TAG, "rename clicked");
-		        try {        	
-  		          	Log.d(TAG, "db begin transaction");
-  		            Main.db.beginTransaction();
-  		            try {
-  		            	qry = "UPDATE CodeName" +
-  		            		" SET CommonName = " + q + Main.newSpecName + q +
-  		            		", Spec = " + q + Main.newSpec + q +
-  		            		", Region = " + q + Main.newRegion + q +
-  		            		", SubRegion = " + q + Main.newSubRegion + q +
-							", RedList = " + q + Main.newRedList + q;
-  		            		if (Main.isUseLocation == false) {
-  		            			qry += ", InArea = 1" + 
-  		            					", MinX = -180" +
-  		            					", MinY = -90" +
-  		            					", MaxX = 180" +
-  		            					", MaxY = 90";
-            				} else {
-            					int lat = Main.latitude;
-            					int lng = Main.longitude;
-            					qry += ", InArea = 1" +
-										", MinX = " + (lng-1) +
-										", MinY = " + (lat-1) +
-										", MaxX = " + (lng+1) +
-										", MaxY = " + (lat+1);
-            				}
-  		            	qry += " WHERE Ref = " + Main.existingRef; 
-  		            	Log.d(TAG, "Rename qry:" + qry);
-  		            	Main.db.execSQL(qry);
-  		            	Main.db.setTransactionSuccessful();
-  		            } finally {
-  		            	Main.db.endTransaction();
-  		            	Log.d(TAG, "db end transaction");
-  		            }
-		        } catch( Exception e ) {
-		           	Log.e(TAG, "Database Exception: " + e.toString() );     	    
-		        }
-       	  	} // resultCode = 1
-			Main.specRenamed = true;
-			finish();
-        }
-		if (requestCode == 3) { // delete a species
-			deleteOk(resultCode);
-		}
-    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		  //         super.onActivityResult(requestCode, resultCode, data);
+		  // Check which request we're responding to
+		  super.onActivityResult(requestCode, resultCode, data);
+		  Log.d(TAG, "onActivityResult requestCode:" + requestCode);
+		  if (requestCode == 1) {  // add a species
+			  Log.d(TAG, "*** 7 *** onActivityResult resultCode:" + resultCode);
+			  // Make sure the request was successful
+			  if (resultCode == 1) {
+				  // The user picked a FileName.
+				  if (!Main.newSpecName.isEmpty()) { // if NOT blank add
+					  try {
+						  Log.d(TAG, "db begin transaction");
+						  Main.db.beginTransaction();
+						  ContentValues val = new ContentValues();
+						  try {
+							  Log.d(TAG, "Add Species:" + Main.newSpec + " CommonName:" + Main.newSpecName + " region:" + Main.newRegion + " : " + Main.newSubRegion);
+							  val.put("Ref", Main.newSpecRef);
+							  val.put("Spec", Main.newSpec);
+							  val.put("CommonName", Main.newSpecName);
+							  val.put("Region", Main.newRegion);
+							  val.put("SubRegion", Main.newSubRegion);
+							  val.put("RedList", Main.newRedList);
+							  if (Main.isUseLocation == false) {
+								  val.put("InArea", 1);
+								  val.put("MinX", -180);
+								  val.put("MinY", -90);
+								  val.put("MaxX", 180);
+								  val.put("MaxY", 90);
+							  } else {
+								  int lat = Main.latitude;
+								  int lng = Main.longitude;
+								  val.put("InArea", 1);
+								  val.put("MinX", lat - 1);
+								  val.put("MinY", lng - 1);
+								  val.put("MaxX", lat + 1);
+								  val.put("MaxY", lng + 1);
+							  }
+							  Main.db.insert("CodeName", null, val);
+						  } finally {
+							  Main.db.setTransactionSuccessful();
+							  Main.db.endTransaction();
+							  val.clear();
+							  Log.d(TAG, "db end transaction");
+						  }
+					  } catch (Exception e) {
+						  Log.e(TAG, "Database Exception: " + e.toString());
+					  }
+				  }  // if not empty
+			  } // result code 1
+			  Main.specRenamed = true;
+			  finish();
+		  }  // request code 1
+		  if (requestCode == 2) {
+			  if (resultCode == 1) {
+				  Log.d(TAG, "rename clicked");
+				  try {
+					  Log.d(TAG, "db begin transaction");
+					  Main.db.beginTransaction();
+					  try {
+						  qry = "UPDATE CodeName" +
+								  " SET CommonName = " + q + Main.newSpecName + q +
+								  ", Spec = " + q + Main.newSpec + q +
+								  ", Region = " + q + Main.newRegion + q +
+								  ", SubRegion = " + q + Main.newSubRegion + q +
+								  ", RedList = " + q + Main.newRedList + q;
+						  if (Main.isUseLocation == false) {
+							  qry += ", InArea = 1" +
+									  ", MinX = -180" +
+									  ", MinY = -90" +
+									  ", MaxX = 180" +
+									  ", MaxY = 90";
+						  } else {
+							  int lat = Main.latitude;
+							  int lng = Main.longitude;
+							  qry += ", InArea = 1" +
+									  ", MinX = " + (lng - 1) +
+									  ", MinY = " + (lat - 1) +
+									  ", MaxX = " + (lng + 1) +
+									  ", MaxY = " + (lat + 1);
+						  }
+						  qry += " WHERE Ref = " + Main.existingRef;
+						  Log.d(TAG, "Rename qry:" + qry);
+						  Main.db.execSQL(qry);
+						  Main.db.setTransactionSuccessful();
+					  } finally {
+						  Main.db.endTransaction();
+						  Log.d(TAG, "db end transaction");
+					  }
+				  } catch (Exception e) {
+					  Log.e(TAG, "Database Exception: " + e.toString());
+				  }
+			  } // resultCode = 1
+			  Main.specRenamed = true;
+			  finish();
+		  }
+		  if (requestCode == 3) { // delete a species
+			  deleteOk(resultCode);
+		  }
+	  }
 
     private void deleteSelectedFile() { // you only get here if personal species
 		Log.d(TAG, "in deleteSelectedFile" );

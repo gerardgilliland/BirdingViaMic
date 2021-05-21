@@ -128,8 +128,8 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
         mPaint.setAntiAlias(true);
         mPaint.setStrokeWidth(3);
         mPaint.setTextAlign(Paint.Align.CENTER);
-        save_label = context.getString(R.string.save_lable);
-        exclude_label = context.getString(R.string.exclude_lable);
+        save_label = context.getString(R.string.save_label);
+        exclude_label = context.getString(R.string.exclude_label);
         cancel_label = context.getString(R.string.cancel_label);
         low_label = context.getString(R.string.low_label);
         high_label = context.getString(R.string.high_label);

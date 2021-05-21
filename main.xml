@@ -6,13 +6,13 @@
     android:background="@color/black"
     >
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="@color/linen" >
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <TextView
         android:id="@+id/spacer"
@@ -46,7 +46,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/song_lable" />
+        android:text="@string/song_label" />
     <Button
         android:id="@+id/record_button"
         android:textAllCaps="false"
@@ -55,7 +55,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/record_lable" />
+        android:text="@string/record_label" />
     <Button 
         android:id="@+id/play_button"
         android:textAllCaps="false"
@@ -81,7 +81,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/species_lable" />
+        android:text="@string/species_label" />
 
     <Button 
         android:id="@+id/web_browser_button"
@@ -91,7 +91,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/web_view_lable" />
+        android:text="@string/web_view_label" />
 
     <Button 
         android:id="@+id/options_button"
@@ -128,7 +128,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/region_lable" />
+        android:text="@string/region_label" />
 
     <Button
         android:id="@+id/location_button"
@@ -138,7 +138,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/location_lable" />
+        android:text="@string/location_label" />
 
     <TextView
         android:text=""
@@ -148,14 +148,14 @@
         android:textSize="6.0sp" />
 
     <Button
-        android:id="@+id/select_songpath_button"
+        android:id="@+id/songpath_button"
         android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/select_songpath_lable" />
+        android:text="@string/select_songpath_label" />
 
     <Button
         android:id="@+id/my_list_button"
@@ -165,17 +165,17 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/my_list_lable" />
+        android:text="@string/my_list_label" />
 
     <Button
-        android:id="@+id/register_button"
+        android:id="@+id/backup_button"
         android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/register_lable" />
+        android:text="@string/backup_label" />
 
     <TextView
         android:text=""
@@ -185,6 +185,16 @@
         android:textSize="6.0sp" />
 
     <Button
+        android:id="@+id/register_button"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="1dp"
+        android:textColor="@drawable/text_state"
+        android:background="@drawable/background_state"
+        android:text="@string/register_label" />
+
+    <Button
         android:id="@+id/help_button"
         android:textAllCaps="false"
         android:layout_width="match_parent"
@@ -192,7 +202,7 @@
         android:layout_margin="1dp"
         android:textColor="@drawable/text_state"
         android:background="@drawable/background_state"
-        android:text="@string/help_lable" />
+        android:text="@string/help_label" />
 
     </LinearLayout>
     </ScrollView>

@@ -23,7 +23,7 @@ public class WebList extends AppCompatActivity {
 	private static final String TAG = "WebList";
     private WebAdapter adapter;
     public static Boolean[] chk;
-	private static Context ctx;
+	private Context ctx;
     public static int existingWebId;
     public static int[] id;
     public static boolean isWebSiteSelected;
@@ -36,7 +36,7 @@ public class WebList extends AppCompatActivity {
     public static String[] webCombined;
     public static int webDbLen; // count of web sites
     public static String webLink; // the text for the web site
-    public static EditText webText;
+    public EditText webText;
     Toolbar toolbar;
     
     @Override
@@ -181,7 +181,7 @@ public class WebList extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {    	 
-        //         super.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
         // Check which request we're responding to
 		Log.d(TAG, "*** 6 *** onActivityResult requestCode:" + requestCode  ); 
         if (requestCode == 1) { // add

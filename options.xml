@@ -6,13 +6,13 @@
     android:background="#ff000000"
     >
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="@color/linen" >
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <ScrollView
     android:layout_width="match_parent"
@@ -465,7 +465,33 @@
     </RelativeLayout>
 	-->
 
-    <RelativeLayout
+	<RelativeLayout
+		android:screenOrientation="portrait"
+		android:paddingTop="16dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+		<TextView android:id="@+id/save_pcm_data"
+			android:textSize="16sp"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:text="@string/save_pcm_data_title"
+			android:textColor="@color/linen"
+			android:layout_alignParentLeft="true"
+			android:layout_toLeftOf="@+id/save_pcm_data_check"/>
+		<CheckBox android:id="@+id/save_pcm_data_check"
+			android:layout_height="wrap_content"
+			android:layout_width="40dip"
+			android:layout_alignParentRight="true" />
+		<TextView android:id="@+id/save_pcm_data_summary"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textColor="@color/linen"
+			android:text="@string/save_pcm_data_summary"
+			android:layout_below="@id/save_pcm_data" />
+	</RelativeLayout>
+
+	<RelativeLayout
         android:screenOrientation="portrait"
         android:paddingTop="16dp"
         android:orientation="horizontal"
