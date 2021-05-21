@@ -1,29 +1,30 @@
 <resources>
-    <string name="app_version_name">57.G</string>
+    <string name="app_version_name">59A.104</string>
     <string name="label_shared_user">Birding Via Mic</string>
     <string name="add_rename_title">Name</string>
-    <string name="adlabel0">Help</string>
-    <string name="adlabel2">Path</string>
-    <string name="adlabel3">Web</string>
-    <string name="adlabel4">MyList</string>
-    <string name="adlabel5">Region</string>
-    <string name="adlabel6">RedList</string>
-    <string name="adlabel7">Location</string>
-    <string name="adlabel8">Options</string>
-    <string name="adlabel9">Species</string>
-    <string name="adlabel10">Songs</string>
-    <string name="adlabel11">Home</string>
     <string name="add_button_label">Add</string>
     <string name="add_species_label">Add Species</string>
     <string name="add_web_label">Add Web</string>
     <string name="app_name">Birding Via Mic</string>
-    <string name="area_na_lable">NA North America</string>
-    <string name="autoFilter_summary">true = Use an Auto Filter on the Frequency and Noise. 
+    <string name="autoFilter_summary">true = Use an Auto Filter on the Frequency and Noise.
 	    \nfalse = Use the manually placed Frequency and Filter cutoffs from the Edit screen. </string>
     <string name="auto_filter_title">Auto Filter</string>
     <string name="sample_rate_summary">true = Record at sample rate of 44100.
 	    \nfalse = Record at sample rate of 22050. </string>
     <string name="sample_rate_title">Sample Rate</string>
+    <string name="backup_database_result">Click the Backup button to copy the Database and CSV files
+        \nand export the Define and Song folders to the Download folder.\n</string>
+    <string name="backup_label">Backup</string>
+    <string name="backup_table_label0">CodeName</string>
+    <string name="backup_table_label1">DefineDetail</string>
+    <string name="backup_table_label2">DefineTotals</string>
+    <string name="backup_table_label3">Filter</string>
+    <string name="backup_table_label4">Identify</string>
+    <string name="backup_table_label5">Location</string>
+    <string name="backup_table_label6">Options</string>
+    <string name="backup_table_label7">RedList</string>
+    <string name="backup_table_label8">Region</string>
+    <string name="backup_table_label9">SongList</string>
     <string name="begin_label">begin</string>
     <string name="commonname_title">Name</string>
     <string name="cancel_label">Cancel</string>
@@ -38,23 +39,24 @@
     <string name="debug_title">Debug</string>
     <string name="debug_summary">true = Use debug. 
 	    \nfalse = Debug off. </string>
-    <string name="decode_file_lable">DecodeFile</string>
+    <string name="decode_file_label">DecodeFile</string>
     <string name="define_label">Def</string>
     <string name="delete_label">Delete</string>
     <string name="dismiss_label">Done</string>
     <string name="done_label">Done</string>
-    <string name="edit_lable">Edit</string>   
+    <string name="edit_label">Edit</string>
     <string name="edit_species_title">Edit Species Name:</string>
     <string name="end_label">end</string>
-    <string name="enhance_mic_lable">Enhance Quality</string>
+    <string name="enhance_mic_label">Enhance Quality</string>
     <string name="enhance_mic_summary">true - Enhance a low quality recording. Does not improve the sound quality. It may improve the identification analysis.
 	    \nfalse = Analyze the recording as is.  </string>
     <string name="enhance_mic_title">Enhance Quality</string>
-    <string name="exclude_lable">Exclude</string>
+    <string name="exclude_label">Exclude</string>
     <string name="existing_name_title">Existing File Name:</string>
     <string name="existing_region_title">Existing Region:</string>
+    <string name="export_folders_result">Export Folders Result:</string>
     <string name="go_label">Go</string>
-    <string name="help_lable">Help</string>
+    <string name="help_label">Help</string>
     <string name="help_title">Help</string>
     <string name="high_label">high</string>
     <string name="identify_label">Id</string>
@@ -64,26 +66,26 @@
     <string name="length_each_record_title">Length Each Record</string>
     <string name="linen">#FAF0E6</string>
     <string name="link_label">Link:</string>
-    <string name="my_list_lable">My List</string>
-    <string name="listen_lable">Listen</string>
-    <string name="load_now_lable">Load Now</string>
+    <string name="my_list_label">My List</string>
+    <string name="listen_label">Listen</string>
+    <string name="load_now_label">Load Now</string>
     <string name="loading">Loading</string>
     <string name="load_definitions_title">Load Definitions</string>
-    <string name="load_definitions_lable">is Load Definition</string>
+    <string name="load_definitions_label">is Load Definition</string>
     <string name="load_definitions_summary">true = Load the definition for the birds selected without playing the file first. 
 	    \nfalse = Do not automatically load the definition for the birds selected. </string>
-    <string name="location_lable">Location</string>
+    <string name="location_label">Location</string>
     <string name="location_title">Location</string>
     <string name="low_label">low</string>
     <string name="low_freq_cutoff_title">Low Frequency Cutoff</string>
-    <string name="main_lable">Birding Via Mic</string>
+    <string name="main_label">Birding Via Mic</string>
     <string name="main_title">Home</string>
     <string name="manual_location_title">Manual Location</string>
     <string name="meta_data">Meta Data</string>
-    <string name="mic0_lable">0 Default</string>
-    <string name="mic1_lable">1 Mic</string>
-    <string name="mic5_lable">5 Camcorder</string>
-    <string name="mic6_lable">6 Voice Recognition</string>
+    <string name="mic0_label">0 Default</string>
+    <string name="mic1_label">1 Mic</string>
+    <string name="mic5_label">5 Camcorder</string>
+    <string name="mic6_label">6 Voice Recognition</string>
     <string name="my_list">My List</string>
     <string name="name_label">Name</string>
     <string name="never_label">Never</string>
@@ -98,37 +100,44 @@
     <string name="ok_label">Ok</string>
     <string name="options_label">Options</string>
     <string name="options_title">Options</string>
-    <string name="path3_define">Android/data/com.modelsw.birdingviamic_nw/files/Define</string>
-    <string name="path4_define">Android/data/com.modelsw.birdingviamic_ow/files/Define</string>
-    <string name="path5_define">Android/data/com.modelsw.birdingviamic_oa/files/Define</string>
-    <string name="path6_define">Android/data/com.modelsw.birdingviamic_nac/files/Define</string>
+    <string name="path4_define">Android/data/com.modelsw.birdingviamicnw/files/Define</string>
+    <string name="path5_define">Android/data/com.modelsw.birdingviamicow/files/Define</string>
+    <string name="path6_define">Android/data/com.modelsw.birdingviamicoa/files/Define</string>
+    <string name="path7_define">Android/data/com.modelsw.birdingviamicnac/files/Define</string>
+    <string name="path8_define">Android/data/com.modelsw.birdingviamicsa/files/Define</string>
+    <string name="path9_define">Android/data/com.modelsw.birdingviamicaf/files/Define</string>
     <string name="path1_label">Internal Songs</string>
     <string name="path2_label">Download</string>
-    <string name="path3_label">Birding Via Mic -- New World</string>
-    <string name="path4_label">Birding Via Mic -- Old World</string>
-    <string name="path5_label">Birding Via Mic -- Orient Australasia</string>
-    <string name="path6_label">Birding Via Mic -- North American Common</string>
-    <string name="path7_label">Custom (Enter path below)</string>
+    <string name="path4_label">Birding Via Mic -- New World</string>
+    <string name="path5_label">Birding Via Mic -- Old World</string>
+    <string name="path6_label">Birding Via Mic -- Orient Australasia</string>
+    <string name="path7_label">Birding Via Mic -- North America Common</string>
+    <string name="path8_label">Birding Via Mic -- South America</string>
+    <string name="path9_label">Birding Via Mic -- Africa</string>
+    <string name="path99_label">Custom (Enter path below)</string>
     <string name="path1_location">Internal</string>
     <string name="path2_location">Download</string>
-    <string name="path3_location">Android/data/com.modelsw.birdingviamic_nw/files/Song</string>
-    <string name="path4_location">Android/data/com.modelsw.birdingviamic_ow/files/Song</string>
-    <string name="path5_location">Android/data/com.modelsw.birdingviamic_oa/files/Song</string>
-    <string name="path6_location">Android/data/com.modelsw.birdingviamic_nac/files/Song</string>
-    <string name="path7_location">Custom (Enter path below)</string>
+    <string name="path4_location">Android/data/com.modelsw.birdingviamicnw/files/Song</string>
+    <string name="path5_location">Android/data/com.modelsw.birdingviamicow/files/Song</string>
+    <string name="path6_location">Android/data/com.modelsw.birdingviamicoa/files/Song</string>
+    <string name="path7_location">Android/data/com.modelsw.birdingviamicnac/files/Song</string>
+    <string name="path8_location">Android/data/com.modelsw.birdingviamicsa/files/Song</string>
+    <string name="path9_location">Android/data/com.modelsw.birdingviamicaf/files/Song</string>
+    <string name="path99_location">Custom (Enter path below)</string>
     <string name="permission_label">
         INTERNET is needed to display the birds identified or download bird songs.\n
         RECORD_AUDIO is needed for you to be able to record the birds and thus be able to recognize them.
         READ_EXTERNAL_STORAGE is needed to read the Download folders.\n
         WRITE_EXTERNAL_STORAGE is needed to save a file in the Download folder.\n
         These two permissions (READ and WRITE) plus INTERNET are needed to select, download, and import songs to the app.\n
-        You can veiw and change your permissions in Settings > Applications > Application Manager > Birding Via Mic > Permissions\n
+        ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION are needed if you use Location to limit the lists.\n
+        You can view and change your permissions in Settings > Applications > Application Manager > Birding Via Mic > Permissions\n
     </string>
     <string name="permission_title">Permissions</string>
     <string name="phone_location_title">Phone Location</string>
     <string name="play_label">Play</string>
     <string name="playsong_title">Play</string>
-    <string name="record_lable">Record</string>
+    <string name="record_label">Record</string>
     <string name="recordsong_title">Record</string>
     <string name="redlist_label">Red List</string>
     <string name="redlist_label1">NE : Not Evaluated</string>
@@ -142,21 +151,24 @@
     <string name="redlist_label9">EX : Extinct</string>
     <string name="redlist_label10">\? : Unknown (Internal)</string>
     <string name="register_title">Register</string>
-    <string name="register_lable">Register</string>
-    <string name="return_lable">Return To Main</string>
-    <string name="region_lable">Region</string>    
+    <string name="register_label">Register</string>
+    <string name="return_label">Return To Main</string>
+    <string name="region_label">Region</string>
     <string name="region_title">Region</string>
     <string name="register_now_label">Register Now</string>
     <string name="rename_species_label">Rename Species</string>
     <string name="rename_web_label">Rename Web</string>
     <string name="rename_song">Rename Song</string>
-    <string name="search_lable">Search</string>
+    <string name="search_label">Search</string>
     <string name="selected_area_title">Selected Areas</string>
-    <string name="save_lable">Save</string>
+    <string name="save_label">Save</string>
+    <string name="save_pcm_data_title">Save Pcm Data</string>
+    <string name="save_pcm_data_summary">true = save the audioData from the file just decoded
+	    \nfalse = Do not save the audioData. </string>
     <string name="selectpath_label">Select Path:</string>
-    <string name="selectweb_lable">Web Sites:</string>
-    <string name="selectmic_lable">Mic Options:</string>
-    <string name="select_songpath_lable">Path</string>
+    <string name="selectweb_label">Web Sites:</string>
+    <string name="selectmic_label">Mic Options:</string>
+    <string name="select_songpath_label">Path</string>
     <string name="share">Share</string>
     <string name="show_definitions_title">Show Definition</string>
     <string name="show_definitions_summary">true = show the definition for the file just defined 
@@ -168,7 +180,8 @@
     <string name="sign_in">Sign In</string>
     <string name="signed_in_fmt">signed in</string>
     <string name="signed_out">signed out</string>
-    <string name="song_lable">Songs</string>
+    <string name="csv_save_result">CSV Save Result:</string>
+    <string name="song_label">Songs</string>
     <string name="use_location_title">Use Location</string>
     <string name="show_web_title">Show Web</string>
     <string name="show_web_summary">true = Show the bird on the web for the file just identified. 
@@ -181,7 +194,7 @@
     <string name="sort_by_name_title">Sort By Name</string>
     <string name="start_label">start</string>
     <string name="stop_label">stop</string>
-    <string name="species_lable">Species</string>
+    <string name="species_label">Species</string>
     <string name="species_list">Species List</string>
     <string name="specieslist_title">Species</string>
     <string name="spec_range_title">Select the Breeding Range:</string>
@@ -207,19 +220,19 @@
 	    \nfalse = Do not use the spare. </string>
     <string name="use_smoothing_summary">true = Smooth the Voiced and Frequency data.
 	    \nfalse = Leave the data alone. </string>
-    <string name="update_lable">Update</string>
+    <string name="update_label">Update</string>
     <string name="upgrade_title">Upgrade</string>
     <string name="upgrade_text">"A new species list is available.\nDo you want to load it?"</string>
     <string name="view_distance_title">"Distance"</string>
     <string name="view_energy_title">"Energy"</string>
     <string name="view_frequency_title">"Frequency"</string>
     <string name="view_quality_title">"Quality"</string>
-    <string name="volume_lable">Volume</string>
+    <string name="volume_label">Volume</string>
 	<string name="volume_summary">This is indication only. Change with volume buttons.</string>
     <string name="weblist_title">WebSites</string>
-    <string name="web_lable">Web</string>
+    <string name="web_label">Web</string>
     <string name="web_list">Web List</string>
-    <string name="web_view_lable">Web</string>
+    <string name="web_view_label">Web</string>
     <string name="web_button_label">Open Web Site</string>
     <string name="web_site_label">
         You can view this information (minus your email address) at the Web site:
@@ -279,11 +292,13 @@ The \'Red List\' screen limits the World Bird List to species listed within part
 Region \n
 The \'Region\' screen limits the World Bird List to Regions such as \'North America\',  \'Eurasia\', et al. \n
 Location \n
-When \'Location\' is enabled (See \'Options\'), this shows your current location (within one degree) which should be enough to identify a general location within 110 km (70 miles).  The concept is: if you are in Canada you wouldn\'t expect any Caribbean birds and they  will be excluded from the list of songs, and species, and excluded in identification. In  addition, I show a descriptive location of the bird and let you decide if the selection  is valid. \n
+When \'Location\' is enabled (See \'Options\'), this shows your current location (within one degree) which should be enough to identify a general location within 110 km (70 miles).  The concept is: if you are in Canada you wouldn\'t expect any Caribbean birds and they  will be excluded from the list of songs, and species, and excluded in identification. In  addition, I show a descriptive location of the bird and let you decide if the selection is valid. \n
 Path \n
 The \'Path\' screen allows you to load songs from other sources.\n
 My List\n
 \'My List\' contains your personal list of species that have been identified and  defined.\n
+Backup\n
+\'Backup\' saves a copy of the BirdSongs.db database to the \'Download\' folder. You must Backup this database BEFORE you load a new copy of Birding Via Mic or you will loose the songs you recorded, defined, and identified.\n
 Register \n
 The \'Register\' button brings up a Register screen.\n
 Help \n
@@ -339,15 +354,7 @@ If the bird is known and you want to add it to the definitions, tap \'Def\' (Def
         See Songs above for the Delete function. If you have a good recording and you know the bird is identified wrong you can return to the Songs screen, tap \'Name\'  and select the  species from the list and then after playing the song tap \'Define\'.
         You  don\'t need to delete a definition to re-define it.\n
         If you get a message \'Decoder failed on FileName\', the Definition or Identification will stop
-        and will mark the song with an E (Error) in place of i (Identify) or d (Defined).
-        When it fails, it fails at 91.9 percent completion of the file regardless of the length.
-        It doesn\'t matter if you are using the Option Load Definitions set true or false, if the song is stereo, or mono,
-        what the sample rate is, or if you are defining, or identifying the file.
-        Once it fails it continues to fail until you restart this app.
-        This is not a common problem. It can run successfully for hundreds of files.
-        But you should expect to get this error eventually.
-        I don\'t have a fix at this time. Restart this app to restart the file decoder and then define or identify
-        this errant file first.\n\n
+        and will mark the song with an E (Error) in place of i (Identify) or d (Defined).\n\n
 
 Tap \'Edit\' then tap a second time near the center of the screen to start the edit mode.
         Use \'Edit\' if you need to extract a portion of the song to be defined or identified.
@@ -459,12 +466,17 @@ You can limit the Species and Songs to Specific regions.
 Location \n
 To use the phone location you need to set that up on your phone, not in Birding Via Mic.
         Go to Settings > Location  > Mode and tap either High Accuracy or GPS Only.
-        Back in  \'Birding Via Mic\', when \'Location\' is enabled (See  \'Options\'), this shows your current  location (within one degree) which should be enough to identify a general location  within 110 km (70 miles). The concept is: if you are in Canada you wouldn\'t expect to  see any Caribbean  birds. If you are on the West Coast, no East Coast birds will be  listed. If you are \'pretending\' to be somewhere  else, tap on \'Manual Location\' and  enter the \'Latitude\' and \'Longitude\'. You can find these values on your computer at  Google Maps: https://www.google.com/maps/. Right-click a location on the map. Select  \'What\'s here?\'  Coordinates will appear in or below the search box. Google has removed  longitude and latitude from Google Maps on  your mobile. Location can help or hurt you.  When the birds you worked so hard to identify are missing, go to  \'Options\' and verify  \'Use Location\' is off, \'Sort By Name\' is On, go to Regions and verify that you haven\'t  removed any Region, and go to Red List and verify your designations. \n\n
-
-My List \n
-The \'My List\' screen shows your personal list of species that have been identified and defined.
-        The number in the parenthesis following the species is the count of files for  that species.
-        The menu offers Share so you can email your list.\n\n
+        Back in  \'Birding Via Mic\', when \'Location\' is enabled (See  \'Options\'),
+        this shows your current location (within one degree) which should be enough to identify a general location within 110 km (70 miles).
+        The concept is: if you are in Canada you wouldn\'t expect to  see any Caribbean birds.
+        If you are on the West Coast, no East Coast birds will be  listed.
+        If you are \'pretending\' to be somewhere  else, tap on \'Manual Location\' and enter the \'Latitude\' and \'Longitude\'.
+        You can find these values on your computer at  Google Maps: https://www.google.com/maps/.
+        Right-click a location on the map. Select  \'What\'s here?\'  Coordinates will appear in or below the search box.
+        Google has removed longitude and latitude from Google Maps on your mobile. Location can help or hurt you.
+        When the birds you worked so hard to identify are missing, go to  \'Options\' and verify  \'Use Location\' is off, \'Sort By Name\' is On,
+        go to Regions and verify that you haven\'t removed any Region, and go to Red List and verify your designations.
+        When you enable location be sure to go to the location screen, verify your location selected and click the Update button.\n\n
 
 Path \n
 Use this screen for loading several files at once.
@@ -473,17 +485,19 @@ You can choose
         Birding Via Mic -- New World,
         Birding Via Mic -- Old World,
         Birding Via Mic -- Orient Australasia,
-        Birding Via Mic -- North American Common,
+        Birding Via Mic -- North America Common,
+        Birding Via Mic -- South America,
+        Birding Via Mic -- Africa,
         or enter your own Custom  path.\n
 To transfer the songs:\n
 If you are loading from \'Birding Via Mic -- Your Region,\n
-1) Install Birding Via Mic_YourRegion app.\n
-2) Open Birding Via Mic_YourRegion, tap Songs and verify a list of songs is displayed.\n
+1) Install Birding Via Mic YourRegion app.\n
+2) Open Birding Via Mic YourRegion, tap Songs and verify a list of songs is displayed.\n
 3) In this Birding Via Mic app tap the Path button.\n
 4) On the Path screen select Birding Via Mic -- YourRegion.\n
 5) Tap the "Load Now" button.\n
 After the load is complete the path is set back to \'Internal\'.
-        Uninstall the Birding Via Mic_YourRegion app to recover memory.\n
+        Uninstall the Birding Via Mic YourRegion app to recover memory.\n
 
 See \'Web\' above for downloading a single file from Xeno-Canto\n\n
 
@@ -510,6 +524,23 @@ You can also load files from your PC if you have a USB connection.
 You can store them directly in YourPhoneName > Phone > Android > data > com.modelsw.birdingviamic > files > Song.
         If the file name starts with the bird\'s name, I will look up the species when I add the name to the list.
         As with any file, it should be a unique name or it will overwrite what is there.\n\n
+
+My List \n
+The \'My List\' screen shows your personal list of species that have been identified and defined.
+        The number in the parenthesis following the species is the count of files for  that species.
+        The menu offers Share so you can email your list.\n\n
+
+Backup \n
+The \'Backup\' screen has a Backup button at the bottom of screen.
+Click the button to copy the BirdSongs.db database to the \'Downlaod\' folder.
+        You must Backup this database BEFORE you load a new copy of Birding Via Mic or you will loose the songs you recorded, defined, and identified.
+        On completion, it shows a Result of the backup (success or failure).
+        This database contains the species list that is dependent on the version of the IOC World Bird List.
+        When you upgrade Birding Via Mic to a new version, it may contain a new version of the species.
+        And the Bird Songs that you previously loaded, recorded, and identified will need to updated with the new species reference.
+        The upgrade will look in the Download folder and if the BirdSongs.db exists and is a different version the load process will correct the old data with the new reference.
+        If the upgrade process does NOT find the BirdSongs.db database in the Download folder,
+        it will delete all the songs and references to them.\n\n
 
 Register \n
 The Register button brings up a Register screen that asks you to register and shows the data that will be sent: Email Address, Manufacturer, Model, Android Version, Android  Release, BirdingViaMic Version, and a Comments area  where you can describe any problems  you had or are having with installation or running.
@@ -548,16 +579,16 @@ The Scientist and Engineer\'s Guide to Digital Signal Processing by Steven W. Sm
 Speech Recognition Java Code - Hidden Markov Model by Ganesh Tiwari
 https://github.com/gtiwari333/speech-recognition-java-hidden-markov-model-vq-mfcc \n
 Final Report : Text Prompted Remote Speaker Authentication : Joint Speech and Speaker Recognition/Verification System by Ganesh Tiwari
-http://ganeshtiwaridotcomdotnp.blogspot.com/2011/06/final-report-text-prompted- remote.html \n
-Gill, F \u0026 D Donsker (Eds). 2016. IOC World Bird List (v 6.1). doi : 10.14344/IOC.ML.6.1. http://www.worldbirdnames.org \n
-BirdLife International and NatureServe (2015) Bird species distribution maps of the world. BirdLife International, Cambridge, UK
-        and NatureServe, Arlington, USA. http://www.birdlife.org/ for allowing me access to their location data.\n
+http://ganeshtiwaridotcomdotnp.blogspot.com/2011/06/final-report-text-prompted-remote.html \n
+Gill, F \u0026 D Donsker (Eds). 2019. IOC World Bird List (v9.2). doi :  10.14344/IOC.ML.9.2. https://www.worldbirdnames.org \n
+BirdLife International and Handbook of the Birds of the World (2018) Bird species distribution maps of the world. Version 2018.1.
+        Available at https://datazone.birdlife.org/species/requestdis for allowing me access to their location data.\n
 Mark Balman (BirdLife International) for providing the technical details of the BirdLife location data.
         However, I am responsible for the interpretation of this data.\n
 The IUCN Red List of Threatened Species, http://www.iucnredlist.org/ for allowing me to use their IUCN Red List.
-        I am using RedList 2015-4 data as of 19 Feb 2016.  http://www.iucnredlist.org/search/link/56c210a0-f15f541a \n
-
-        There are some world class birders that have selected and shared their songs. Recordists: (alphabetically) \n
+        I am using RedList 2018 data as of 07 Jun 2019. \n
+Catherine Sayer (IUCN Red List) for clarifying and improving my discription and use of the IUCN Red List.
+There are some world class birders that have selected and shared their songs. Recordists: (alphabetically) \n
         david m -- Eurasia, Orient, Pacific Ocean \n
         Ding Li Yong -- Australasia, Eurasia, Orient \n
         Elias A Ryberg -- Eurasia, North, Middle America \n
