@@ -18,7 +18,6 @@
             android:background="@color/linen"
             android:orientation="vertical">
 
-
             <TextView
                 android:id="@+id/upgrade_title"
                 android:text="@string/upgrade_title"
@@ -31,7 +30,7 @@
 
             <TextView
                 android:id="@+id/upgrade_text"
-                android:textColor="@color/white"
+                android:textColor="@color/linen"
                 android:background="@color/black"
                 android:layout_marginLeft="3dp"
                 android:layout_marginRight="3dp"
@@ -41,6 +40,23 @@
                 android:layout_marginBottom="10dip"
                 android:text="@string/upgrade_text"/>
 
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="android:attr/progressBarStyleHorizontal"
+                android:textColor="@color/linen"
+                android:background="@color/black"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="15dp"
+                android:indeterminate="false"
+                android:max="150"
+                android:minHeight="50dp"
+                android:minWidth="200dp"
+                android:gravity="center"
+                android:progress="1" />
 
         </LinearLayout>
     </RelativeLayout>
@@ -58,8 +74,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:orientation="horizontal"
-            >
+            android:orientation="horizontal" >
 
             <Button
                 android:id="@+id/later_button"
