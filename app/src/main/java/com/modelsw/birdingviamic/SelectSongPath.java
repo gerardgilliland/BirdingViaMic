@@ -23,29 +23,27 @@ import android.widget.RadioGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-
+// THIS CLASS MOVES SONG FILES FROM EXTERNAL LOCATIONS Song folder TO BirdingViaMic/files/Song folder
+// AND Filter.csv FILES FROM EXTERNAL LOCATIONS Define folder TO IN BirdingViaMic/files/Define folder
+// IT DOES NOT LOAD ANY FILES INTO THE DATABASE.
 public class SelectSongPath extends AppCompatActivity implements OnClickListener {
-	private static final String TAG = "SelectSongPath";  
-	private EditText customPath;
+    private static final String TAG = "SelectSongPath";
+    private EditText customPath;
     private Button loadNow;
-	private RadioButton path1;
-	private RadioButton path2;
+    private RadioButton path1;
+    private RadioButton path2;
     private RadioButton path4;
     private RadioButton path5;
     private RadioButton path6;
     private RadioButton path7;
-    private RadioButton path8;
-    private RadioButton path9;
     private RadioButton path99;
     private RadioGroup pathGroup;
-	private CharSequence path1Label;
-	private CharSequence path2Label;
+    private CharSequence path1Label;
+    private CharSequence path2Label;
     private CharSequence path4Label;
     private CharSequence path5Label;
     private CharSequence path6Label;
     private CharSequence path7Label;
-    private CharSequence path8Label;
-    private CharSequence path9Label;
     private CharSequence path99Label;
     Toolbar toolbar;
 
@@ -88,12 +86,6 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         path7 = (RadioButton) findViewById(R.id.path_7);
         path7.setOnClickListener(this);
         path7Label = path7.getText();
-        path8 = (RadioButton) findViewById(R.id.path_8);
-        path8.setOnClickListener(this);
-        path8Label = path8.getText();
-        path9 = (RadioButton) findViewById(R.id.path_9);
-        path9.setOnClickListener(this);
-        path9Label = path9.getText();
         path99 = (RadioButton) findViewById(R.id.path_99);
         path99.setOnClickListener(this);
         path99Label = path99.getText();
@@ -105,6 +97,7 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         Log.d(TAG, "path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
         // move the data from assets to definepath and songpath
         String packageName = getPackageName(); // com.modelsw.birdingviamic
+        /*
         switch (Main.path) {
         	case 1: path1.setChecked(true); break;
         	case 2: path2.setChecked(true); break;
@@ -112,101 +105,85 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
             case 5: path5.setChecked(true); break;
             case 6: path6.setChecked(true); break;
             case 7: path7.setChecked(true); break;
-            case 8: path8.setChecked(true); break;
-            case 9: path9.setChecked(true); break;
             case 99: path99.setChecked(true); break;
         }
         if (path1.isChecked() == true) {
             loadNow.setEnabled(false);
         }
+        */
     }
 
     public void onClick(View v) {
         if (path1.isChecked() == false) {
             loadNow.setEnabled(true);
         }
-    	switch (v.getId()) {
-    	case R.id.path_1:
-    		Main.songpath = Main.songPathDir.toString() + "/";
-            Main.sharedDefine = null;
-    		Main.path = 1;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-    	case R.id.path_2:
-    		Main.songpath = Main.environment + "/" + getResources().getString(R.string.path2_location) + "/";
-            Main.sharedDefine = null;
-    		Main.path = 2;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-        case R.id.path_4:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path4_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path4_define) + "/";
-            Main.path = 4;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_5:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path5_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path5_define) + "/";
-            Main.path = 5;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_6:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path6_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path6_define) + "/";
-            Main.path = 6;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_7:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path7_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path7_define) + "/";
-            Main.path = 7;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_8:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path8_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path8_define) + "/";
-            Main.path = 8;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-        case R.id.path_9:
-            Main.songpath = Main.environment + "/" + getResources().getString(R.string.path9_location) + "/";
-            Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path9_define) + "/";
-            Main.path = 9;
-            Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-            break;
-    	case R.id.path_99:
-            // this is stored in the database BirdSongs.db in the table SongPath: default shown as: MyCustomPath...
-    		Main.customPathLocation = customPath.getText().toString();
-    		if (Main.customPathLocation.substring(0, 1) != "/") {
-    			Main.customPathLocation = "/" + Main.customPathLocation;
-    		}
-    		Main.songpath = Main.environment + "/" + Main.customPathLocation + "/";
-            Main.sharedDefine = null;
-    		Main.path = 99;
-    	    Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
-    		break;
-        case R.id.load_now_button:
-            if (path1.isChecked() == false) {
-                checkForNewFiles();
-            } else {
-                String msg = "Please select an external path";
-                Log.d(TAG, msg);
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            }
-            break;
+        switch (v.getId()) {
+            case R.id.path_1:
+                Main.songpath = Main.songPathDir.toString() + "/";
+                Main.sharedDefine = null;
+                Main.path = 1;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_2:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path2_location) + "/";
+                Main.sharedDefine = null;
+                Main.path = 2;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_4:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path4_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path4_define) + "/";
+                Main.path = 4;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_5:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path5_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path5_define) + "/";
+                Main.path = 5;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_6:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path6_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path6_define) + "/";
+                Main.path = 6;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_7:
+                Main.songpath = Main.environment + "/" + getResources().getString(R.string.path7_location) + "/";
+                Main.sharedDefine = Main.environment + "/" + getResources().getString(R.string.path7_define) + "/";
+                Main.path = 7;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.path_99:
+                // this is stored in the database BirdSongs.db in the table SongPath: default shown as: MyCustomPath...
+                Main.customPathLocation = customPath.getText().toString();
+                if (Main.customPathLocation.substring(0, 1) != "/") {
+                    Main.customPathLocation = "/" + Main.customPathLocation;
+                }
+                Main.songpath = Main.environment + "/" + Main.customPathLocation + "/";
+                Main.sharedDefine = null;
+                Main.path = 99;
+                Log.d(TAG, "onClick path:" + Main.path + " songpath:" + Main.songpath );
+                break;
+            case R.id.load_now_button:
+                if (path1.isChecked() == false) {
+                    checkForNewFiles(); // <-- ***** MOVE THEM NOW *****
+                } else {
+                    String msg = "Please select an external path";
+                    Log.d(TAG, msg);
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                }
+                break;
         }
-	}
-	
-	protected void onPause() {
-    	super.onPause();
-        //if (Main.isDebug == true) {
-            // keep the external path
-        //} else {
-            Main.path = 1; // don't confuse the issue
-            Main.songpath = Main.songPathDir.toString() + "/";
-        //}
-		Main.customPathLocation = customPath.getText().toString();
-	    Log.d(TAG, "onPause saveTheSongPath path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
+    }
+
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause()");
+        Main.path = 1; // don't confuse the issue
+        Main.songpath = Main.songPathDir.toString() + "/";
+        Main.customPathLocation = customPath.getText().toString();
+        Log.d(TAG, "onPause saveTheSongPath path:" + Main.path + " customPathLocation:" + Main.customPathLocation);
         Main.db.beginTransaction();
         String qry = "UPDATE SongPath SET Path = " + Main.path + ", CustomPath = '" + Main.customPathLocation + "'";
         Main.db.execSQL(qry);
@@ -223,6 +200,8 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
             finish();
             return;
         }
+
+        // Move the filter.csv if it exists
         if (Main.sharedDefine != null) {
             int pathLen = Main.sharedDefine.length();
             Log.d(TAG, "* checkForNewFiles() sharedDefine:" + Main.sharedDefine);
@@ -238,20 +217,14 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
                     //defines[i] = defineFile[i].toString().substring(pathLen);
                     //String nam = defines[i];
                     String nam = defineFile[i].toString().substring(pathLen);
-                    int extLoc = nam.length() - 4;
-                    String ext = nam.substring(extLoc);
-                    Log.d(TAG, " definefile:" + nam + " ext:" + ext );
-                    if (ext.equalsIgnoreCase(".csv")) { // only transfers csv files
+                    if (nam.equals("filter.csv")) {
                         Boolean success = defineFile[i].renameTo(new File(Main.definepath + nam));
                         Log.d(TAG, " did i move file:" + nam + " ?:" + success);
-                        if (nam.equals("filter.csv")) {
-                            loadFilterData();  // it is loaded into database
-                            //deleteFile(nam); // crash on has a file separater
-                        }
                     }
                 }
             }
         }
+
         // localPath is songPath = 1 from getExternalFilesDir("Song");
         String localPath = Main.songPathDir.toString() + "/";
         Log.d(TAG, "* checkForNewFiles() path:" + Main.path + " songpath:" + Main.songpath);
@@ -275,9 +248,10 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
             Main.songs = new String[songsFileLen];
             for (int i = 0; i < songsFileLen; i++) {
                 Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
-                                                    //  01234567890123456789012345678901234
+                //  01234567890123456789012345678901234
                 String nam = Main.songs[i];         // "16 White-crowned Sparrow Song 1.mp3"
                 //Log.d(TAG, "* checkForNewFiles() songs[" + i + "] " + nam );
+                // this section renames the file name to moves the bird name to the front of the name
                 Boolean isAlbumNumber = false;
                 Boolean isStartsWithXC = false;
                 int chLoc = nam.indexOf(' '); // 2
@@ -312,8 +286,10 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
                             cntr++;
                         }
                     }
+
+                    // this section renames XC files by moving XCxxxxx after the bird name and before the .ext
                 } else if (nam.substring(0, 2).equals("XC")) {    // XC179353-Northern Mockingbird 140414-002.mp3
-                    chLoc = nam.indexOf("-");                    // 0123456789012345678901234567890123456789012
+                    chLoc = nam.indexOf("-");                     // 01234567890123456789012345678901234567890123
                     isStartsWithXC = true;
                     if (chLoc > 3) {
                         ch = nam.substring(0, chLoc);  // XC179353
@@ -326,30 +302,30 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
                         }
                     }
                 }
+
+                // this section load songs that start with names.
                 if ((isAlbumNumber == false) && (isStartsWithXC == false)) { // for Birding Via Mic_XX external apps or full name Download
                     int extLoc = nam.length() - 4;
                     String ext = nam.substring(extLoc);
                     if (ext.equalsIgnoreCase(".mp3") || ext.equalsIgnoreCase(".m4a") ||
                             ext.equalsIgnoreCase(".wav") || ext.equalsIgnoreCase(".ogg")) {
                         Main.newName = nam; // it's a song file load it like it is.
-                        Main.songFile[i].renameTo(new File(localPath + Main.newName));
+                        Boolean success = Main.songFile[i].renameTo(new File(localPath + Main.newName));
+                        Log.d(TAG, "newName: " + Main.newName + " transferred status: " + success);
                         cntr++;
                     }
 
                 }
-                Log.d(TAG, "* checkForNewFiles() newName:" + Main.newName);
-            } // finished loading files
-            // check the Define folder for filter.csv
+            } // finished moving files -- THEY SHOULD ALL BE IN THE BirdingViaMic/files/Song folder
+            // and the filter.csv SHOULD BE IN THE BirdingViaMic/files/Define folder
         }
+
         Main.db.beginTransaction();
-        // remove the non-internal songs from the songlist
-        String qry = "DELETE FROM SongList WHERE Path = " + Main.path;
-        Main.db.execSQL(qry);
         Main.path = 1;
         pathGroup.check(R.id.path_1);
         Main.sharedDefine = null;
         Main.songpath = Main.songPathDir.toString() + "/";
-        qry = "UPDATE SongPath SET Path = " + Main.path;
+        String qry = "UPDATE SongPath SET Path = " + Main.path;
         Main.db.execSQL(qry);
         Main.db.setTransactionSuccessful();
         Main.db.endTransaction();
@@ -358,54 +334,5 @@ public class SelectSongPath extends AppCompatActivity implements OnClickListener
         Log.d(TAG, "* return from checkForNewFiles() path:" + Main.path + " songpath:" + Main.songpath);
     }
 
-    void loadFilterData() { // called only on transfer from external data if filter.csv file now exists
-        Log.d(TAG, "loadFilterData()");
-        Scanner filtr = null;
-        File localFilter = null;
-        try {
-            localFilter = new File(Main.definePathDir.toString() + "/filter.csv");
-            filtr = new Scanner(new BufferedReader(new FileReader(localFilter)));
-            Log.d(TAG, "loadFilterData - clear existing filter -- load new data");
-            Main.db.beginTransaction();
-            String qry = "DELETE FROM Filter";  // clear out the table first it may have previous data
-            Main.db.execSQL(qry);
-            Main.db.setTransactionSuccessful();
-            Main.db.endTransaction();
-            // the filter file  has FileName XCxxxxxx.m4a, filterType, integerValue
-            ContentValues val = new ContentValues();
-            try {
-                String line;
-                String[] tokens;
-                while ((line = filtr.nextLine()) != null) {
-                    tokens = line.split(",");
-                    if (tokens.length == 3) {
-                        Main.db.beginTransaction();
-                        val.put("XcName", tokens[0]);  // it was XC123456 now it is the Full Name XC123456.m4a
-                        val.put("FilterType", tokens[1]);
-                        val.put("FilterVal", Integer.parseInt(tokens[2]));
-                        Log.d(TAG, " filter data:" + tokens[0] + "," + tokens[1] + "," + Integer.parseInt(tokens[2]));
-                        Main.db.insert("Filter", null, val);
-                        Main.db.setTransactionSuccessful();
-                        Main.db.endTransaction();
-                        val.clear();
-                    }
-                }
-            } catch (Exception e) {
-                Log.d(TAG, "internal error loading filter:" + e);
-            } finally {
-                Main.isFilterExists = true;
-                filtr.close(); // does this close cause an exception ? -- file will be deleted on return -- no it is left there
-                Log.d(TAG, "Close and Cleanup file filter");
-            }
-        } catch (Exception e) {
-            // the file dosen't exist leave quitely.
-            Log.d(TAG, "Exit checkVersion -- filter.csv does NOT Exist:" + e);
-            Main.isFilterExists = false;
-            return;
-        }
-        //boolean success = deleteFile(localFilter.toString()); // crash on contains file separator
-        //Log.d(TAG, " delete filter.csv ?" + success);
-
-    }
 
 }
