@@ -13,15 +13,15 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 public class HelpActivity extends AppCompatActivity implements OnClickListener{
-	private static final String TAG = "HelpActivity";  
-	public TextView mAdStatus;
+    private static final String TAG = "HelpActivity";
+    public TextView mAdStatus;
     Toolbar toolbar;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate ");
-		setContentView(R.layout.help_text);
+        setContentView(R.layout.help_text);
 
         // action bar toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -36,16 +36,16 @@ public class HelpActivity extends AppCompatActivity implements OnClickListener{
             }
         });
 
-	}
+    }
 
 
-	public void onClick(View v) {
-    	switch (v.getId()) {
+    public void onClick(View v) {
+        switch (v.getId()) {
 /*    	case R.id.closehelp_button:
     		finish();
 	    	break; */
-    	}
-	}
+        }
+    }
 
 
 }
