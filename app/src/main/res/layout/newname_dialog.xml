@@ -11,66 +11,83 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
-          >
+        >
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/linen"
-        android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/rename_title"
-        android:text="@string/rename_song"
-        android:textSize="20sp"
-        android:textColor="@color/teal"
-        android:background="@color/linen"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center" />
-
-    <TextView
-        android:text="@string/newname_title"
-        android:textColor="@color/sienna"
-        android:background="@color/linen"
-        android:layout_marginLeft="3dp"
-        android:layout_marginRight="3dp"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:id="@+id/newname_text"
-        android:textColor="@color/white"
-        android:background="@color/black"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="3dp"
-        android:layout_marginRight="3dp"
-        android:layout_marginBottom="10dip"
-        android:textSize="16sp"
-        android:text=""/>
-
-    <TextView
-        android:id="@+id/spinner_title"
-        android:text="@string/spec_spinner_title"
-        android:layout_marginLeft="3dp"
-        android:layout_marginRight="3dp"
-        android:textColor="@color/sienna"
-        android:background="@color/linen"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        />
-
-        <Spinner
-            android:id="@+id/species_spinner"
-            android:layout_marginLeft="3dp"
-            android:layout_marginBottom="10dip"
+        <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:background="@color/linen"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/rename_title"
+                android:text="@string/rename_song"
+                android:textSize="20sp"
+                android:textColor="@color/teal"
+                android:background="@color/linen"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center" />
+
+            <TextView
+                android:text="@string/newname_title"
+                android:textColor="@color/sienna"
+                android:background="@color/linen"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/newname_text"
+                android:textColor="@color/white"
+                android:background="@color/black"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginBottom="10dip"
+                android:textSize="16sp"
+                android:text=""/>
+
+            <TextView
+                android:id="@+id/species_title"
+                android:text="@string/species_title"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:textColor="@color/sienna"
+                android:background="@color/linen"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                />
+
+            <EditText
+                android:id="@+id/species_text"
+                android:textColor="@color/white"
+                android:background="@color/black"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginBottom="10dip"
+                android:textSize="16sp"
+                android:text=""/>
+
+            <TextView
+                android:id="@+id/species_instructions"
+                android:text="@string/spec_instructions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dip"
+                android:layout_marginBottom="3dip"
+                android:textSize="16sp" />
 
 
-    </LinearLayout>
+        </LinearLayout>
     </RelativeLayout>
+
+
+
 
 
     <RelativeLayout

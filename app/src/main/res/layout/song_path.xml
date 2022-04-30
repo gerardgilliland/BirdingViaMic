@@ -43,120 +43,100 @@
         android:layout_below="@id/select_path_label"
         android:scrollbars="none">
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
-
-    <RadioGroup android:id="@+id/path_group"
-        android:layout_height="wrap_content"
-	    android:layout_width="fill_parent" 
-	    android:orientation="vertical">
-	    	     
-	    <RadioButton
-            android:id="@+id/path_1"
-            android:text="@string/path1_label"
+        <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+            android:orientation="vertical"
+            >
 
-	    <RadioButton
-            android:id="@+id/path_2"
-            android:text="@string/path2_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+            <RadioGroup android:id="@+id/path_group"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:orientation="vertical">
 
-        <RadioButton
-            android:id="@+id/path_4"
-            android:text="@string/path4_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_1"
+                    android:text="@string/path1_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_5"
-            android:text="@string/path5_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_2"
+                    android:text="@string/path2_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_6"
-            android:text="@string/path6_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_4"
+                    android:text="@string/path4_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_7"
-            android:text="@string/path7_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_5"
+                    android:text="@string/path5_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_8"
-            android:text="@string/path8_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_6"
+                    android:text="@string/path6_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_9"
-            android:text="@string/path9_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_7"
+                    android:text="@string/path7_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-        <RadioButton
-            android:id="@+id/path_99"
-            android:text="@string/path99_label"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:textColor="@color/linen"
-            />
+                <RadioButton
+                    android:id="@+id/path_99"
+                    android:text="@string/path99_label"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginRight="3dip"
+                    android:textColor="@color/linen"
+                    />
 
-    </RadioGroup>
+            </RadioGroup>
 
-    <EditText
-        android:id="@+id/custom_path"
-        android:text="@string/custom_path"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="3dip"
-        android:layout_marginRight="3dip"
-        android:textColor="@color/linen"
-        />
+            <EditText
+                android:id="@+id/custom_path"
+                android:text="@string/custom_path"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:textColor="@color/linen"
+                />
 
-    </LinearLayout>
+        </LinearLayout>
 
 
     </ScrollView>
@@ -194,4 +174,4 @@
     </RelativeLayout>
 
 
-</RelativeLayout>      
+</RelativeLayout>
