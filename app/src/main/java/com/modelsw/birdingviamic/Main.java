@@ -106,7 +106,45 @@ package com.modelsw.birdingviamic;
  *	 the tables that I control: RedList, RefUpgrade, Region, Version
  *
  * I need to but haven't implemented setFastScrollEnabled on Species list during Song Rename (can't find it)
- *
+ * 59b.105 -- load options from database on startup -- store database in temp folder if database exists in define
+ * 59c.106 -- transfer the old database to download -- move new database out of temp --  update new database with data from old database
+ * 59d.107 -- start over with blank database and previously copied define and song folders in the download folder.
+ * 59e.108 -- success exporting old database csv files in dowlload/define to new database in /birdingviamic/define
+ * 59f.109 -- remove all but copy folders in backup, fix string too large in help was > 32767, broke out credits and added them below -- success
+ * 59g.110 -- change location to round was integer
+ * 59h.111 -- add restore option in backup include websites (was not saving before) -- upgradespecies and converttables not done yet.
+ * 59i.112 -- upgradespecies and converttables from restore (under backup).
+ * 			add progress bar to upgrade -- but it doesn't understand time.
+ * 59j.113 -- fix newnamedialog.java to load the specie from the species list before opening the songs name dialog.
+ * 59k.114 -- remove south american and african lists they were duplicates.
+ * 59l.115 -- re-add load assets on startup -- the app can't see the database unless i transfer it.
+ * 59m.116 -- no changes -- using new keystore birdingviamic.jks
+ * the last two times i modified and rebuilt my app bundle, i got a bad block error during build on birdingviamic.jks
+	i closed android studio, rebooted, reopened, rebuilt, re-selected the key from the keystore -- success -- loaded in google play.
+	i could rebuild my keystore but i worry that the sha1 will be different and you will require me to change my app name.
+	what do you recommend? -- they recommended build a new keystore -- so here it is.
+	keytool -list -v -alias birding -keystore birdingviamic.jks
+		 sha1: c2:07:27:75:d4:16:6a:55:f5:7a:5f:64:4c:d1:60:bd:cb:29:3f:59
+	THE NEW KEYSTORE WORKS
+ * old -->   the last keystore was
+ * old -->   c:/users/owner/.android>keytool -list -v -alias birding -keystore birdingviamic.jks
+ * old -->  sha1: e3:99:77:ba:b4:c7:6f:b1:c7:46:c7:9e:77:1b:3b:8c:eb:7e:25:c9
+
+ * 59n.117 -- work on UpgradeDialog progressBar -- Unsuccessful -- I had to drop back to UpgradeDialog copied from 59l
+ * 59o.118 -- fix backup -- it was running backup when clicked then restore immediately -- added return at the end of each OnClick case
+ * 59p.119 -- fix location input for manual input if null set to zero.
+ * 59q.120 -- clean up StartCnn -- sends existing file to Nvidia for analysis -- BROKEN
+ * 59r.121 -- start over with send CNN to Nvidia
+ * 59s.122 -- Starting Send file to Nvidia -- loads file name in MySql on Nvidia -- No Sftp loaded yet
+ * 59t.123 -- ?
+ * 59u.124 -- still can't SFTP but this is fix for can't laod external apps (which fails) Android 12 --API 31
+ * 59w.124 -- start over with app that loads external files with Android 9 -- fails with Android 12
+ * 60b.125 -- start over with 59w -- before load songs and filter from Download/SongsXX
+ * 60c.126 -- load songs and filter from Download/SongsXX works Android 10
+ * 60d.127 -- implement storage permissions from // https://www.youtube.com/watch?v=_IbfUJS13h8 -- attempt from Download folder
+ * 60e.128 -- attempt to laod from external storage (original NAC location - with new permissions from 60d.127)
+ * 60f.129 -- remove duplicate permissions code. fix load filter on startup
+
  */
 // NOTE: All (at least most) TrebleClef.jpg images are in: C:\OSJ\GerardRoot 
 // Also, there are a lot of images and songs at: J:\Users\Gerard
