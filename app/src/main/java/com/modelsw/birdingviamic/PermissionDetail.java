@@ -7,15 +7,21 @@ import android.content.Intent;
 //import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 //import android.os.Build;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 //import android.support.v4.app.ActivityCompat;
 //import android.support.v4.content.ContextCompat;
 //import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +37,7 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
     int targetSdkVersion;
     Toolbar toolbar;
 
+    //@RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +66,8 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
         try {
             int cntr = 0;
             for (String p : Main.permissions) {
-                int result = ContextCompat.checkSelfPermission(this, p);
+                int result = ContextCompat.checkSelfPermission(this, p); // result --> 0=GRANTED; -1=DENIED
+                // should you show why you need this permission -- false == it is already GRANTED; true == explain why you need it.
                 boolean showRationale = shouldShowRequestPermissionRationale( p );
                 Log.d(TAG, "check:" + p + " result:" + result + " Rationale:" + showRationale);
                 if (result != PackageManager.PERMISSION_GRANTED) {
@@ -68,18 +76,13 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
                         Log.d(TAG, "missing permission:" + p);
                         cntr--;
                     } else {
-                        Log.d(TAG, "NOT missing permission:" + p + " rationale:" + showRationale);
+                        Log.d(TAG, "NOT missing permission:" + p + " rationale:" + showRationale);  // not granted but not required (Android 9)
                     }
                 }
                 cntr++;
             }
-            if (!Main.listPermissionsNeeded.isEmpty()) {
-                ActivityCompat.requestPermissions(this,
-                        Main.listPermissionsNeeded.toArray(new String[Main.listPermissionsNeeded.size()]),
-                        REQUEST_ID_MULTIPLE_PERMISSIONS);
-                return cntr;
-            }
-            return Main.permCntr;
+            return cntr;
+
         } catch (NoSuchMethodError e) { // this showed up from a android 5.1
             Log.e(TAG, "error:" + e);   // not supposed to be in this class if less than 6.0
             return 0;
@@ -99,4 +102,3 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
     }
 
 }
-
