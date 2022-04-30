@@ -38,7 +38,7 @@ import static com.modelsw.birdingviamic.PlaySong.*;
 
 
 @TargetApi(16)
-public class VisualizerView extends View {  // disabled --> View implements OnTouchListener
+public class VisualizerView extends View {  // ??  why and where -- disabled --> View implements OnTouchListener
 	private static final String TAG = "VisualizerView";
 	float adjAve = 0.8f;
 	private float aveCntr = 0;
@@ -79,7 +79,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 		super(context, attrs);
 		ctx = context;
 		init();
-		//VisualizerView view = (VisualizerView) findViewById(R.id.visualizerView);
+		VisualizerView view = (VisualizerView) findViewById(R.id.visualizerView); // was disabled (commented out)
 	}
 
 	public VisualizerView(Context context, AttributeSet attrs) {
@@ -199,7 +199,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 				bitmapHeight = h;
 				Main.bitmapWidth = bitmapWidth; // is the visualizer the same as adjust view ????
 				Main.bitmapHeight = bitmapHeight;
-				PlaySong.scalePxPerMs = ((float) Main.bitmapHeight / (float) Main.duration);
+				PlaySong.scalePxPerMs = ((float) Main.bitmapHeight / (float) Main.duration);  // 384
 				Log.d(TAG, "onDraw: width:" + bitmapWidth + " height:" + bitmapHeight + " buttonHeight:" + Main.buttonHeight );
 			}
 			if(mCanvas == null) { // one time
@@ -218,12 +218,12 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 				mPaint.setColor(Color.WHITE);
 				mPaint.setTextAlign(Paint.Align.CENTER);
 				Log.d(TAG, "onDraw: width:" + bitmapWidth + " height:" + bitmapHeight + " scale:" + scaleW + " scaleText:" + scaleText);
-				for (int i=0; i<12; i++) {
+				for (int i=0; i<12; i++) {  // frequency
 					String si = "" + i;
 					float freq = (float)(i*1000) / (float)(11025.f / (base/2)) * scaleW ;
 					mCanvas.drawText(si, freq, scaleText, mPaint);
 				}
-				int d = Main.duration;   // 6224 ms
+				int d = Main.duration;  // time -- 6224 ms length of song
 				float oneSec = PlaySong.scalePxPerMs * 1000f;  //  384 / 6.224 = oneSecond every 61.7 pixels
 				Log.d(TAG, "time duration:" + d + " oneSec:" + oneSec );
 				int di = d / 1000;  // 6 sec
@@ -456,7 +456,7 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 			//float prevX1 = (rs1.getInt(1) * scaleW); // voiced
 			//float prevX2 = (rs1.getInt(2)/2 * scaleW + screenCenterW); // energy
 			float prevX2 = (rs1.getInt(2) * scaleW/2f + screenCenterW); // energy
-			float prevX3 = (rs1.getInt(3) * scaleW/4f); // distance
+			float prevX3 = (rs1.getInt(3) * scaleW/2f); // distance
 			float prevX4 = (bitmapWidth - rs1.getInt(4) * scaleW); // quality
 			//float prevX5 = (rs1.getInt(5) * scaleW); // harmonic
 			float prevY = y;
@@ -520,4 +520,3 @@ public class VisualizerView extends View {  // disabled --> View implements OnTo
 
 
 }
-
