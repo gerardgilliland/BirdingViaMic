@@ -37,13 +37,13 @@ import android.widget.Toast;
 
 public class SongList extends AppCompatActivity {
 	private static final String TAG = "SongList";
-    private SongAdapter adapter;
+	private SongAdapter adapter;
 	private Boolean foundExisting = false;
 	private Boolean foundRenamed = false;
-    private ListView list;
+	private ListView list;
 	private String qry = "";
 	private Cursor rs;  // I see cursor as RecordSet (rs)
-	private Cursor rsCk; 
+	private Cursor rsCk;
 	private String songPath = null;
 	private int filtLow;
 	private int filtHi;
@@ -58,25 +58,25 @@ public class SongList extends AppCompatActivity {
 	private byte[] metaBuffer;
 	char q = 34;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {    	
-        super.onCreate(savedInstanceState);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate songpath:" + Main.songpath + " songdata:" + Main.songdata);
-        setContentView(R.layout.songlist_header );
-        // action bar toolbar
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(R.drawable.ic_action_back);
-        toolbar.setLogo(R.drawable.treble_clef_linen);
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
+		setContentView(R.layout.songlist_header );
+		// action bar toolbar
+		toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		toolbar.setNavigationIcon(R.drawable.ic_action_back);
+		toolbar.setLogo(R.drawable.treble_clef_linen);
+		toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.teal));
 		onCreateOptionsMenu();
 		toolbar.showOverflowMenu();
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG, "Navigation Icon tapped");
-                finish();
-            }
-        });
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Log.d(TAG, "Navigation Icon tapped");
+				finish();
+			}
+		});
 		if (Main.songdata == null || Main.songpath == null) { // knocked out of memory re-init the database
 			Main.fileReshowExisting = true;
 			finish();
@@ -92,14 +92,14 @@ public class SongList extends AppCompatActivity {
 			ar.buildRampFile();
 		}
 		rs.close();
-        list = (ListView) findViewById(R.id.list);  // list is in song_list.xml
-        adapter = new SongAdapter(this, Main.songsCombined);  // fileName on one line and Spec Inx Seg on second line
-        list.setAdapter(adapter);
-        list.setFastScrollEnabled(true);
-       	Main.songStartAtLoc = 0;
-       	Main.songStopAtLoc = 0;   	
-       	Main.isNewStartStop = false;
-       	Main.showPlayFromList = false;
+		list = (ListView) findViewById(R.id.list);  // list is in song_list.xml
+		adapter = new SongAdapter(this, Main.songsCombined);  // fileName on one line and Spec Inx Seg on second line
+		list.setAdapter(adapter);
+		list.setFastScrollEnabled(true);
+		Main.songStartAtLoc = 0;
+		Main.songStopAtLoc = 0;
+		Main.isNewStartStop = false;
+		Main.showPlayFromList = false;
 		Log.d(TAG, "onCreate path:" + Main.path );
 		Button rename=(Button)findViewById(R.id.rename_button);
 		Button delete=(Button)findViewById(R.id.delete_button);
@@ -112,7 +112,7 @@ public class SongList extends AppCompatActivity {
 		}
 		Main.fileRenamed = false;
 		Main.fileReshowExisting = false;
-    } // onCreate
+	} // onCreate
 
 	public boolean onCreateOptionsMenu() {
 		final MenuInflater menuInflater = getMenuInflater();
@@ -145,65 +145,65 @@ public class SongList extends AppCompatActivity {
 
 
 	void buildList() {
-    	char q = 34;
+		char q = 34;
 		InputStream is;
-		Log.d(TAG, "buildList:" + songPath );		// crash if songPath is null		
-        int pathLen = songPath.length();
-        File dir = new File(songPath);
-        if (dir.exists() == false) {
-        	String msg = "Your song path:" + songPath + " is invalid";
-        	Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            Log.d(TAG, msg);
+		Log.d(TAG, "buildList:" + songPath );		// crash if songPath is null
+		int pathLen = songPath.length();
+		File dir = new File(songPath);
+		if (dir.exists() == false) {
+			String msg = "Your song path:" + songPath + " is invalid";
+			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+			Log.d(TAG, msg);
 			finish();
-        	return;
-        } 
-       	Log.d(TAG, "buildList: dir:" + dir);
-    	Main.songFile = dir.listFiles();
-    	if (Main.songFile == null) {
-    		Log.d(TAG, "onCreate songFile is null -- closing" );        
-        	String msg = "invalid path:" + songPath;
-        	Log.d(TAG, msg);
-     	   	finish();
 			return;
-    	}
+		}
+		Log.d(TAG, "buildList: dir:" + dir);
+		Main.songFile = dir.listFiles();
+		if (Main.songFile == null) {
+			Log.d(TAG, "onCreate songFile is null -- closing" );
+			String msg = "invalid path:" + songPath;
+			Log.d(TAG, msg);
+			finish();
+			return;
+		}
 		Log.d(TAG, "buildList songFile is not null -- length:" + Main.songFile.length );
 		String z = "zzzzzzzz";
 		ContentValues val = new ContentValues();
 		qry = "SELECT FileName FROM SongList" +
-			" WHERE FileName = '" + z + "'"; 
+				" WHERE FileName = '" + z + "'";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		if (rs.getCount() == 0) {
 			Main.db.beginTransaction();
 			val.put("Ref", 39997);
 			val.put("Inx", 1);
 			val.put("Seg", 0);
-			val.put("Path", Main.path);				
+			val.put("Path", Main.path);
 			val.put("FileName", z);
 			val.put("Start", 0);
 			val.put("Stop", 0);
-			val.put("Identified", 0);  
+			val.put("Identified", 0);
 			val.put("Defined", 0);
-   			val.put("AutoFilter", 0);
-   			val.put("Enhanced", 0);
-   			val.put("Smoothing", 0);
-   			val.put("SourceMic", 0);
-            val.put("SampleRate", 0);
-            val.put("AudioSource", -1);
+			val.put("AutoFilter", 0);
+			val.put("Enhanced", 0);
+			val.put("Smoothing", 0);
+			val.put("SourceMic", 0);
+			val.put("SampleRate", 0);
+			val.put("AudioSource", -1);
 			val.put("Stereo", 0);
-   			val.put("LowFreqCutoff", 0);
-   			val.put("HighFreqCutoff", 0);
-   			val.put("FilterStart", 0);
-   			val.put("FilterStop", 0);
-   			Main.db.insert("SongList", null, val);
-   			Main.db.setTransactionSuccessful();
-   			Main.db.endTransaction();
-   			val.clear();
+			val.put("LowFreqCutoff", 0);
+			val.put("HighFreqCutoff", 0);
+			val.put("FilterStart", 0);
+			val.put("FilterStop", 0);
+			Main.db.insert("SongList", null, val);
+			Main.db.setTransactionSuccessful();
+			Main.db.endTransaction();
+			val.clear();
 			rs.close();
 		}
 		qry = "SELECT FileName FROM SongList" +
 				" WHERE Path = " + Main.path +
-				" GROUP BY FileName" + 
-    			" ORDER BY FileName";
+				" GROUP BY FileName" +
+				" ORDER BY FileName";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		songsDbLen = rs.getCount();  // count (indexed 0 to < count
 		if (songsDbLen == 0) {
@@ -217,18 +217,18 @@ public class SongList extends AppCompatActivity {
 		songsFileLen = Main.songFile.length;
 		Log.d(TAG, "buildList songsDbLen:" + songsDbLen + " songsFilesLen:" + songsFileLen );
 		songsLen = Math.max(songsDbLen, songsFileLen);  // for dim of arrays
-		songsLen += 20;  // save more than enough room for additions.		
-    	Main.songs = new String[songsLen]; 
-    	Log.d(TAG, "START Update database isFilterExists:" + Main.isFilterExists );
+		songsLen += 20;  // save more than enough room for additions.
+		Main.songs = new String[songsLen];
+		Log.d(TAG, "START Update database isFilterExists:" + Main.isFilterExists );
 		//int kcc = 0;
-    	for (int i=0; i<songsFileLen; i++) {
-    		Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
+		for (int i=0; i<songsFileLen; i++) {
+			Main.songs[i] = Main.songFile[i].toString().substring(pathLen);
 			//Log.d(TAG, "buildList songs[" + i + "] " + Main.songs[i]) ; // + " kcc:" + kcc);
-    	}
-    	for (int i=songsFileLen; i<songsLen; i++) {    		
-    		Main.songs[i] = z;
-    	}
-    	Arrays.sort(Main.songs);
+		}
+		for (int i=songsFileLen; i<songsLen; i++) {
+			Main.songs[i] = z;
+		}
+		Arrays.sort(Main.songs);
 		int ifile = 0;
 		int ref = 0;
 		String atSign = null;
@@ -239,7 +239,7 @@ public class SongList extends AppCompatActivity {
 			Log.d(TAG, "EMPTY Database" );
 			for (ifile = 0; ifile < songsFileLen; ifile++) {
 				Log.d(TAG, "Adding '" + Main.songs[ifile] + "' to the SongList ref:" + ref);
-				atSign = Main.songs[ifile].substring(0,1);  
+				atSign = Main.songs[ifile].substring(0,1);
 				filtLow = 0;
 				filtHi = 0;
 				filtBeg = 0;
@@ -248,7 +248,7 @@ public class SongList extends AppCompatActivity {
 					int lenExist = Main.songs[ifile].length();
 					ref = 0;
 				} else {
-					ref = tryForSpec(Main.songs[ifile]);  // the file name				
+					ref = tryForSpec(Main.songs[ifile]);  // the file name
 					if (Main.isFilterExists = true) {
 						checkForFilter(Main.songs[ifile]);
 					}
@@ -257,7 +257,7 @@ public class SongList extends AppCompatActivity {
 					maxInx = 0;
 				} else {
 					qry = "SELECT MAX(Inx) AS MaxInx FROM SongList" +
-						" WHERE Ref = " + ref;
+							" WHERE Ref = " + ref;
 					rsCk = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 					rsCk.moveToFirst();
 					maxInx = rsCk.getInt(0)+1;  // increment the last known inx
@@ -285,20 +285,20 @@ public class SongList extends AppCompatActivity {
 				val.put("Ref", ref);
 				val.put("Inx", maxInx);
 				val.put("Seg", 0);
-				val.put("Path", Main.path);				
+				val.put("Path", Main.path);
 				val.put("FileName", Main.songs[ifile]);
 				val.put("Start", 0);
 				val.put("Stop", 0);
-				val.put("Identified", 0);  
+				val.put("Identified", 0);
 				val.put("Defined", 0);
-           	   	val.put("AutoFilter", 0);
+				val.put("AutoFilter", 0);
 				val.put("Enhanced", 0);
-	   			val.put("Smoothing", 0);
+				val.put("Smoothing", 0);
 				val.put("SourceMic", sourceMic); // pre-recorded
-                val.put("SampleRate", 4);  // 0=22050, 1=44100 2=24000, 3=48000, 4=unknown
-                val.put("AudioSource", Main.audioSource); // really unknown 0=default, 1=mic, 5=camcorder, 6 voice recognition
+				val.put("SampleRate", 4);  // 0=22050, 1=44100 2=24000, 3=48000, 4=unknown
+				val.put("AudioSource", Main.audioSource); // really unknown 0=default, 1=mic, 5=camcorder, 6 voice recognition
 				val.put("Stereo", Main.stereoFlag); // 0 = mono, 1 = stereo
-                val.put("LowFreqCutoff", filtLow);
+				val.put("LowFreqCutoff", filtLow);
 				val.put("HighFreqCutoff", filtHi);
 				val.put("FilterStart", filtBeg);
 				val.put("FilterStop", filtEnd);
@@ -320,12 +320,12 @@ public class SongList extends AppCompatActivity {
 					// when Delete option within SongList is executed the file and record are both deleted and this code is not run.
 					Log.d(TAG, "Deleting " + nam + " from SongList");
 					Main.db.beginTransaction();
-						qry = "DELETE FROM SongList" +
-								" WHERE Path = " + Main.path +
-								" AND FileName = " + q + nam + q;
-						Main.db.execSQL(qry);
-						Main.db.setTransactionSuccessful();
-						Main.db.endTransaction();
+					qry = "DELETE FROM SongList" +
+							" WHERE Path = " + Main.path +
+							" AND FileName = " + q + nam + q;
+					Main.db.execSQL(qry);
+					Main.db.setTransactionSuccessful();
+					Main.db.endTransaction();
 					rs.moveToNext();
 				}
 				if (result == 0) { // do nothing (except keep the files in sync)
@@ -334,7 +334,7 @@ public class SongList extends AppCompatActivity {
 				}
 				if (result > 0) {  // file > dbName name -- so the song needs to be added
 					//Log.d(TAG, "Adding '" + Main.songs[ifile] + "' to the SongList");
-					atSign = Main.songs[ifile].substring(0,1);  
+					atSign = Main.songs[ifile].substring(0,1);
 					filtLow = 0;
 					filtHi = 0;
 					filtBeg = 0;
@@ -353,7 +353,7 @@ public class SongList extends AppCompatActivity {
 						maxInx = 0;
 					} else {
 						qry = "SELECT MAX(Inx) AS MaxInx FROM SongList" +
-							" WHERE Ref = " + ref;
+								" WHERE Ref = " + ref;
 						rsCk = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 						rsCk.moveToFirst();
 						maxInx = rsCk.getInt(0)+1;  // increment the last known inx
@@ -378,41 +378,41 @@ public class SongList extends AppCompatActivity {
 					} catch (IllegalArgumentException e) {
 						Log.e(TAG, "error:" + e + " " +  Main.songs[ifile]);
 					}
-	   	            try {        	
-	   	            	Log.d(TAG, "db begin transaction -- adding file:" + Main.songs[ifile]);
-	   	            	Main.db.beginTransaction();
-   	            		val = new ContentValues();
-	   	            	try {
-	   	            		val.put("Ref", ref);
-	   	            		val.put("Inx", maxInx);
-	   	            		val.put("Seg", 0);
-	   	            		val.put("Path", Main.path);
-	   	            		val.put("FileName", Main.songs[ifile]);
-	   	            		val.put("Start", 0);
-	   	            		val.put("Stop", 0);
-	   	            		val.put("Identified", 0);  
-	   	            		val.put("Defined", 0);
-	   	            	   	val.put("AutoFilter", 0);
-	   	            		val.put("Enhanced", 0);
-	   	        			val.put("Smoothing", 0);
-	   	            		val.put("SourceMic", sourceMic); // pre-recorded
+					try {
+						Log.d(TAG, "db begin transaction -- adding file:" + Main.songs[ifile]);
+						Main.db.beginTransaction();
+						val = new ContentValues();
+						try {
+							val.put("Ref", ref);
+							val.put("Inx", maxInx);
+							val.put("Seg", 0);
+							val.put("Path", Main.path);
+							val.put("FileName", Main.songs[ifile]);
+							val.put("Start", 0);
+							val.put("Stop", 0);
+							val.put("Identified", 0);
+							val.put("Defined", 0);
+							val.put("AutoFilter", 0);
+							val.put("Enhanced", 0);
+							val.put("Smoothing", 0);
+							val.put("SourceMic", sourceMic); // pre-recorded
 							val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
-                            val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
+							val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
 							val.put("Stereo", Main.stereoFlag); // 0 = mono, 1 = stereo
-	   	            		val.put("LowFreqCutoff", filtLow);
-	   	            		val.put("HighFreqCutoff", filtHi);
-	   	            		val.put("FilterStart", filtBeg);
-	   	            		val.put("FilterStop", filtEnd);
-	   	            		Main.db.insert("SongList", null, val);
-	   	            		Main.db.setTransactionSuccessful();					
-	   	            	} finally {
-	   	            		Main.db.endTransaction();
-	   	            		val.clear();
-	   	            		//Log.d(TAG, "db end transaction");
-	   	            	}
-	   	            } catch( Exception e ) {
-	   	            	Log.e(TAG, "Database Exception: " + e.toString() );     	    
-	   	            }
+							val.put("LowFreqCutoff", filtLow);
+							val.put("HighFreqCutoff", filtHi);
+							val.put("FilterStart", filtBeg);
+							val.put("FilterStop", filtEnd);
+							Main.db.insert("SongList", null, val);
+							Main.db.setTransactionSuccessful();
+						} finally {
+							Main.db.endTransaction();
+							val.clear();
+							//Log.d(TAG, "db end transaction");
+						}
+					} catch( Exception e ) {
+						Log.e(TAG, "Database Exception: " + e.toString() );
+					}
 					if (filtStrt > 0 || filtStop > 0) {
 						Log.d(TAG, "Start from XC file:" + filtStrt + " Stop:" + filtStop);
 						qry = "SELECT MAX(Seg) AS MaxSeg FROM SongList" +
@@ -462,20 +462,20 @@ public class SongList extends AppCompatActivity {
 					ifile++;
 				}
 			} // while
-			
-		} // else database has data 
-    	Log.d(TAG, "END Update database");
+
+		} // else database has data
+		Log.d(TAG, "END Update database");
 		// at this point the database names match the file names
 		// now build the list which includes the location and options
-   	    qry = "SELECT Area from Region WHERE isSelected = 1";
-   		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-   		rs.moveToFirst();
-   		int cntr = rs.getCount();
-   		String[] area = new String[cntr];
-   		for (int i = 0; i<cntr; i++) {
-   			area[i] = rs.getString(0);
+		qry = "SELECT Area from Region WHERE isSelected = 1";
+		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+		rs.moveToFirst();
+		int cntr = rs.getCount();
+		String[] area = new String[cntr];
+		for (int i = 0; i<cntr; i++) {
+			area[i] = rs.getString(0);
 			rs.moveToNext();
-   		}
+		}
 		qry = "SELECT Type from RedList WHERE isSelected = 1";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
@@ -491,10 +491,10 @@ public class SongList extends AppCompatActivity {
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 
 		qry = "SELECT FileName, CodeName.Spec, CodeName.Ref, Inx, Seg, Identified, Defined, AutoFilter, Enhanced, Smoothing," +
-                " SourceMic, SampleRate, AudioSource, Stereo," +
+				" SourceMic, SampleRate, AudioSource, Stereo," +
 				" CodeName.Region, CodeName.SubRegion, CodeName.RedList," +
 				" LowFreqCutoff, HighFreqCutoff, FilterStart, FilterStop" +
-				" FROM SongList JOIN CodeName ON SongList.Ref = CodeName.Ref" + 
+				" FROM SongList JOIN CodeName ON SongList.Ref = CodeName.Ref" +
 				" WHERE path = " + Main.path ;
 		if (cntr == 0) {
 			qry += " AND CodeName.Region = 'none'";
@@ -559,8 +559,8 @@ public class SongList extends AppCompatActivity {
 			int ienh = rs.getInt(8); // Enhanced
 			int ismo = rs.getInt(9); // Smoothing
 			int imic = rs.getInt(10); // SourceMic  0=pre-recorded, 1=internal, 2=external
-            int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown
-            int iaud = rs.getInt(12); // AudioSource 0,1,5, or 6, -1=unknown
+			int isrt = rs.getInt(11); // SampleRate 0=22050, 1=44100, 2=24000, 3=48000, 4=unknown
+			int iaud = rs.getInt(12); // AudioSource 0,1,5, or 6, -1=unknown
 			int iste = rs.getInt(13); // Stereo 0=mono, 1=stereo, -1=unknown
 			int if1 = rs.getInt(17); //  lowFreqCutoff
 			int if2 = rs.getInt(18); //  highFreqCutoff
@@ -568,8 +568,8 @@ public class SongList extends AppCompatActivity {
 			int if4 = rs.getInt(20); // filterEnd
 			String def = " ";
 
-            switch (imic) { // first microphone
-                case 0:
+			switch (imic) { // first microphone
+				case 0:
 					def += ".";  // pre-recorded
 					iaud = -1;
 					break;
@@ -588,23 +588,23 @@ public class SongList extends AppCompatActivity {
 					break;
 				}
 				case 0:	{
-                    def += "m";  // mono
-                    break;
-                }
+					def += "m";  // mono
+					break;
+				}
 				case 1: {
 					def += "s"; // stereo
 					break;
 				}
-            }
-            switch(isrt) { // third sample rate
-                case 0: {
-                    def += "0";  // 22050
-                    break;
-                }
-                case 1: {
-                    def += "1"; // 44100
-                    break;
-                }
+			}
+			switch(isrt) { // third sample rate
+				case 0: {
+					def += "0";  // 22050
+					break;
+				}
+				case 1: {
+					def += "1"; // 44100
+					break;
+				}
 				case 2: {
 					def += "2";  // 24000
 					break;
@@ -617,7 +617,7 @@ public class SongList extends AppCompatActivity {
 					def += "."; // unknown
 					break;
 				}
-            }
+			}
 			if (imic == 0) {  // pre-recorded
 				def += ".";
 			} else {
@@ -711,43 +711,43 @@ public class SongList extends AppCompatActivity {
 		qry = "PRAGMA case_sensitive_like = 0";
 		rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.close();
-		
-    } // buildList
-    
-    int tryForSpec(String filname) {
-    	int ref = 0;  // unknown
-//    	Log.d(TAG, "try for spec filname:" + filname);    	
-    	int fillen; // the length of the common name from the database
+
+	} // buildList
+
+	int tryForSpec(String filname) {
+		int ref = 0;  // unknown
+//    	Log.d(TAG, "try for spec filname:" + filname);
+		int fillen; // the length of the common name from the database
 		fillen = filname.length(); // the length of the common name from the database
-    	String fil3 = filname.substring(0,3);  // the name can be as short as 3 before blanks
-    	qry = "SELECT Ref, CommonName FROM CodeName WHERE CommonName LIKE " + q + fil3 + "%" + q; // don't look at all of them
+		String fil3 = filname.substring(0,3);  // the name can be as short as 3 before blanks
+		qry = "SELECT Ref, CommonName FROM CodeName WHERE CommonName LIKE " + q + fil3 + "%" + q; // don't look at all of them
 		rsCk = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		int cntr = rsCk.getCount();
-    	if (cntr == 0) {
-        	Log.d(TAG, "returning ref:" + ref + " Unknown");
-        	rsCk.close();
-    		return ref;  // Unknown
-    	}
+		if (cntr == 0) {
+			Log.d(TAG, "returning ref:" + ref + " Unknown");
+			rsCk.close();
+			return ref;  // Unknown
+		}
 		rsCk.moveToFirst();
-    	for (int i = 0; i < cntr; i++) {
-    		String comname = rsCk.getString(1);  // common name from the database
-    		int comlen = comname.length(); // the length of the common name from the database
-    		if (comlen < fillen) { // the database name is shorter than the file name - continue ( file has .wav or .m4a)
-	        	//Log.d(TAG, "filname:" + filname + " comname:" + comname);
-    			String filcheck = filname.substring(0,comlen); // make them the same length
-    			if (comname.equalsIgnoreCase(filcheck)) {  
-    				ref = rsCk.getInt(0);
-    	        	//Log.d(TAG, "returning ref:" + ref + " comname:" + comname);
-    	        	rsCk.close();
-    				return ref; // the reference (if you get lucky)
-    			}
-    		}
-    		rsCk.moveToNext();
-    	}
-    	rsCk.close();
-    	Log.d(TAG, "returning ref:" + ref + " Unknown");
-		return ref; 
-    }
+		for (int i = 0; i < cntr; i++) {
+			String comname = rsCk.getString(1);  // common name from the database
+			int comlen = comname.length(); // the length of the common name from the database
+			if (comlen < fillen) { // the database name is shorter than the file name - continue ( file has .wav or .m4a)
+				//Log.d(TAG, "filname:" + filname + " comname:" + comname);
+				String filcheck = filname.substring(0,comlen); // make them the same length
+				if (comname.equalsIgnoreCase(filcheck)) {
+					ref = rsCk.getInt(0);
+					//Log.d(TAG, "returning ref:" + ref + " comname:" + comname);
+					rsCk.close();
+					return ref; // the reference (if you get lucky)
+				}
+			}
+			rsCk.moveToNext();
+		}
+		rsCk.close();
+		Log.d(TAG, "returning ref:" + ref + " Unknown");
+		return ref;
+	}
 
 	// Main.isFilterExist == true to get to here. -- filter is in the database
 	public void checkForFilter(String filName) { // filter loaded at the time the file is loaded.
@@ -788,46 +788,46 @@ public class SongList extends AppCompatActivity {
 		return;
 	}
 
-    public OnClickListener listener = new OnClickListener() {  // for non-list items -- i.e. buttons -- see SongAdaptor for click on list
-        public void onClick(View v) {
+	public OnClickListener listener = new OnClickListener() {  // for non-list items -- i.e. buttons -- see SongAdaptor for click on list
+		public void onClick(View v) {
 			if (Main.existingName == null) {
 				Toast.makeText(SongList.this, "Please select a song first.", Toast.LENGTH_LONG).show();
 				return;
 			}
 			switch (v.getId()) {
-                case R.id.rename_button:
-                    Log.d(TAG, "*** 1 *** Rename clicked existingInx:" + Main.existingInx);
-                    getNewName(); // I will now allow rename of files regardless of path
-                    break;
-                case R.id.delete_button:
-                    Log.d(TAG, "Delete clicked");
-                    deleteSelectedFile();  // I will now delete files regardless of path
-                    break;
-                case R.id.play_button:
-                    Log.d(TAG, "Play clicked");
-                    Main.showPlayFromList = true; // showPlayScreen();
-                    finish();
-                    break;
-            } // switch
-        } // onclick
-    }; // onClickListener (because it does NOT extend OnClickListener)
+				case R.id.rename_button:
+					Log.d(TAG, "*** 1 *** Rename clicked existingInx:" + Main.existingInx);
+					getNewName(); // I will now allow rename of files regardless of path
+					break;
+				case R.id.delete_button:
+					Log.d(TAG, "Delete clicked");
+					deleteSelectedFile();  // I will now delete files regardless of path
+					break;
+				case R.id.play_button:
+					Log.d(TAG, "Play clicked");
+					Main.showPlayFromList = true; // showPlayScreen();
+					finish();
+					break;
+			} // switch
+		} // onclick
+	}; // onClickListener (because it does NOT extend OnClickListener)
 
-    public void getNewName() {
-        if (Main.existingName == null) {
-            Log.d(TAG, "*** 1a *** getNewName existing name is null -- returning");
-            Toast.makeText(this, "Please select a name to change.", Toast.LENGTH_LONG).show();
-            return;
-        }
-        //    	  Main.newName = null; // clear it before you ask for new name.
-        Log.d(TAG, "*** 2 *** existing name:" + Main.existingName + " existingRef:" + Main.existingRef + " existingInx:" + Main.existingInx);
-        Main.newName = null;
-        Main.newRef = 0;
-        Intent nnd = new Intent(this, NewNameDialog.class);
-        startActivityForResult(nnd, 1);  // request == 1
-    }
+	public void getNewName() {
+		if (Main.existingName == null) {
+			Log.d(TAG, "*** 1a *** getNewName existing name is null -- returning");
+			Toast.makeText(this, "Please select a name to change.", Toast.LENGTH_LONG).show();
+			return;
+		}
+		//    	  Main.newName = null; // clear it before you ask for new name.
+		Log.d(TAG, "*** 2 *** existing name:" + Main.existingName + " existingRef:" + Main.existingRef + " existingInx:" + Main.existingInx);
+		Main.newName = null;
+		Main.newRef = 0;
+		Intent nnd = new Intent(this, NewNameDialog.class);
+		startActivityForResult(nnd, 1);  // request == 1
+	}
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// Check which request we're responding to
 		super.onActivityResult(requestCode, resultCode, data);
 		Log.d(TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
@@ -866,114 +866,114 @@ public class SongList extends AppCompatActivity {
 		}
 	}
 
-    public void renameFile() {
-        char q = 34; // the name can contain a single tic so enclose the name in double quote
-        if (Main.newName.equals(Main.existingName)) {
-            Toast.makeText(this, "The File name didn't change", Toast.LENGTH_LONG).show();
-        } else {
-            Log.d(TAG, "Directory:" + songPath);
-            File from = new File(songPath, Main.existingName);
-            Log.d(TAG, "Rename from:" + from);
-            File to = new File(songPath, Main.newName.trim());
-            Log.d(TAG, "Rename   to:" + to);
-            from.renameTo(to);  // rename the file
-            // update the database
-            try {
-                Log.d(TAG, "db begin transaction");
-                Main.db.beginTransaction();
-                try {
-                    qry = "UPDATE SongList " +
-                            " SET FileName = " + q + Main.newName + q +
-                            " WHERE FileName = " + q + Main.existingName + q +
-                            " AND Path = " + Main.path;
-                    Log.d(TAG, "Rename qry:" + qry);
-                    Main.db.execSQL(qry);
-                    Main.db.setTransactionSuccessful();
-                } finally {
-                    Main.db.endTransaction();
-                    Log.d(TAG, "db end transaction");
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Database Exception: " + e.toString());
-            }
+	public void renameFile() {
+		char q = 34; // the name can contain a single tic so enclose the name in double quote
+		if (Main.newName.equals(Main.existingName)) {
+			Toast.makeText(this, "The File name didn't change", Toast.LENGTH_LONG).show();
+		} else {
+			Log.d(TAG, "Directory:" + songPath);
+			File from = new File(songPath, Main.existingName);
+			Log.d(TAG, "Rename from:" + from);
+			File to = new File(songPath, Main.newName.trim());
+			Log.d(TAG, "Rename   to:" + to);
+			from.renameTo(to);  // rename the file
+			// update the database
+			try {
+				Log.d(TAG, "db begin transaction");
+				Main.db.beginTransaction();
+				try {
+					qry = "UPDATE SongList " +
+							" SET FileName = " + q + Main.newName + q +
+							" WHERE FileName = " + q + Main.existingName + q +
+							" AND Path = " + Main.path;
+					Log.d(TAG, "Rename qry:" + qry);
+					Main.db.execSQL(qry);
+					Main.db.setTransactionSuccessful();
+				} finally {
+					Main.db.endTransaction();
+					Log.d(TAG, "db end transaction");
+				}
+			} catch (Exception e) {
+				Log.e(TAG, "Database Exception: " + e.toString());
+			}
 
-        }
-        // now check the spec
-        Log.d(TAG, "*** 10 *** existingRef: " + Main.existingRef + " newRef:" + Main.newRef);
-        if (Main.newRef != Main.existingRef) {
-            // update the database
-            int maxInx = 0;
-            int maxSeg = 0;
-            if (Main.newRef > 0) {
-                qry = "SELECT MAX(Inx) AS MaxInx, MAX(Seg) AS MaxSeg FROM SongList" +
-                        " WHERE Ref = " + Main.newRef;
-                rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+		}
+		// now check the spec
+		Log.d(TAG, "*** 10 *** existingRef: " + Main.existingRef + " newRef:" + Main.newRef);
+		if (Main.newRef != Main.existingRef) {
+			// update the database
+			int maxInx = 0;
+			int maxSeg = 0;
+			if (Main.newRef > 0) {
+				qry = "SELECT MAX(Inx) AS MaxInx, MAX(Seg) AS MaxSeg FROM SongList" +
+						" WHERE Ref = " + Main.newRef;
+				rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 
-                if (rs.getCount() != 0) {
-                    rs.moveToFirst();
-                    maxInx = rs.getInt(0) + 1;  // increment the last known inx
-                    Log.d(TAG, "*** 11 *** maxInx:" + maxInx + " maxSeg:" + maxSeg);
-                }
-                rs.close();
-            }
+				if (rs.getCount() != 0) {
+					rs.moveToFirst();
+					maxInx = rs.getInt(0) + 1;  // increment the last known inx
+					Log.d(TAG, "*** 11 *** maxInx:" + maxInx + " maxSeg:" + maxSeg);
+				}
+				rs.close();
+			}
 
-            try {
-                Log.d(TAG, "db begin transaction");
-                Main.db.beginTransaction();
-                try {
-                    qry = "UPDATE SongList " +
-                            " SET Ref = " + Main.newRef + ", " +
-                            " Inx = " + maxInx + ", " +
-                            " Seg = " + maxSeg +
-                            " WHERE FileName = " + q + Main.newName + q +
-                            " AND Path = " + Main.path +
-                            " AND Ref = " + Main.existingRef +
-                            " AND Inx = " + Main.existingInx +
-                            " AND Seg = " + Main.existingSeg;
-                    Log.d(TAG, "qry:" + qry);
-                    Main.db.execSQL(qry);
-                    if (Main.existingRef > 0) {
-                        // I have to query to see if existing is in totals before I attempt update
-                        qry = "SELECT Ref FROM DefineTotals" +
-                                " WHERE Ref = " + Main.existingRef +
-                                " AND Inx = " + Main.existingInx +
-                                " AND Seg = " + Main.existingSeg;
-                        rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                        if (rs.getCount() > 0) {
-                            qry = "UPDATE DefineTotals SET Ref = " + Main.newRef +
-                                    " WHERE Ref = " + Main.existingRef +
-                                    " AND Inx = " + Main.existingInx +
-                                    " AND Seg = " + Main.existingSeg;
-                            Main.db.execSQL(qry);
-                        }
-                        rs.close();
-                        qry = "SELECT Ref FROM DefineDetail" +
-                                " WHERE Ref = " + Main.existingRef +
-                                " AND Inx = " + Main.existingInx +
-                                " AND Seg = " + Main.existingSeg;
-                        rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                        if (rs.getCount() > 0) {
-                            qry = "UPDATE DefineDetail SET Ref = " + Main.newRef +
-                                    " WHERE Ref = " + Main.existingRef +
-                                    " AND Inx = " + Main.existingInx +
-                                    " AND Seg = " + Main.existingSeg;
-                            Main.db.execSQL(qry);
-                        }
-                        rs.close();
-                    } // existing Ref > 0
-                } finally {
-                    Main.db.setTransactionSuccessful();
-                    Main.db.endTransaction();
-                    Log.d(TAG, "db end transaction");
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Database Exception: " + e.toString());
-            }
+			try {
+				Log.d(TAG, "db begin transaction");
+				Main.db.beginTransaction();
+				try {
+					qry = "UPDATE SongList " +
+							" SET Ref = " + Main.newRef + ", " +
+							" Inx = " + maxInx + ", " +
+							" Seg = " + maxSeg +
+							" WHERE FileName = " + q + Main.newName + q +
+							" AND Path = " + Main.path +
+							" AND Ref = " + Main.existingRef +
+							" AND Inx = " + Main.existingInx +
+							" AND Seg = " + Main.existingSeg;
+					Log.d(TAG, "qry:" + qry);
+					Main.db.execSQL(qry);
+					if (Main.existingRef > 0) {
+						// I have to query to see if existing is in totals before I attempt update
+						qry = "SELECT Ref FROM DefineTotals" +
+								" WHERE Ref = " + Main.existingRef +
+								" AND Inx = " + Main.existingInx +
+								" AND Seg = " + Main.existingSeg;
+						rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+						if (rs.getCount() > 0) {
+							qry = "UPDATE DefineTotals SET Ref = " + Main.newRef +
+									" WHERE Ref = " + Main.existingRef +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg;
+							Main.db.execSQL(qry);
+						}
+						rs.close();
+						qry = "SELECT Ref FROM DefineDetail" +
+								" WHERE Ref = " + Main.existingRef +
+								" AND Inx = " + Main.existingInx +
+								" AND Seg = " + Main.existingSeg;
+						rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+						if (rs.getCount() > 0) {
+							qry = "UPDATE DefineDetail SET Ref = " + Main.newRef +
+									" WHERE Ref = " + Main.existingRef +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg;
+							Main.db.execSQL(qry);
+						}
+						rs.close();
+					} // existing Ref > 0
+				} finally {
+					Main.db.setTransactionSuccessful();
+					Main.db.endTransaction();
+					Log.d(TAG, "db end transaction");
+				}
+			} catch (Exception e) {
+				Log.e(TAG, "Database Exception: " + e.toString());
+			}
 
-        }
-    }
+		}
+	}
 
-    private void deleteSelectedFile() {
+	private void deleteSelectedFile() {
 		if (Main.songCounter > 0) {
 			Main.alertRequest = 2; // delete selected files
 			Intent a3b = new Intent(this, Alert3ButtonDialog.class);
@@ -981,40 +981,40 @@ public class SongList extends AppCompatActivity {
 		} else {
 			Toast.makeText(this, "Nothing selected to delete.", Toast.LENGTH_LONG).show();
 		}
-    } // deleteSelectedFile
+	} // deleteSelectedFile
 
 
-    private void deleteOk(int id) {
-        char q = 34;
-        Log.d(TAG, "deleteOk option:" + id);
-        if (id == 2) { // 2 = no - cancel
-            Toast.makeText(this, "Delete Canceled", Toast.LENGTH_LONG).show();
-            return; // cancel
-        }
+	private void deleteOk(int id) {
+		char q = 34;
+		Log.d(TAG, "deleteOk option:" + id);
+		if (id == 2) { // 2 = no - cancel
+			Toast.makeText(this, "Delete Canceled", Toast.LENGTH_LONG).show();
+			return; // cancel
+		}
 
-        Cursor rsDel = null;
-        for (int i = 0; i < Main.songsDbLen; i++) {
-            if (Main.ck[i] == true) {
+		Cursor rsDel = null;
+		for (int i = 0; i < Main.songsDbLen; i++) {
+			if (Main.ck[i] == true) {
 				Main.listOffset = i;
 				Main.existingName = Main.songs[i];
-                Main.existingRef = Main.ref[i];
-                Main.existingInx = Main.inx[i];
-                Main.existingSeg = Main.seg[i];
-                qry = "SELECT count(*) FROM SongList" +
-                        " WHERE FileName = " + q + Main.existingName + q +
+				Main.existingRef = Main.ref[i];
+				Main.existingInx = Main.inx[i];
+				Main.existingSeg = Main.seg[i];
+				qry = "SELECT count(*) FROM SongList" +
+						" WHERE FileName = " + q + Main.existingName + q +
 						" AND Ref = " + Main.existingRef +
-                        " AND Inx = " + Main.existingInx +
-                        " AND Seg = " + Main.existingSeg;
-                Log.d(TAG, "count qry:" + qry);
-                rsDel = Main.songdata.getReadableDatabase().rawQuery(qry, null);
-                rsDel.moveToFirst();
-                int cntr = rsDel.getInt(0);
-                Log.d(TAG, "deleteSelectedFile count potential files:" + cntr);
-                rsDel.close();
-                try {
-                    Log.d(TAG, "db begin transaction");
-                    Main.db.beginTransaction();
-                    try {   // 0= file and definition 1 = definition only
+						" AND Inx = " + Main.existingInx +
+						" AND Seg = " + Main.existingSeg;
+				Log.d(TAG, "count qry:" + qry);
+				rsDel = Main.songdata.getReadableDatabase().rawQuery(qry, null);
+				rsDel.moveToFirst();
+				int cntr = rsDel.getInt(0);
+				Log.d(TAG, "deleteSelectedFile count potential files:" + cntr);
+				rsDel.close();
+				try {
+					Log.d(TAG, "db begin transaction");
+					Main.db.beginTransaction();
+					try {   // 0= file and definition 1 = definition only
 						if (id == 0) {
 							qry = "DELETE FROM SongList" +
 									" WHERE FileName = " + q + Main.existingName + q +
@@ -1024,19 +1024,19 @@ public class SongList extends AppCompatActivity {
 							Main.db.execSQL(qry);
 						}
 						if (id == 0 || id == 1) {
-                            Log.d(TAG, "delete definition with ref:" + Main.existingRef + " inx:" + Main.existingInx + " seg:" + Main.existingSeg);
-                            qry = "DELETE FROM DefineTotals" +
-                                    " WHERE Ref = " + Main.existingRef +
-                                    " AND Inx = " + Main.existingInx +
-                                    " AND Seg = " + Main.existingSeg;
-                            Main.db.execSQL(qry);
-                            qry = "DELETE FROM DefineDetail" +
-                                    " WHERE Ref = " + Main.existingRef +
-                                    " AND Inx = " + Main.existingInx +
-                                    " AND Seg = " + Main.existingSeg;
-                            Main.db.execSQL(qry);
+							Log.d(TAG, "delete definition with ref:" + Main.existingRef + " inx:" + Main.existingInx + " seg:" + Main.existingSeg);
+							qry = "DELETE FROM DefineTotals" +
+									" WHERE Ref = " + Main.existingRef +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg;
+							Main.db.execSQL(qry);
+							qry = "DELETE FROM DefineDetail" +
+									" WHERE Ref = " + Main.existingRef +
+									" AND Inx = " + Main.existingInx +
+									" AND Seg = " + Main.existingSeg;
+							Main.db.execSQL(qry);
 						}
-                        if (id == 1) {
+						if (id == 1) {
 							qry = "UPDATE SongList " +
 									" SET Defined = 0" +
 									", Identified = 0" +
@@ -1050,20 +1050,20 @@ public class SongList extends AppCompatActivity {
 									" AND Seg = " + Main.existingSeg;
 							Log.d(TAG, "qry:" + qry);
 							Main.db.execSQL(qry);
-                        }
-                    } finally {
-                        Main.db.setTransactionSuccessful();
-                        Main.db.endTransaction();
-                        Log.d(TAG, "db end transaction");
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Database Exception: " + e.toString());
+						}
+					} finally {
+						Main.db.setTransactionSuccessful();
+						Main.db.endTransaction();
+						Log.d(TAG, "db end transaction");
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "Database Exception: " + e.toString());
 				}
 
-                boolean deleted = false;
-                if (id == 0) { // 0 = file and definition
+				boolean deleted = false;
+				if (id == 0) { // 0 = file and definition
 					Log.d(TAG, "is it a real file? existingSeg:" + Main.existingSeg);
-                    if (Main.existingSeg == 0) {
+					if (Main.existingSeg == 0) {
 						try {
 							Log.d(TAG, "deleteFile name:" + Main.songpath + Main.existingName);
 							File file = new File(Main.songpath + Main.existingName);
@@ -1074,13 +1074,13 @@ public class SongList extends AppCompatActivity {
 						} catch (Exception e) {
 							Log.d(TAG, "exception e:" + e);
 						}
-                    }
-                }
-            }
-        } // next i
-        Main.fileReshowExisting = true;
+					}
+				}
+			}
+		} // next i
+		Main.fileReshowExisting = true;
 		Main.isNewStartStop = false; // finish was taking me to play
-        //db.close();
+		//db.close();
 		Log.d(TAG, "finish() back to main resume fileReshowExisting:" + Main.fileReshowExisting);
 		finish(); // should resume and back here to songlist -- error "rsrc of package null"
 	} // deleteOk
@@ -1179,8 +1179,8 @@ public class SongList extends AppCompatActivity {
 			Log.d(TAG, "mp3 metadata:" + Main.metaData);
 
 		}
-			// [4 bytes atom name][4 bytes len to next atom name][data]								[4 bytes atom name]
-			// 		TIT2			 	0x24 				 	Cedar Waxwing (Bombycilla cedrorum)	TCON
+		// [4 bytes atom name][4 bytes len to next atom name][data]								[4 bytes atom name]
+		// 		TIT2			 	0x24 				 	Cedar Waxwing (Bombycilla cedrorum)	TCON
 		if (filePath.indexOf(".m4a") > 0) {
 			// [4 bytes atom length] [4 bytes atom name] [4 bytes len] [4 bytes "data"] [4 len of data] [data] [contents of the atom, if any]
 			// 3B,"©nam",33,"data",1,0,"American ...." (length 33-12)
@@ -1197,7 +1197,7 @@ public class SongList extends AppCompatActivity {
 				hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 				metaHex.append(hexChars[j*2]);
 				metaHex.append(hexChars[j * 2 + 1]);
-					//Log.d(TAG, "m4a hexChars at:" + j + " " + hexChars[j*2] + hexChars[j*2+1]);
+				//Log.d(TAG, "m4a hexChars at:" + j + " " + hexChars[j*2] + hexChars[j*2+1]);
 			}
 			//Log.d(TAG, "read hexChars:" + metaHex);
 			StringBuilder meta = new StringBuilder();
@@ -1311,12 +1311,11 @@ public class SongList extends AppCompatActivity {
 	}
 
 	@Override
-    public void onDestroy() {
-        super.onDestroy();
+	public void onDestroy() {
+		super.onDestroy();
 		if (list != null) {
 			list = null;
 		}
-    }
+	}
 
 } // SongList
-
