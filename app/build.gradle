@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "com.modelsw.birdingviamic"
         minSdkVersion 17
-        targetSdkVersion 30
-        versionCode 104  // code version
-        versionName "59A.104"  // match the versionCode line above and also in strings.xml
-        // DatabaseVersion 84 in Main
+        targetSdkVersion 31
+        versionCode 130  // code version
+        versionName "60g.130"  // match the versionCode line above and also in strings.xml
+        // DatabaseVersion 88 in Main
         compileOptions {
             sourceCompatibility JavaVersion.VERSION_1_7
             targetCompatibility JavaVersion.VERSION_1_7
@@ -31,6 +31,6 @@ android {
 
 dependencies {
         implementation fileTree(dir: 'libs', include: ['*.jar'])
-        implementation 'androidx.appcompat:appcompat:1.2.0'
-        implementation 'com.google.android.material:material:1.0.0'
+        implementation 'androidx.appcompat:appcompat:1.4.1'
+        implementation 'com.google.android.material:material:1.5.0'
 }

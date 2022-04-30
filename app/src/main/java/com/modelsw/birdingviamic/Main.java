@@ -140,7 +140,7 @@ package com.modelsw.birdingviamic;
 * 60d.127 -- implement storage permissions from // https://www.youtube.com/watch?v=_IbfUJS13h8 -- attempt from Download folder
 * 60e.128 -- attempt to laod from external storage (original NAC location - with new permissions from 60d.127)
 * 60f.129 -- remove duplicate permissions code. fix load filter on startup
-
+* 60g.130 -- run after load github load master with Rebase
 
 *	 the tables that use ref: codename, definedetail, definetotals, identify, songlist
 *	 the table that could be user modified: birdwebsites, filter, lastknown, location, options, songpath
@@ -231,7 +231,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static int CnnId = 0; // new id created when Option CNN set  CnnId
 	public static String customPathLocation = null;
 	public static String databaseName; // birdingviamic/Define/BirdSongs.db
-	public static int databaseVersion = 87; // increment if change database -- calls SongData
+	public static int databaseVersion = 88; // increment if change database -- calls SongData
 	public static SQLiteDatabase db;
 	public static String definepath = null; // birdingviamic/Define
 	public static File definePathDir; // file format
