@@ -83,8 +83,8 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 		manLng = (EditText) findViewById(R.id.man_lng);
 		locationStats = (TextView) findViewById(R.id.location_stats);
 		findViewById(R.id.update_button).setOnClickListener(this);
-		// read from text file
-		Log.d(TAG, "read the Location file");
+		// read from database
+		Log.d(TAG, "read the Location table");
 		qry = "SELECT Value FROM Location WHERE Name = 'AutoLocation'";
 		Cursor rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 		rs.moveToFirst();
@@ -124,7 +124,7 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 				latitudeField.setText("Location not available");
 				longitudeField.setText("Location not available");
 			}
-		// Initialize the location fields
+			// Initialize the location fields
 			if (location != null) {
 				Log.d(TAG, "Provider " + provider + " has been selected.");
 				onLocationChanged(location);
@@ -166,18 +166,20 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 	protected void onPause() {
 		super.onPause();
 		try {
-		locationManager.removeUpdates(this);
+			locationManager.removeUpdates(this);
 		} catch (SecurityException e) {
 			Log.e(TAG, "OnPause Location Security exception:" + e);
 		}
 	}
 
 	public void onLocationChanged(Location location) {
-		phoneLat = (int) (location.getLatitude());
-		phoneLng = (int) (location.getLongitude());
-		manualLat = Integer.parseInt(manLat.getText().toString());
+		phoneLat = (int) Math.round(location.getLatitude());
+		Log.d(TAG, "onLocationChanged phoneLat:" + phoneLat);
+		phoneLng = (int) Math.round(location.getLongitude());
+		Log.d(TAG, "onLocationChanged phoneLng:" + phoneLng);
+		manualLat = check_manual_input(manLat);
 		Log.d(TAG, "onLocationChanged manualLat:" + manualLat);
-		manualLng = Integer.parseInt(manLng.getText().toString());
+		manualLng = check_manual_input(manLng);
 		Log.d(TAG, "onLocationChanged manualLng:" + manualLng);
 
 		latitudeField.setText(String.valueOf(phoneLat));
@@ -212,6 +214,15 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 				Toast.LENGTH_SHORT).show();
 	}
 
+	public int check_manual_input(EditText manInp){
+		// (int) Math.round(Float.parseFloat((manLat.getText().toString())));
+		String x = manInp.getText().toString();
+		if (x == "") {
+			x = "0";
+		}
+		return (int) Math.round(Float.parseFloat((x)));
+	}
+
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.phone_location: {
@@ -224,17 +235,16 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 			case R.id.manual_location: {
 				Main.isAutoLocation = false;
 				manualLocation.setChecked(true);
-				manualLat = Integer.parseInt(manLat.getText().toString());
-				manualLng = Integer.parseInt(manLng.getText().toString());
+				manualLat = check_manual_input(manLat);
+				manualLng = check_manual_input(manLng);
 				Main.latitude = manualLat;
 				Main.longitude = manualLng;
 				break;
 			}
 			case R.id.update_button: {
 				Log.d(TAG, "save the location file");
-				manualLat = Integer.parseInt(manLat.getText().toString());
-				manualLng = Integer.parseInt(manLng.getText().toString());
-
+				manualLat = check_manual_input(manLat);
+				manualLng = check_manual_input(manLng);
 				Main.db.beginTransaction();
 				int temp = Main.isAutoLocation ? 1 : 0;
 				String qry = "UPDATE Location SET Value = " + temp + " WHERE Name =  'AutoLocation'";
@@ -447,4 +457,3 @@ public class ShowLocation extends AppCompatActivity implements LocationListener,
 */
 	}
 } // show location
-		
