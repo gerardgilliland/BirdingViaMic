@@ -17,10 +17,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 public class NewSpecDialog extends Activity implements OnClickListener {
-	private static final String TAG = "NewSpecDialog";
-	private EditText editRegion;
-	private EditText editSpec;
-	private EditText editSubRegion;
+    private static final String TAG = "NewSpecDialog";
+    private EditText editRegion;
+    private EditText editSpec;
+    private EditText editSubRegion;
     private String existingRegion;
     private int ireg = 0;  // region offset
     private int ired = 0;  // redlist offseet
@@ -35,12 +35,12 @@ public class NewSpecDialog extends Activity implements OnClickListener {
     private Spinner redspinner;
     TextView textTitle;
     TextView textSpecName;
-	TextView textRegion;
-	TextView textSpec;
-	TextView textSubRegion;
+    TextView textRegion;
+    TextView textSpec;
+    TextView textSubRegion;
 
-	public void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "onCreate existingName:" + Main.existingSpecName );	
+    public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate existingSpecName:" + Main.existingSpecName);
         super.onCreate(savedInstanceState);
         if (Main.songpath == null || Main.songdata == null) {
             return;
@@ -55,14 +55,13 @@ public class NewSpecDialog extends Activity implements OnClickListener {
         if (Main.myRequest == 2) { // 1=add 2=rename
             title = getString(R.string.rename_species_label);
         }
-        textTitle.setText(title);
+        textTitle.setText(title);  // Rename Species
         textSpecName = (EditText) findViewById(R.id.new_commonname_text);
         textSpecName.setText((CharSequence) Main.existingSpecName);
         textSpecName.setOnClickListener(this);
         textSpec = (EditText) findViewById(R.id.new_spec_text);
         textSpec.setText((CharSequence) Main.existingSpec);
         textSpec.setOnClickListener(this);
-
         textSubRegion = (EditText) findViewById(R.id.new_subregion_text);
         textSubRegion.setText((CharSequence) Main.existingSubRegion);
         textSubRegion.setOnClickListener(this);
@@ -102,8 +101,8 @@ public class NewSpecDialog extends Activity implements OnClickListener {
         findViewById(R.id.cancel_button).setOnClickListener(this);
         Log.d(TAG, "*** 1c *** onCreate: existingSpecName:" + Main.existingSpecName + " newSpecName:" + Main.newSpecName);
         //Log.d(TAG, "*** 1d *** onCreate: textName:" + textName.getText() + " editText:" + editText.getText() +
- 		//	  " textSpec:" + textSpec.getText() + " editSpec:" + editSpec.getText() + " textRange:" + textRange.getText() + " editRange:" + editRange.getText());
-	}
+        //	  " textSpec:" + textSpec.getText() + " editSpec:" + editSpec.getText() + " textRange:" + textRange.getText() + " editRange:" + editRange.getText());
+    }
 
     private void loadSpinnerData() {
         // Spinner Drop down elements
@@ -184,7 +183,7 @@ public class NewSpecDialog extends Activity implements OnClickListener {
                 }
                 Main.newRedList = redlist;
                 Log.d(TAG, "done newSpecName:" + Main.newSpecName + " newSpec:" + Main.newSpec + " newRegion:" + Main.newRegion
-                            + " newRedList:" + Main.newRedList);
+                        + " newRedList:" + Main.newRedList);
                 setResult(1);
                 finish();
                 break;
