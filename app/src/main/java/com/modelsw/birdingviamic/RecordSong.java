@@ -37,16 +37,16 @@ import android.widget.Toast;
 
 public class RecordSong extends AppCompatActivity implements OnClickListener {
     private static final String TAG = "RecordSong";
-	//public static SQLiteDatabase db;
-	//public static SongData songdata;
+    //public static SQLiteDatabase db;
+    //public static SongData songdata;
     int audsrc = 0;
     int chanCnt = 1;
     Context ctx = this;
     private boolean fileSaved = false;
     private static String mFileName = null;
     //private static String pathBase = null;
-    private static String[] items;   
-	private static File[] songFile;   
+    private static String[] items;
+    private static File[] songFile;
     boolean mStartRecording;
     boolean mStartListening;
     boolean mStartPlaying;
@@ -57,11 +57,11 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
     private Button mListenButton = null;
     private Button mPlayButton = null;
     private MediaPlayer mPlayer = null;
-//    short[] audioData;
-	public boolean recording;
+    //    short[] audioData;
+    public boolean recording;
     Toolbar toolbar;
-	TextView adStatus;
-	
+    TextView adStatus;
+
     public RecordSong() {  // constructor
     }
 
@@ -160,21 +160,21 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         }
 
         mRecordButton = (Button) findViewById(R.id.record_button);
-		findViewById(R.id.record_button).setOnClickListener(this);
-		mListenButton = (Button) findViewById(R.id.listen_button);
-		findViewById(R.id.listen_button).setOnClickListener(this);
+        findViewById(R.id.record_button).setOnClickListener(this);
+        mListenButton = (Button) findViewById(R.id.listen_button);
+        findViewById(R.id.listen_button).setOnClickListener(this);
         mPlayButton = (Button) findViewById(R.id.play_button);
-		findViewById(R.id.play_button).setOnClickListener(this);
-		fileDate = (TextView) findViewById(R.id.file_date);
-		cs = "";
-		fileDate.setText(cs);
+        findViewById(R.id.play_button).setOnClickListener(this);
+        fileDate = (TextView) findViewById(R.id.file_date);
+        cs = "";
+        fileDate.setText(cs);
         mStartRecording = true;
         mStartListening = true;
         mStartPlaying = true;
-    	Main.showPlayFromRecord = false;
-	    if (Main.isStartRecording == true) {
-	    	mRecordButton.performClick();    
-	    }
+        Main.showPlayFromRecord = false;
+        if (Main.isStartRecording == true) {
+            mRecordButton.performClick();
+        }
 
     }
 
@@ -201,51 +201,51 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
 
     }
 
-/* removed because I moved the record button outside of the scroll.
-    // this allows the record button to act on release of touch and doesn't interpret the touch as scroll
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        // Normal event dispatch to this container's children, ignore the return value
-        super.dispatchTouchEvent(ev);
-        // Always consume the event so it is not dispatched further up the chain
-        Log.d(TAG, "dispatchTouchEvent ev:" + ev.toString() );
-        return false;
-    }
-*/
-	public void onClick(View v) {
-		switch (v.getId()) {
-		    case R.id.record_button: {
-	    	    Log.d(TAG, "onClick Record mStartRecording:" + mStartRecording);
+    /* removed because I moved the record button outside of the scroll.
+        // this allows the record button to act on release of touch and doesn't interpret the touch as scroll
+        public boolean dispatchTouchEvent(MotionEvent ev) {
+            // Normal event dispatch to this container's children, ignore the return value
+            super.dispatchTouchEvent(ev);
+            // Always consume the event so it is not dispatched further up the chain
+            Log.d(TAG, "dispatchTouchEvent ev:" + ev.toString() );
+            return false;
+        }
+    */
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.record_button: {
+                Log.d(TAG, "onClick Record mStartRecording:" + mStartRecording);
                 onRecord(mStartRecording);
                 if (mStartRecording) {
                     mRecordButton.setText("Stop recording");
                     fileSaved = false;
                 } else {
-            	    mRecordButton.setText("Record");
+                    mRecordButton.setText("Record");
                 }
                 mStartRecording = !mStartRecording;
-		        break;
-		    }
-		    case R.id.listen_button: {
+                break;
+            }
+            case R.id.listen_button: {
                 if (fileSaved == false) {
                     break;
                 }
-	    	    Log.d(TAG, "onClick Listen mStartListening:" + mStartListening );
+                Log.d(TAG, "onClick Listen mStartListening:" + mStartListening );
                 onListen(mStartListening);
                 if (mStartListening) {
-            	    mListenButton.setText("Stop Listening");
+                    mListenButton.setText("Stop Listening");
                 } else {
-            	    mListenButton.setText("Listen");
+                    mListenButton.setText("Listen");
                 }
                 mStartListening = !mStartListening;
-		        break;
-		    }
-		    case R.id.play_button: {  // load play screen via main onResume()
-	    	    Log.d(TAG, "onClick Play");
-	            Main.songCounter = 0; // clear the list so this one will play
-	    	    Main.showPlayFromRecord = true; // force the play screen to appear
+                break;
+            }
+            case R.id.play_button: {  // load play screen via main onResume()
+                Log.d(TAG, "onClick Play");
+                Main.songCounter = 0; // clear the list so this one will play
+                Main.showPlayFromRecord = true; // force the play screen to appear
 
                 finish();
-		    }
+            }
             case R.id.mic_0: {
                 Log.d(TAG, "onClick mic_0 Default");
                 audsrc = 0;
@@ -267,8 +267,8 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
                 break;
             }
 
-		} // switch
-	}
+        } // switch
+    }
 
     private void onRecord(boolean start) {
         if (start) {
@@ -287,7 +287,7 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
     }
 
     private void startListening() {
-    	long duration = 0;
+        long duration = 0;
         try {
             if (mFileName == null) {
                 String msg = "Nothing recorded to listen to.";
@@ -312,15 +312,15 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
             String msg = "Not initialized yet.";
             showToast(msg);
         }
-        // I need this on Completion listener because the file length extends until I click stop 
+        // I need this on Completion listener because the file length extends until I click stop
         // even though the song is through playing
         mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-        // @Override
-        	public void onCompletion(MediaPlayer mediaPlayer) {
-        		// Main.isPlaying = false;
-        		Log.d(TAG, "startListening onCompletion" );
-        		mListenButton.performClick();
-        	}
+            // @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                // Main.isPlaying = false;
+                Log.d(TAG, "startListening onCompletion" );
+                mListenButton.performClick();
+            }
         });
     }
 
@@ -337,8 +337,8 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
             Log.d(TAG, "stopListening() mPlayer is null" );
             return;
         }
-		Log.d(TAG, "stopListening" );
-		//mPlayer.reset();
+        Log.d(TAG, "stopListening" );
+        //mPlayer.reset();
         mPlayer.stop();
         mPlayer.release();
         mPlayer = null;
@@ -406,19 +406,19 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
                 return;
             }
             mRecorder.start();
-		} catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
             String msg = "Failed to setAudioSource:" + audsrc + ". Try another Mic Option.";
             showToast(msg);
             return;
-		}
+        }
     }
 
 
     private void stopRecording() {
-    	//RecordThread recordThread = new RecordThread();
-    	//recording = false;
-    	//recordThread.quit();
+        //RecordThread recordThread = new RecordThread();
+        //recording = false;
+        //recordThread.quit();
         cs = "Saving file ...";  // the time of the recording
         fileDate.setText(cs);
         fileSaved = false;
@@ -436,7 +436,7 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         InputStream inStream = null;
         OutputStream outStream = null;
         try{
- 
+
             File file1 = new File(mFileName);  // full path
             File file2 = new File(Main.songpath + "zztemp.m4a"); // mp4 works, .aac works
             inStream = new FileInputStream(file1);
@@ -461,37 +461,37 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
         Main.sourceMic = Main.isExternalMic ? 2 : 1; // 2 = external / 1 internal mic
         Main.stereoFlag = Main.isStereo ? 1 : 0; // 1 = stereo / 0 = mono
         Main.audioSource = audsrc;
-    	Log.d(TAG, "stop recording Main.existingName:" + Main.existingName);
-    	Log.d(TAG, "stop recording mFileName:" + mFileName);
-        try {        	
-        	Log.d(TAG, "db begin transaction");
-        	Main.db.beginTransaction();
-        	ContentValues val = new ContentValues();
+        Log.d(TAG, "stop recording Main.existingName:" + Main.existingName);
+        Log.d(TAG, "stop recording mFileName:" + mFileName);
+        try {
+            Log.d(TAG, "db begin transaction");
+            Main.db.beginTransaction();
+            ContentValues val = new ContentValues();
             try {
-    			val.put("Ref", 0);
-    			val.put("Inx", 0);
-    			val.put("Seg", 0);
-    			val.put("Path", Main.path);
-    			val.put("FileName", Main.existingName);
-    			val.put("Start", 0);
-    			val.put("Stop", 0);
-    			val.put("Identified", 0);  
-           		val.put("Defined", 0);
-           	   	val.put("AutoFilter", 0);
-           	   	val.put("Enhanced", 0);
+                val.put("Ref", 0);
+                val.put("Inx", 0);
+                val.put("Seg", 0);
+                val.put("Path", Main.path);
+                val.put("FileName", Main.existingName);
+                val.put("Start", 0);
+                val.put("Stop", 0);
+                val.put("Identified", 0);
+                val.put("Defined", 0);
+                val.put("AutoFilter", 0);
+                val.put("Enhanced", 0);
                 val.put("Smoothing", 0);
-    			val.put("SourceMic", Main.sourceMic);
+                val.put("SourceMic", Main.sourceMic);
                 val.put("SampleRate", Main.sampleRateOption);  // 0=22050, 1=44100
                 val.put("AudioSource", Main.audioSource); // 0=default, 1=mic, 5=camcorder, 6 voice recognition
                 val.put("Stereo", Main.stereoFlag); // 0=mono, 1=stereo
-    			val.put("LowFreqCutoff", 0);
-    			val.put("HighFreqCutoff", 0);
-    			val.put("FilterStart", 0);
-    			val.put("FilterStop", 0);
-           		Main.db.insert("SongList", null, val);
-           		Main.db.setTransactionSuccessful();
+                val.put("LowFreqCutoff", 0);
+                val.put("HighFreqCutoff", 0);
+                val.put("FilterStart", 0);
+                val.put("FilterStop", 0);
+                Main.db.insert("SongList", null, val);
+                Main.db.setTransactionSuccessful();
             } finally {
-		    	val.clear();
+                val.clear();
                 Main.db.endTransaction();
                 cs = "Recorded at: " + Main.recordedName.substring(2, 20);  // the time of the recording
                 fileDate.setText(cs);
@@ -499,20 +499,20 @@ public class RecordSong extends AppCompatActivity implements OnClickListener {
                 Log.d(TAG, "db end transaction fileSaved:" + fileSaved);
             }
         } catch( Exception e ) {
-     	    Log.e(TAG, "Database Exception: " + e.toString() );     	    
+            Log.e(TAG, "Database Exception: " + e.toString() );
         }
     }
 
     public String tempFile() {  // called during startRecording()
-    	String format = "yyyy_MMdd_HH.mm.ss";        	
-		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
-     	long iNow = System.currentTimeMillis();
-    	Main.recordedName = "@_" + sdf.format(iNow) + ".m4a";  // @_yyyy_MMdd_HH.mm.ss.3gp move to top of list (before A) .mp4 works  -- trying aac   	
-        mFileName = Main.songpath + Main.recordedName; // file name is the date        
-    	Log.d(TAG, "mFileName:" + mFileName);
-    	return mFileName;  
-    	
+        String format = "yyyy_MMdd_HH.mm.ss";
+        SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+        long iNow = System.currentTimeMillis();
+        Main.recordedName = "@_" + sdf.format(iNow) + ".m4a";  // @_yyyy_MMdd_HH.mm.ss.3gp move to top of list (before A) .mp4 works  -- trying aac
+        mFileName = Main.songpath + Main.recordedName; // file name is the date
+        Log.d(TAG, "mFileName:" + mFileName);
+        return mFileName;
+
     }
-    
+
 
 }
