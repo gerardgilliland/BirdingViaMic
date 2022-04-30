@@ -31,28 +31,28 @@
         android:layout_above="@id/bottom_buttons"
         android:scrollbars="none">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
-        android:gravity="center" >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:gravity="center" >
 
 
-    <TextView
-        android:id="@+id/permission_label"
-        android:text="@string/permission_label"
-        android:gravity="start"
-        android:textColor="@color/linen"
-        android:layout_marginLeft="3dip"
-        android:layout_marginRight="3dip"
-        android:layout_below="@id/spacer"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/permission_label"
+                android:text="@string/permission_label"
+                android:gravity="start"
+                android:textColor="@color/linen"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:layout_below="@id/spacer"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                />
+        </LinearLayout>
 
     </ScrollView>
 
