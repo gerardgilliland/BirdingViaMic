@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <paths>
+        <files-path path="storage/emulated/0/Android/data/com.modelsw.birdingviamicnw/files/" name="Song" />
+        <files-path path="storage/emulated/0/Android/data/com.modelsw.birdingviamicow/files/" name="Song" />
+        <files-path path="storage/emulated/0/Android/data/com.modelsw.birdingviamicoa/files/" name="Song" />
+        <files-path path="storage/emulated/0/Android/data/com.modelsw.birdingviamicnac/files/" name="Song" />
+    </paths>
+</resources>
