@@ -1,10 +1,19 @@
 package com.modelsw.birdingviamic;
 
+import static com.modelsw.birdingviamic.Main.existingName;
+import static com.modelsw.birdingviamic.Main.isRunCnnModel;
+import static com.modelsw.birdingviamic.Main.songPathDir;
+
+import static java.nio.file.Files.*;
+import static java.nio.file.Paths.get;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -22,10 +31,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.MediaPlayer;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 //import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -158,7 +169,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	private static String mFileName = null;
 	public static MediaPlayer mPlayer;  // static in attempt to retain image
 	private float mult = 1f;
-	public static VisualizerView mVisualizerView;
+	public VisualizerView mVisualizerView;
 	public static int numCepstra = 16;  // was 12
 	private int numMelFilters = 128;  // gg was 30 -- then 32 now 64 -- WAIT -- IT IS 128
 	public static int numSamplesPlayed = 0;
@@ -247,12 +258,12 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		mVisualizerView.mCanvasBitmap = null;
 		mVisualizerView.mCanvas = null;
 		mVisualizerView.mPaint = null;
-		if (Main.songpath == null || Main.songdata == null) {
+		if (songPathDir == null || Main.songdata == null) {
 			finish();
 			return;
 		}
-		mFileName = Main.songpath + Main.existingName;
-		if (mFileName.equals(null)) {
+		mFileName = Main.songpath + existingName;
+		if (mFileName == "") {
 			String msg = "Please select a file to Play.";
 			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 			Log.d(TAG, msg);
@@ -281,9 +292,12 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				Main.isEdit = false;  // re-added 3/10/16
 				Main.isPlaying = true;
 				Main.isIdentify = false;
-				removeAdjustView();
+				//removeAdjustView();
 				try {
 					startSong(v);
+					// added these two from Edit - now the frequency and time and bird name show up !!!
+					addLineRenderer();
+					showAdjustView();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -331,12 +345,32 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				if (mVisualizerView != null) {
 					mVisualizerView.release();
 				}
+				/*
+				Android SFTP songs from BirdingViaMic to Host (modelsw server)
+				which will transfer the songs to NVIDIA model
+				which will attempt an ID and send the Bird Name reference number back ...
+				*/
+				Log.d(TAG, "Main.isRunCnnModel: " + isRunCnnModel);
+				// send this to the model before starting internal identify
+				// ??????????????? can I move this to play button ????????????????????? NOT YET
+				if (isRunCnnModel == true) {
+					Log.d(TAG, "RunCnnModel Server defined");
+					// open web page that updates MySqlServer with file to be passed
+					//String data = "https://www.modelsw.com/Nvidia/GetSpecieRef.php?FileName=" + existingName;
+					//String data = "https://www.modelsw.com/Nvidia/GetSpecieRef.php?FileName=/storage/emulated/0/Android/data/com.modelsw.birdingviamic/files/Song/" + existingName;
+					Log.d(TAG, "existingName: " + existingName + " length: " + existingName.length() );
+					if (existingName.length() > 0) {
+						Intent intent = new Intent(this, StartCnn.class); // updates MySql on server
+						Log.d(TAG, "Run StartCnn");
+						startActivity(intent);
+						// returns to here
+					}
+				}
 				identifyPressed(v);
 				break;
 			}
 		} //switch
 	}
-
 
 	void definePressed(View v) {
 		Log.d(TAG, "definePressed ref:" + Main.existingRef);
@@ -382,7 +416,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		cleanUp();
 	}
 
-	public static void stopPlaying() {
+	public void stopPlaying() {
 		Log.d(TAG, "stopPlaying()");
 		if (mPlayer == null) {
 			return;
@@ -492,17 +526,17 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 		if ((Main.songCounter > 0) && (activeSong < Main.songCounter)) {
 			Main.thisSong = activeSong;
-			Main.existingName = Main.songs[Main.selectedSong[Main.thisSong]]; // first song selected
+			existingName = Main.songs[Main.selectedSong[Main.thisSong]]; // first song selected
 			Log.d(TAG, "startSong inside if .. Main.songpath:" + Main.songpath);
-			Log.d(TAG, "startSong inside if .. Main.existingName:" + Main.existingName);
-			mFileName = Main.songpath + Main.existingName;
+			Log.d(TAG, "startSong inside if .. existingName:" + existingName);
+			mFileName = Main.songpath + existingName;
 			Log.d(TAG, "startSong inside if .. mFileName:" + mFileName);
 			Main.existingRef = Main.ref[Main.selectedSong[Main.thisSong]];
 			Main.existingInx = Main.inx[Main.selectedSong[Main.thisSong]];
 			Main.existingSeg = Main.seg[Main.selectedSong[Main.thisSong]];
 			Log.d(TAG, "startSong ref:" + Main.existingRef);
 			qry = "SELECT Start, Stop, LowFreqCutoff, HighFreqCutoff, FilterStart, FilterStop, SourceMic FROM SongList" +
-					" WHERE FileName = " + q + Main.existingName + q +
+					" WHERE FileName = " + q + existingName + q +
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
 					" AND Seg = " + Main.existingSeg +
@@ -543,10 +577,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				finish();
 				return;
 			}
-			Main.existingName = Main.recordedName;
+			existingName = Main.recordedName;
 			Log.d(TAG, "startSong else .. Main.songpath:" + Main.songpath);
-			Log.d(TAG, "startSong else .. Main.existingName:" + Main.existingName);
-			mFileName = Main.songpath + Main.existingName;  // use last known
+			Log.d(TAG, "startSong else .. existingName:" + existingName);
+			mFileName = Main.songpath + existingName;  // use last known
 			Log.d(TAG, "startSong else .. mFileName:" + mFileName);
 			Main.songStartAtLoc = 0;
 			Main.songStopAtLoc = 0;
@@ -555,7 +589,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			Main.filterStartAtLoc = 0;
 			Main.filterStopAtLoc = 0;
 		}
-		if (Main.existingName == null) {
+		if (existingName == null) {
 			Log.d(TAG, "No songs selected from the list or it is recently recorded");
 			Toast.makeText(this, "Please select a song from the list or record a song to play.", Toast.LENGTH_LONG).show();
 			cleanUp();
@@ -574,7 +608,16 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				Log.d(TAG, "else before mPlayer.reset" );
 				mPlayer.reset();
 			}
-			Log.d(TAG, "existingName to be played / visualized:" + Main.existingName);
+			// ???????????????????????????????????????????????????????????????????????????????
+			// I have been missing mFileName, Frequency, and Time on PlaySong.
+			// I have been getting the lines around the edge
+			// on trying to add any text to the canvas I failed
+			// BUT I edited song, saved it, and it had the fileName, Frequency, and time when played.
+			// AND now they are back when I play any song.
+			// when are they initialized ??
+			// study VisualizerView -- it is all there !!
+			// ???????????????????????????????????????????????????????????????????????????????
+			Log.d(TAG, "existingName to be played / visualized:" + existingName);
 			mPlayer.setDataSource(mFileName);
 			mPlayer.prepare();
 			Main.duration = mPlayer.getDuration();    // millisec
@@ -781,14 +824,14 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				msg = "Unable to analyze the file -- suspect Sample Rate";
 			} else if (result == -2) {
 				//Main.isLoadDefinition = false;
-				msg = "Decoder failed on " + Main.existingName;
+				msg = "Decoder failed on " + existingName;
 				Main.db.beginTransaction();
 				if (Main.isIdentify == true) {
 					qry = "UPDATE SongList SET Identified = 2";
 				} else {
 					qry = "UPDATE SongList SET Defined = 2";
 				}
-					qry +=	" WHERE FileName = " + q + Main.existingName + q +
+				qry +=	" WHERE FileName = " + q + existingName + q +
 						" AND Path = " + Main.path +
 						" AND Ref = " + Main.existingRef +
 						" AND Inx = " + Main.existingInx +
@@ -1455,6 +1498,10 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		} // mode == 1
 
 		if (mode == 2) { // this song is done
+			// if cnn request result (load it at the bottom after current)
+			if (isRunCnnModel == true) {
+
+			}
 			qry = "SELECT Identify.Ref, COUNT(Identify.Ref) AS CntName, SUM(Cntr) AS SumCntr, " +
 					"CommonName, Region, SubRegion " +
 					"FROM Identify JOIN CodeName ON Identify.Ref = CodeName.Ref " +
@@ -1620,7 +1667,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			enh = 1;
 		}
 		int aut = 0;
-		if (Main.isOptionAutoFilter == true ){
+		if (Main.isAutoFilter == true ){
 			aut = 1;
 		}
 		int smo = 0;
@@ -1628,7 +1675,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			smo = 1;
 		}
 		Log.d(TAG, "Entering updateSpecAndName identifiedRef:" + identifiedRef + " accepted:" + accepted
-				+ " existingName:" + Main.existingName + " existingRef:" + Main.existingRef + " existingInx:" + Main.existingInx
+				+ " existingName:" + existingName + " existingRef:" + Main.existingRef + " existingInx:" + Main.existingInx
 				+ " existingSeg:" + Main.existingSeg);
 
 		// update identified if I rejected the Identification
@@ -1639,7 +1686,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					", AutoFilter = " + aut +
 					", Enhanced = " + enh +
 					", Smoothing =" + smo +
-					" WHERE FileName = " + q + Main.existingName + q +
+					" WHERE FileName = " + q + existingName + q +
 					" AND Path = " + Main.path +
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
@@ -1660,7 +1707,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					", AutoFilter = " + aut +
 					", Enhanced = " + enh +
 					", Smoothing = " + smo +
-					" WHERE FileName = " + q + Main.existingName + q +
+					" WHERE FileName = " + q + existingName + q +
 					" AND Path = " + Main.path +
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
@@ -1690,7 +1737,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 					", AutoFilter = " + aut +
 					", Enhanced = " + enh +
 					", Smoothing = " + smo +
-					" WHERE FileName = " + q + Main.existingName + q +
+					" WHERE FileName = " + q + existingName + q +
 					" AND Path = " + Main.path +
 					" AND Ref = " + Main.existingRef +
 					" AND Inx = " + Main.existingInx +
@@ -1711,14 +1758,14 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 			rs.moveToFirst();
 			int maxInx = rs.getInt(0)+1;  // increment the last known inx
-			String at = Main.existingName.substring(0, 1);  // @
+			String at = existingName.substring(0, 1);  // @
 			if (at.equals("@")) {
 				qry = "SELECT CommonName FROM CodeName" +
 						" WHERE Ref = '" + identifiedRef + "'";
 				rs = Main.songdata.getReadableDatabase().rawQuery(qry, null);
 				rs.moveToFirst();
-				int lenExist = Main.existingName.length();
-				String extn = Main.existingName.substring(lenExist-4); // the extension ".m4a" or ".wav"
+				int lenExist = existingName.length();
+				String extn = existingName.substring(lenExist-4); // the extension ".m4a" or ".wav"
 				String comname = rs.getString(0);  // common name from the database
 				int comlen = comname.length(); // the length of 'partially' compressed common name from the database
 				qry = "SELECT FileName, Inx, Seg FROM SongList" +
@@ -1778,7 +1825,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						", AutoFilter = " + aut +
 						", Enhanced =" + enh +
 						", Smoothing = " + smo +
-						" WHERE FileName = " + q + Main.existingName + q +
+						" WHERE FileName = " + q + existingName + q +
 						" AND Path = " + Main.path +
 						" AND Ref = 0"  +
 						" AND Inx = " + Main.existingInx +
@@ -1788,12 +1835,12 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				updateLastIdentified();
 				Main.db.setTransactionSuccessful();
 				Main.db.endTransaction();
-				File from = new File(Main.songpath, Main.existingName );
+				File from = new File(Main.songpath, existingName );
 				Log.d(TAG, "Rename from:" + from);
 				File to = new File(Main.songpath, newName.trim());
 				Log.d(TAG, "Rename   to:" + to);
 				from.renameTo(to);  // rename the file
-				Main.existingName = newName;
+				existingName = newName;
 				Main.existingRef = identifiedRef;   // enabled so I can use web
 				Main.fileRenamed = true;
 			} else { // don't change the name -- just update the ref and Inx
@@ -1806,7 +1853,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						", AutoFilter = " + aut +
 						", Enhanced =" + enh +
 						", Smoothing =" + smo +
-						" WHERE FileName = " + q + Main.existingName + q +
+						" WHERE FileName = " + q + existingName + q +
 						" AND Path = " + Main.path +
 						" AND Ref = 0"  +
 						" AND Inx = " + Main.existingInx +
@@ -1830,13 +1877,13 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 	}
 
 	public void updateLastIdentified() {
-		Log.d(TAG, "*** Update LastIdentified " + Main.existingName);
+		Log.d(TAG, "*** Update LastIdentified " + existingName);
 		String format = "yyyy_MMdd_HH.mm.ss";
 		SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
 		long iNow = System.currentTimeMillis();
 		Main.db.beginTransaction();
 		qry = "UPDATE LastKnown" +
-				" SET FileName = " + q + Main.existingName + q + ", " +
+				" SET FileName = " + q + existingName + q + ", " +
 				" LastDate = '" + sdf.format(iNow) + "'" +
 				" WHERE Activity = 'Identified'";
 		//Log.d(TAG, "LastIdentified qry=" + qry);
@@ -1854,7 +1901,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 			enh = 1;
 		}
 		int aut = 0;
-		if (Main.isOptionAutoFilter == true ){
+		if (Main.isAutoFilter == true ){
 			aut = 1;
 		}
 		int smo = 0;
@@ -1984,7 +2031,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		}
 
 		if (mode == 2) { // mode 2 update the song list
-			Log.d(TAG, "*** Update SongList " + Main.existingName);
+			Log.d(TAG, "*** Update SongList " + existingName);
 			if (Main.isIdentify == false) { // defined
 				Main.db.beginTransaction();
 				qry = "UPDATE SongList" +
@@ -1992,18 +2039,18 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 						", AutoFilter = " + aut +
 						", Enhanced =" + enh +
 						", Smoothing =" + smo +
-						" WHERE FileName = " + q + Main.existingName + q +
+						" WHERE FileName = " + q + existingName + q +
 						" AND Path = " + Main.path +
 						" AND Ref = " + Main.existingRef +
 						" AND Inx = " + Main.existingInx +
 						" AND Seg = " + Main.existingSeg;
 				Main.db.execSQL(qry);
-				Log.d(TAG, "*** Update LastKnown " + Main.existingName);
+				Log.d(TAG, "*** Update LastKnown " + existingName);
 				String format = "yyyy_MMdd_HH.mm.ss";
 				SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
 				long iNow = System.currentTimeMillis();
 				qry = "UPDATE LastKnown" +
-						" SET FileName = " + q + Main.existingName + q + ", " +
+						" SET FileName = " + q + existingName + q + ", " +
 						" LastDate = '" + sdf.format(iNow) + "'" +
 						" WHERE Activity = 'Defined'";
 				Main.db.execSQL(qry);
@@ -2025,7 +2072,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				sb = sb + "trillLen:" + trillLen;
 				sb = sb + ", ratio:" + aveEnergyRatio;
 				sb = sb + ", mic:" + Main.sourceMic;
-				sb = sb + ", AutoFilter:" + Main.isOptionAutoFilter;
+				sb = sb + ", AutoFilter:" + Main.isAutoFilter;
 				sb = sb + ", Enhanced:" + Main.isEnhanceQuality;
 				sb = sb + ", snMean:" + snMean;
 				sb = sb + "\n";
@@ -2060,7 +2107,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 				sb = sb + "trillLen:" + trillLen;
 				sb = sb + ", ratio:" + aveEnergyRatio;
 				sb = sb + ", mic:" + Main.sourceMic;
-				sb = sb + ", AutoFilter:" + Main.isOptionAutoFilter;
+				sb = sb + ", AutoFilter:" + Main.isAutoFilter;
 				sb = sb + ", Enhanced:" + Main.isEnhanceQuality;
 				sb = sb + ", snMean:" + snMean;
 				sb = sb + "\n";
@@ -2754,7 +2801,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 
 		// Manual filter and AutoFilter can both be true
 		boolean isManualFilter = Main.filterStartAtLoc > 0 || Main.filterStopAtLoc > 0 || Main.lowFreqCutoff > 0 || Main.highFreqCutoff > 0;
-		boolean isEnableAutoFilter = Main.isOptionAutoFilter == true;
+		boolean isEnableAutoFilter = Main.isAutoFilter == true;
 		String audsrc = "";
 
 		// get values required to normalize
@@ -3047,11 +3094,11 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		int fixEnd = 3;
 		if (Main.isEnhanceQuality == true) {
 			fixEnd = 4;
-	}
+		}
 		int fixOffset = 0;
 		idFix = "";  // "Fix:" will be prepended in writeId
 		for (int fix = fixStart; fix < fixEnd; fix++) {
-			Log.d(TAG, "* * * * * pass:" + fix + " * * * * " + Main.existingName);
+			Log.d(TAG, "* * * * * pass:" + fix + " * * * * " + existingName);
 			switch (fix) {
 				case 0:  // variable lowFreqCutoff
 					if (autoFilterFreq == 0) {
@@ -3999,7 +4046,7 @@ public class PlaySong extends AppCompatActivity implements OnClickListener {
 		Log.d(TAG, "*** find Voiced");
 		Log.d(TAG, " file:" + mFileName + " _" + Main.existingInx + "." + Main.existingSeg );
 		Log.d(TAG, " AutoFilter:" + isEnableAutoFilter + " Strt:" + Main.filterStartAtLoc + " Stop:" + Main.filterStopAtLoc
-				+ " AutoFilterOption:" + Main.isOptionAutoFilter  + " mic:" + Main.sourceMic + " isEnhanceQuality:" + Main.isEnhanceQuality);
+				+ " AutoFilterOption:" + Main.isAutoFilter  + " mic:" + Main.sourceMic + " isEnhanceQuality:" + Main.isEnhanceQuality);
 		Log.d(TAG, " mean:" +  originalMean + " stdDev:" + stdDev + " filterAve:" + filterAve + " snMean:" + snMean);
 		Log.d(TAG, " cntrRemovedViaFilter:" + cntrRemovedViaFilter + " cntrRemovedViaFreq:" + cntrRemovedViaFreq);
 		Log.d(TAG, " stdLim:" + stdLim + " voiceLim:" + voiceLim
