@@ -13,89 +13,105 @@
         android:background="@color/linen" >
     </androidx.appcompat.widget.Toolbar>
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:screenOrientation="portrait"
+    <RelativeLayout
+        android:id="@+id/top"
         android:layout_below="@id/toolbar"
-        android:scrollbars="none">
-
-        <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/spacer"
-            android:text=""
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/spacer"
+                android:text=""
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp" />
 
-        <TextView
-            android:id="@+id/result"
-            android:text="@string/backup_database_result"
-            android:gravity="start"
-            android:textColor="@color/linen"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:layout_below="@id/spacer"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"  />
+            <TextView
+                android:id="@+id/result"
+                android:text="@string/backup_database_result"
+                android:gravity="start"
+                android:textColor="@color/linen"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:layout_below="@id/spacer"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp" />
 
-        <EditText
-            android:id="@+id/result1"
-            android:text="@string/export_folders_result"
-            android:textColor="@color/linen"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:layout_below="@id/result"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp" />
-
-        <EditText
-            android:id="@+id/result2"
-            android:text="@string/csv_save_result"
-            android:textColor="@color/linen"
-            android:layout_marginLeft="3dip"
-            android:layout_marginRight="3dip"
-            android:layout_below="@id/result1"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp" />
-
-        </LinearLayout>
-    </ScrollView>
-
-    <RelativeLayout
-        android:id="@+id/bottom_buttons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true" >
-
-        <LinearLayout
-            android:id="@+id/footer"
-            style="@style/ButtonBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@color/black" >
+            <EditText
+                android:id="@+id/backup_results"
+                android:text="@string/export_folders_result"
+                android:textColor="@color/linen"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:layout_below="@id/result"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/backup_button"
-                style="@style/ButtonBarButton"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:textAllCaps="false"
                 android:layout_marginLeft="30dp"
                 android:layout_marginRight="30dp"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/backup_results"
                 android:textColor="@drawable/text_state"
                 android:background="@drawable/background_state"
+                android:textSize="16sp"
                 android:text="@string/backup_label"/>
+
+            <TextView
+                android:id="@+id/more_space"
+                android:text=""
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="0dip"
+                android:textSize="24.5sp" />
+
+            <TextView
+                android:id="@+id/result3"
+                android:text="@string/restore_folders_result"
+                android:textColor="@color/linen"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:layout_below="@id/more_space"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp" />
+
+            <EditText
+                android:id="@+id/restore_results"
+                android:text="@string/restore_database_result"
+                android:gravity="start"
+                android:textColor="@color/linen"
+                android:layout_marginLeft="3dip"
+                android:layout_marginRight="3dip"
+                android:layout_below="@id/result3"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/restore_button"
+                android:textAllCaps="false"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/restore_results"
+                android:textColor="@drawable/text_state"
+                android:background="@drawable/background_state"
+                android:textSize="16sp"
+                android:text="@string/restore_label"/>
 
         </LinearLayout>
     </RelativeLayout>
-
-</RelativeLayout>
+</RelativeLayout
