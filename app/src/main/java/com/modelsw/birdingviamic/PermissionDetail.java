@@ -55,10 +55,12 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
         Button dismiss = (Button) findViewById(R.id.dismiss_button);
         findViewById(R.id.dismiss_button).setOnClickListener(this);
         int result = checkPermissions();
+		checkPermissions_10(); // moved from main in android 10
         Log.d(TAG, "if permCntr:" + Main.permCntr + " = result:"  + result + " then exit");
         if (result == Main.permCntr){
             dismiss.performClick();
         }
+		
 
     } // onCreate
 
@@ -89,6 +91,37 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
         }
     }
 
+	private boolean checkPermissions_10() {
+		try {
+			final PackageInfo info = this.getPackageManager().getPackageInfo(this.getPackageName(), 0);
+			targetSdkVersion = info.applicationInfo.targetSdkVersion;
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.e(TAG, "error name not found:" + e);
+			return true; // problems with package -- don't get lost in permissions
+		}
+		// For Android < Android M, self permissions are always granted.
+		Log.d(TAG, "targetSdkVersion:" + targetSdkVersion);
+		Log.d(TAG, "Build.VERSION.SDK_INT:" + Build.VERSION.SDK_INT
+				+ " Build.VERSION_CODES.M:" + Build.VERSION_CODES.M);
+		if (targetSdkVersion < Build.VERSION_CODES.M) {
+			return true;
+		}
+		listPermissionsNeeded = new ArrayList<String>();
+		for (String p:permissions) {
+			int result = ContextCompat.checkSelfPermission(this, p);
+			Log.d(TAG, "result:" + result + " permission:" + p);
+			if (result != PackageManager.PERMISSION_GRANTED && result != 0) {
+				listPermissionsNeeded.add(p);
+				Log.d(TAG, "missing permission:" + p + " result:" + result);
+			}
+		}
+		if (listPermissionsNeeded.isEmpty()) { // either none added or failed to add
+			return true;
+		} else {
+			return false; // list is not empty go get permissions
+		}
+	} // checkPermissions_10
+	
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.dismiss_button:

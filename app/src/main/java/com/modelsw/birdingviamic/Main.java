@@ -141,6 +141,7 @@ package com.modelsw.birdingviamic;
 * 60e.128 -- attempt to laod from external storage (original NAC location - with new permissions from 60d.127)
 * 60f.129 -- remove duplicate permissions code. fix load filter on startup
 * 60g.130 -- run after load github load master with Rebase
+* 60h.131 -- import from github
 
 *	 the tables that use ref: codename, definedetail, definetotals, identify, songlist
 *	 the table that could be user modified: birdwebsites, filter, lastknown, location, options, songpath
@@ -390,7 +391,7 @@ public class Main extends AppCompatActivity implements OnClickListener {
 	public static boolean xenocanto;
 	Bundle savedInstanceState;
 
-	@RequiresApi(api = Build.VERSION_CODES.R)
+	//@RequiresApi(api = Build.VERSION_CODES.R)
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

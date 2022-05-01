@@ -7,12 +7,12 @@ android {
         applicationId "com.modelsw.birdingviamic"
         minSdkVersion 26
         targetSdkVersion 31
-        versionCode 130  // code version
-        versionName "60g.130"  // match the versionCode line above and also in strings.xml
+        versionCode 131  // code version
+        versionName "60h.131"  // match the versionCode line above and also in strings.xml
         // DatabaseVersion 88 in Main
         compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_7
-            targetCompatibility JavaVersion.VERSION_1_7
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
         }
     }
 
