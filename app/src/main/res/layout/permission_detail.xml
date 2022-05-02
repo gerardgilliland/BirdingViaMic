@@ -54,6 +54,48 @@
                 />
         </LinearLayout>
 
+        <!--Button to request storage permission-->
+        <Button
+            android:id="@+id/storage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Storage"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:layout_below="@id/permission_label"
+            android:layout_centerHorizontal="true"/>
+
+        <!--Button to request audio permission-->
+        <Button
+            android:id="@+id/audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Audio"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:layout_below="@id/storage"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:id="@+id/internet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Internet"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:layout_below="@id/audio"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:layout_below="@id/internet"
+            android:layout_centerHorizontal="true"/>
+
     </ScrollView>
 
     <RelativeLayout

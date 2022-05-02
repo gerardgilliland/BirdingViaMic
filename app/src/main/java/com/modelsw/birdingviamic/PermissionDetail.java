@@ -1,19 +1,17 @@
 package com.modelsw.birdingviamic;
 
 //import android.Manifest;
+import static com.modelsw.birdingviamic.Main.permissions;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-//import android.content.pm.PackageInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 //import android.os.Build;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-//import android.support.v4.app.ActivityCompat;
-//import android.support.v4.content.ContextCompat;
-//import android.support.v7.app.AppCompatActivity;
-//import android.support.v7.widget.Toolbar;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -26,22 +24,39 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-//import java.util.ArrayList;
+import java.util.ArrayList;
+import android.Manifest;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
 //import java.util.List;
 
-@TargetApi(23)
-public class PermissionDetail extends AppCompatActivity implements View.OnClickListener {
+//@TargetApi(23)
+public class PermissionDetail extends AppCompatActivity {
     private static final String TAG = "PermissionDetail";
-    Button dismiss_button;
+    // Defining Buttons
+    Button dismiss, storage, audio;
     int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     int targetSdkVersion;
     Toolbar toolbar;
 
-    //@RequiresApi(api = Build.VERSION_CODES.R)
+    // Defining Permission codes.
+    // We can give any value
+    // but unique for each permission.
+    private static final int STORAGE_PERMISSION_CODE = 100; // Read and write song files
+    private static final int AUDIO_PERMISSION_CODE = 101; // record songs
+    private static final int INTERNET_PERMISSION_CODE = 102; // Read and write song files
+    private static final int LOCATION_PERMISSION_CODE = 103; // Fine and Course
+    // I round to the nearest degree which is close enough for bird identification
+    // but I need Fine (GPS) and Course (Network)
+    // because you might be in a remote area that doesn't receive network and thus requires GPS
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.permission_detail);
+        //super.onCreate(savedInstanceState);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setLogo(R.drawable.treble_clef_linen);
@@ -52,10 +67,110 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
             }
         });
 
-        Button dismiss = (Button) findViewById(R.id.dismiss_button);
+        setContentView(R.layout.permission_detail);
         findViewById(R.id.dismiss_button).setOnClickListener(this);
+        Button storage = findViewById(R.id.storage);
+        Button audio = findViewById(R.id.audio);
+        Button internet = findViewById(R.id.internet);
+        Button location = findViewById(R.id.location);
+        Button dismiss = findViewById(R.id.dismiss_button);
+
+        // Set Buttons on Click Listeners
+        storage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+                checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+                checkPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+            }
+        });
+
+        audio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission(Manifest.permission.RECORD_AUDIO, AUDIO_PERMISSION_CODE);
+            }
+        });
+
+        internet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission(Manifest.permission.INTERNET, INTERNET_PERMISSION_CODE);
+            }
+        });
+
+        location.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_CODE);
+                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, LOCATION_PERMISSION_CODE);
+            }
+        });
+
+        dismiss.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+    }
+
+    // Function to check and request permission.
+    public void checkPermission(String permission, int requestCode)  {
+        if (ContextCompat.checkSelfPermission(PermissionDetail.this, permission) == PackageManager.PERMISSION_DENIED) {
+
+            // Requesting the permission
+            ActivityCompat.requestPermissions(PermissionDetail.this, new String[] { permission }, requestCode);
+        }
+        else {
+            Toast.makeText(PermissionDetail.this, "Permission already granted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // This function is called when the user accepts or decline the permission.
+    // Request Code is used to check which permission called this function.
+    // This request code is provided when the user is prompt for permission.
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        super.onRequestPermissionsResult(requestCode,
+                permissions,
+                grantResults);
+
+        if (requestCode == AUDIO_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(PermissionDetail.this, "Audio Permission Granted", Toast.LENGTH_SHORT) .show();
+            }
+            else {
+                Toast.makeText(PermissionDetail.this, "Audio Permission Denied", Toast.LENGTH_SHORT) .show();
+            }
+        }
+        else if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        else if (requestCode == LOCATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+    }
+
+
+
+
+
         int result = checkPermissions();
-		checkPermissions_10(); // moved from main in android 10
+        //checkPermissions_10(); // moved from main in android 10
         Log.d(TAG, "if permCntr:" + Main.permCntr + " = result:"  + result + " then exit");
         if (result == Main.permCntr){
             dismiss.performClick();
@@ -67,9 +182,9 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
     private int checkPermissions() {
         try {
             int cntr = 0;
-            for (String p : Main.permissions) {
+            for (String p : permissions) {
                 int result = ContextCompat.checkSelfPermission(this, p); // result --> 0=GRANTED; -1=DENIED
-                // should you show why you need this permission -- false == it is already GRANTED; true == explain why you need it.
+                // show why you need this permission -- false == it is already GRANTED; true == explain why you need it.
                 boolean showRationale = shouldShowRequestPermissionRationale( p );
                 Log.d(TAG, "check:" + p + " result:" + result + " Rationale:" + showRationale);
                 if (result != PackageManager.PERMISSION_GRANTED) {
@@ -91,6 +206,7 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
         }
     }
 
+    /*
 	private boolean checkPermissions_10() {
 		try {
 			final PackageInfo info = this.getPackageManager().getPackageInfo(this.getPackageName(), 0);
@@ -106,32 +222,21 @@ public class PermissionDetail extends AppCompatActivity implements View.OnClickL
 		if (targetSdkVersion < Build.VERSION_CODES.M) {
 			return true;
 		}
-		listPermissionsNeeded = new ArrayList<String>();
+		Main.listPermissionsNeeded = new ArrayList<String>();
 		for (String p:permissions) {
 			int result = ContextCompat.checkSelfPermission(this, p);
 			Log.d(TAG, "result:" + result + " permission:" + p);
 			if (result != PackageManager.PERMISSION_GRANTED && result != 0) {
-				listPermissionsNeeded.add(p);
+                Main.listPermissionsNeeded.add(p);
 				Log.d(TAG, "missing permission:" + p + " result:" + result);
 			}
 		}
-		if (listPermissionsNeeded.isEmpty()) { // either none added or failed to add
+		if (Main.listPermissionsNeeded.isEmpty()) { // either none added or failed to add
 			return true;
 		} else {
 			return false; // list is not empty go get permissions
 		}
 	} // checkPermissions_10
-	
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.dismiss_button:
-                Intent resultIntent = new Intent();
-                setResult(Activity.RESULT_OK, resultIntent);
-                Log.d(TAG, "dismiss_button permissions");
-                finish();
-                break;
-
-        }
-    }
+	*/
 
 }
