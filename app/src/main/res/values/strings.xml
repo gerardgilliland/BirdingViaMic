@@ -113,16 +113,22 @@
     <string name="path6_location">Android/data/com.modelsw.birdingviamicoa/files/Song</string>
     <string name="path7_location">Android/data/com.modelsw.birdingviamicnac/files/Song</string>
     <string name="path99_location">Custom (Enter path below)</string>
-    <string name="permission_label">
-        INTERNET is needed to display the birds identified or download bird songs.\n
+    <string name="location_permission_label">
+        ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION are needed if you use Location to limit the lists.
+    </string>
+    <string name="audio_permission_label">
         RECORD_AUDIO is needed for you to be able to record the birds and thus be able to recognize them.
+    </string>
+    <string name="internet_permission_label">
+        INTERNET is needed to display the birds identified or download bird songs.
+    </string>
+    <string name="storage_permission_label">
         MANAGE_EXTERNAL_STORAGE is needed to read the songs from the Birding Via Mic apps NW, OW, OA, and NAC.\n
         READ_EXTERNAL_STORAGE is needed to read the Download folder.\n
         WRITE_EXTERNAL_STORAGE is needed to save a file in the Download folder.\n
-        These three permissions (MANAGE, READ and WRITE) plus INTERNET are needed to select, download, and import songs to the app.\n
-        ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION are needed if you use Location to limit the lists.\n
-        You can view and change your permissions in Settings > Applications > Application Manager > Birding Via Mic > Permissions\n
+        These three permissions (MANAGE, READ and WRITE) plus INTERNET are needed to select, download, and import songs to the app.
     </string>
+
     <string name="permission_title">Permissions</string>
     <string name="phone_location_title">Phone Location</string>
     <string name="play_label">Play</string>

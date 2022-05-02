@@ -56,7 +56,8 @@ public class PermissionDetail extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //super.onCreate(savedInstanceState);
+        setContentView(R.layout.permission_detail);
+		
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setLogo(R.drawable.treble_clef_linen);
@@ -67,8 +68,6 @@ public class PermissionDetail extends AppCompatActivity {
             }
         });
 
-        setContentView(R.layout.permission_detail);
-        findViewById(R.id.dismiss_button).setOnClickListener(this);
         Button storage = findViewById(R.id.storage);
         Button audio = findViewById(R.id.audio);
         Button internet = findViewById(R.id.internet);
@@ -114,7 +113,7 @@ public class PermissionDetail extends AppCompatActivity {
             }
         });
 
-    }
+    } // onCreate
 
     // Function to check and request permission.
     public void checkPermission(String permission, int requestCode)  {
@@ -168,7 +167,7 @@ public class PermissionDetail extends AppCompatActivity {
 
 
 
-
+/*
         int result = checkPermissions();
         //checkPermissions_10(); // moved from main in android 10
         Log.d(TAG, "if permCntr:" + Main.permCntr + " = result:"  + result + " then exit");
@@ -176,8 +175,8 @@ public class PermissionDetail extends AppCompatActivity {
             dismiss.performClick();
         }
 		
+*/
 
-    } // onCreate
 
     private int checkPermissions() {
         try {
