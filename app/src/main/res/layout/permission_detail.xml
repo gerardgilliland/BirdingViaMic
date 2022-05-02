@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:screenOrientation="portrait"
-    android:background="#ff000000"
-    >
+    android:background="#ff000000"    >
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -39,7 +38,6 @@
             android:layout_marginRight="30dp"
             android:gravity="center" >
 
-
             <TextView
                 android:id="@+id/storage_permission_label"
                 android:text="@string/storage_permission_label"
@@ -50,9 +48,8 @@
                 android:layout_below="@id/spacer"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                />
-			<!--Button to request storage permission-->
+                android:textSize="16sp" />
+
 			<Button
 				android:id="@+id/storage"
 				android:layout_width="wrap_content"

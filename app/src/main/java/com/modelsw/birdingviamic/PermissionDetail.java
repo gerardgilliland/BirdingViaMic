@@ -1,6 +1,13 @@
 package com.modelsw.birdingviamic;
 
 //import android.Manifest;
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.INTERNET;
+import static android.Manifest.permission.MANAGE_EXTERNAL_STORAGE;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.modelsw.birdingviamic.Main.permissions;
 
 import android.annotation.TargetApi;
@@ -74,45 +81,60 @@ public class PermissionDetail extends AppCompatActivity {
         Button location = findViewById(R.id.location);
         Button dismiss = findViewById(R.id.dismiss_button);
 
-        // Set Buttons on Click Listeners
-        storage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
-                checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
-                checkPermission(Manifest.permission.MANAGE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
-            }
-        });
+        int result0 = ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE ); // result --> 0=GRANTED; -1=DENIED
+        int result1 = ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
+        int result2 = ContextCompat.checkSelfPermission(this, MANAGE_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
+        if (result0 + result1 + result2 != 0) {
+            storage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkPermission(WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+                    checkPermission(READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+                    checkPermission(MANAGE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
+                }
+            });
+        }
 
-        audio.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkPermission(Manifest.permission.RECORD_AUDIO, AUDIO_PERMISSION_CODE);
-            }
-        });
+        int result3 = ContextCompat.checkSelfPermission(this, RECORD_AUDIO); // result --> 0=GRANTED; -1=DENIED
+        if (result3 != 0) {
+            audio.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkPermission(RECORD_AUDIO, AUDIO_PERMISSION_CODE);
+                }
+            });
+        }
 
-        internet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkPermission(Manifest.permission.INTERNET, INTERNET_PERMISSION_CODE);
-            }
-        });
+        int result4 = ContextCompat.checkSelfPermission(this, INTERNET); // result --> 0=GRANTED; -1=DENIED
+        if (result4 != 0) {
+            internet.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkPermission(INTERNET, INTERNET_PERMISSION_CODE);
+                }
+            });
+        }
 
-        location.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_CODE);
-                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, LOCATION_PERMISSION_CODE);
-            }
-        });
+        int result5 = ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION); // result --> 0=GRANTED; -1=DENIED
+        int result6 = ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION); // result --> 0=GRANTED; -1=DENIED
+        if (result5 + result5 != 0) {
+            location.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkPermission(ACCESS_FINE_LOCATION, LOCATION_PERMISSION_CODE);
+                    checkPermission(ACCESS_COARSE_LOCATION, LOCATION_PERMISSION_CODE);
+                }
+            });
+        }
 
-        dismiss.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
+        if (result0 + result1 + result2 + result3 + result4 + result5 + result6 != 0) {
+            dismiss.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
+        }
     } // onCreate
 
     // Function to check and request permission.
@@ -127,9 +149,9 @@ public class PermissionDetail extends AppCompatActivity {
         }
     }
 
-    // This function is called when the user accepts or decline the permission.
+    // This function is called when the user accepts or declines the permission.
     // Request Code is used to check which permission called this function.
-    // This request code is provided when the user is prompt for permission.
+    // This request code is provided when the user is prompted for permission.
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
@@ -138,15 +160,22 @@ public class PermissionDetail extends AppCompatActivity {
                 permissions,
                 grantResults);
 
-        if (requestCode == AUDIO_PERMISSION_CODE) {
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PermissionDetail.this, "Storage Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        else if (requestCode == AUDIO_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(PermissionDetail.this, "Audio Permission Granted", Toast.LENGTH_SHORT) .show();
-            }
-            else {
+            } else {
                 Toast.makeText(PermissionDetail.this, "Audio Permission Denied", Toast.LENGTH_SHORT) .show();
             }
         }
-        else if (requestCode == STORAGE_PERMISSION_CODE) {
+        else if (requestCode == INTERNET_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(PermissionDetail.this, "Storage Permission Granted", Toast.LENGTH_SHORT).show();
             } else {
