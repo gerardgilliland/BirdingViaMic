@@ -9,6 +9,7 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.modelsw.birdingviamic.Main.permissions;
+import static com.modelsw.birdingviamic.R.id.storage_permission_label;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -36,7 +37,10 @@ import android.Manifest;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 //import java.util.List;
 
@@ -48,6 +52,8 @@ public class PermissionDetail extends AppCompatActivity {
     int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     int targetSdkVersion;
     Toolbar toolbar;
+
+    int iver = getAndroidVersion();
 
     // Defining Permission codes.
     // We can give any value
@@ -64,7 +70,7 @@ public class PermissionDetail extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.permission_detail);
-		
+
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setLogo(R.drawable.treble_clef_linen);
@@ -75,16 +81,38 @@ public class PermissionDetail extends AppCompatActivity {
             }
         });
 
+        TextView storage_text = (TextView) findViewById(R.id.storage_permission_label);
+        storage_text.setVisibility(TextView.GONE);
         Button storage = findViewById(R.id.storage);
+        storage.setVisibility(View.GONE);
+
+        TextView audio_text = (TextView) findViewById(R.id.audio_permission_label);
+        audio_text.setVisibility(TextView.GONE);
         Button audio = findViewById(R.id.audio);
+        audio.setVisibility(View.GONE);
+
+        TextView internet_text = (TextView) findViewById(R.id.internet_permission_label);
+        internet_text.setVisibility(TextView.GONE);
         Button internet = findViewById(R.id.internet);
+        internet.setVisibility(View.GONE);
+
+        TextView location_text = (TextView) findViewById(R.id.location_permission_label);
+        location_text.setVisibility(TextView.GONE);
         Button location = findViewById(R.id.location);
+        location.setVisibility(View.GONE);
+
         Button dismiss = findViewById(R.id.dismiss_button);
 
-        int result0 = ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE ); // result --> 0=GRANTED; -1=DENIED
+        int result0 = ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
         int result1 = ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
         int result2 = ContextCompat.checkSelfPermission(this, MANAGE_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
+        if (iver < 30) {
+            result2 = 0;
+        }
+        Log.d(TAG, "result0:" + result0 + ", result1:" + result1 + ", result2:" + result2);
         if (result0 + result1 + result2 != 0) {
+            storage_text.setVisibility(TextView.VISIBLE);
+            storage.setVisibility(View.VISIBLE);
             storage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -97,6 +125,8 @@ public class PermissionDetail extends AppCompatActivity {
 
         int result3 = ContextCompat.checkSelfPermission(this, RECORD_AUDIO); // result --> 0=GRANTED; -1=DENIED
         if (result3 != 0) {
+            audio_text.setVisibility(TextView.VISIBLE);
+            audio.setVisibility(View.VISIBLE);
             audio.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -107,6 +137,8 @@ public class PermissionDetail extends AppCompatActivity {
 
         int result4 = ContextCompat.checkSelfPermission(this, INTERNET); // result --> 0=GRANTED; -1=DENIED
         if (result4 != 0) {
+            internet_text.setVisibility(TextView.VISIBLE);
+            internet.setVisibility(View.VISIBLE);
             internet.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -118,6 +150,8 @@ public class PermissionDetail extends AppCompatActivity {
         int result5 = ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION); // result --> 0=GRANTED; -1=DENIED
         int result6 = ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION); // result --> 0=GRANTED; -1=DENIED
         if (result5 + result5 != 0) {
+            location_text.setVisibility(TextView.VISIBLE);
+            location.setVisibility(View.VISIBLE);
             location.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -127,14 +161,17 @@ public class PermissionDetail extends AppCompatActivity {
             });
         }
 
-        if (result0 + result1 + result2 + result3 + result4 + result5 + result6 != 0) {
-            dismiss.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    finish();
-                }
-            });
+        if (result0 + result1 + result2 + result3 + result4 + result5 + result6 == 0) {
+            Toast.makeText(PermissionDetail.this, "All Permissions granted", Toast.LENGTH_LONG).show();
+            finish();
         }
+
+        dismiss.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     } // onCreate
 
     // Function to check and request permission.
@@ -266,5 +303,10 @@ public class PermissionDetail extends AppCompatActivity {
 		}
 	} // checkPermissions_10
 	*/
+
+    public static int getAndroidVersion() {
+        int iVer = Build.VERSION.SDK_INT;
+        return iVer;
+    }
 
 }
