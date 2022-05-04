@@ -102,6 +102,7 @@ public class PermissionDetail extends AppCompatActivity {
         location.setVisibility(View.GONE);
 
         Button dismiss = findViewById(R.id.dismiss_button);
+        dismiss.setVisibility(View.VISIBLE);
 
         int result0 = ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
         int result1 = ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE); // result --> 0=GRANTED; -1=DENIED
@@ -164,14 +165,14 @@ public class PermissionDetail extends AppCompatActivity {
         if (result0 + result1 + result2 + result3 + result4 + result5 + result6 == 0) {
             Toast.makeText(PermissionDetail.this, "All Permissions granted", Toast.LENGTH_LONG).show();
             finish();
+        } else {
+            dismiss.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
         }
-
-        dismiss.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
     } // onCreate
 
     // Function to check and request permission.

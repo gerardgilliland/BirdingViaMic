@@ -780,11 +780,6 @@ public class SongList extends AppCompatActivity {
 			rsF.moveToNext();
 		}
 		rsF.close();
-		Main.db.beginTransaction();
-		qry = "DELETE FROM Filter WHERE XcName = " + q + filName + q;
-		Main.db.execSQL(qry);
-		Main.db.setTransactionSuccessful();
-		Main.db.endTransaction();
 		return;
 	}
 
@@ -1022,6 +1017,13 @@ public class SongList extends AppCompatActivity {
 									" AND Seg = " + Main.existingSeg +
 									" AND Path = " + Main.path;
 							Main.db.execSQL(qry);
+							// I don't delete a filter here because the table gets loaded from filter.csv once on file load
+							// I can't get it back in the data base if I load a file with the filter.csv missing.
+							// the other place is in Adjust View Cancel where I cancel an existing filter.
+							// I have something in backup ConvertTables that I currently don't understand
+							//the following is disabled:
+							//qry = "DELETE FROM Filter WHERE XcName = " + q + Main.existingName + q;
+							//Main.db.execSQL(qry);
 						}
 						if (id == 0 || id == 1) {
 							Log.d(TAG, "delete definition with ref:" + Main.existingRef + " inx:" + Main.existingInx + " seg:" + Main.existingSeg);

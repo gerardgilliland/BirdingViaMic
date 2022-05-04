@@ -75,6 +75,7 @@ public class Alert3ButtonDialog extends Activity implements OnClickListener {
     }
 
     public void onClick(View v) {
+        // RETURNS TO SongList.OnActivityResult()
         switch (v.getId()) {
             case R.id.button1: {
                 setResult(0); // 0 = File and Definition // Yes  // OK

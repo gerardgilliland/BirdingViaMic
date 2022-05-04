@@ -983,6 +983,7 @@ public class AdjustView extends ViewGroup implements OnTouchListener {
                 " AND Path = " + Main.path +
                 " AND FileName = " + q + song + q;
         Main.db.execSQL(qry);
+        // the second place I delete a File from the Filter table
         qry = "DELETE FROM Filter WHERE XcName = " + q + song + q;
         Main.db.execSQL(qry);
         Main.db.setTransactionSuccessful();
